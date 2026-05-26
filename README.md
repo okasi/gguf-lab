@@ -18,7 +18,6 @@ The Qwopus 35B files below are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF`. They s
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Qwopus35 IQ4_XS | 23.43 GiB | 70.97 tok/s | 62.81 tok/s | 63.62 tok/s | 16/25 | 60/60 | 60/60 |
 | Qwopus35 Q5_K_M | 28.98 GiB | 65.68 tok/s | 59.20 tok/s | 59.84 tok/s | 23/25 | 60/60 | 60/60 |
-| Qwopus35 Q6_K | 32.67 GiB | 59.82 tok/s | 55.01 tok/s | 55.46 tok/s | 17/25 | 60/60 | 60/60 |
 | TeichAI Gemma4 Opus Q5_K_M | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
 
 ## Hard TypeScript Breakdown
@@ -27,9 +26,8 @@ The Qwopus 35B files below are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF`. They s
 |---|---:|---:|---:|---:|---:|
 | Qwopus35 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 | Qwopus35 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
-| Qwopus35 Q6_K | 0/6 | 7/7 | 4/6 | 6/6 | 17/25 |
 | TeichAI Gemma4 Opus Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 
 ## Current Takeaway
 
-Qwopus35 Q5_K_M is the best Qwopus35 balance from this set: it keeps most of the speed advantage over Gemma4 Q5 while matching its hard TypeScript score. Q6_K costs more memory, runs slower, and did not improve quality in this benchmark.
+Qwopus35 Q5_K_M is the best Qwopus35 balance from this set: it keeps most of the speed advantage over Gemma4 Q5 while matching its hard TypeScript score.
