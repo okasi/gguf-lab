@@ -37,7 +37,10 @@ Notes:
 
 | Model | Source / file | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
+| Unsloth Gemma4 E2B it Q5_K_M | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q5_K_XL.gguf` | 5.50 GiB | 85.34 tok/s | 76.75 tok/s | 74.92 tok/s | 20/25 | 60/60 | 60/60 |
+| Unsloth Gemma4 E2B it Q6_K | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q6_K.gguf` | 5.68 GiB | 77.43 tok/s | 69.36 tok/s | 67.74 tok/s | 14/25 | 60/60 | 60/60 |
+| Unsloth Gemma4 E2B it UD Q6_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q6_K_XL.gguf` | 5.96 GiB | 73.02 tok/s | 64.75 tok/s | 64.80 tok/s | 10/25 | 60/60 | 60/60 |
 
 ### Models Under 14 GiB Mem
 
@@ -68,7 +71,10 @@ Notes:
 
 | Model | LRU cache | Expression parser | Weighted grid Dijkstra | Topological scheduler | Total |
 |---|---:|---:|---:|---:|---:|
+| Unsloth Gemma4 E2B it Q5_K_M | 5/6 | 6/7 | 4/6 | 6/6 | 21/25 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
+| Unsloth Gemma4 E2B it Q6_K | 3/6 | 1/7 | 4/6 | 6/6 | 14/25 |
+| Unsloth Gemma4 E2B it UD Q6_K_XL | 0/6 | 0/7 | 4/6 | 6/6 | 10/25 |
 | Smoffyy Gemma4 E4B Instruct Pure Q5_K_M | 6/6 | 4/7 | 4/6 | 6/6 | 20/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.5 4B v3 MTP Q5_K_M | 0/6 | 5/7 | 0/6 | 4/6 | 9/25 |
@@ -87,7 +93,7 @@ Notes:
 
 ## Current Takeaways
 
-- Best under 8 GiB: `Unsloth Gemma4 E2B it UD Q5_K_XL` is the only current row in this bucket after enabling vision, with `20/25` Hard TS and very high throughput.
+- Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is the strongest small model so far: `21/25` Hard TS, `86.95 tok/s` text, working vision, and `60/60` on both agent tests.
 - Best under 14 GiB: `Unsloth Gemma4 E4B it UD Q5_K_XL` now has the best all-around result in this bucket: `23/25`, working vision, and `60/60` on both agent tests.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
 - The new MTP rows were fast, especially `Jackrong Qwopus3.6 35B A3B v1 MTP Q4_K_M`, but they underperformed badly on Hard TypeScript in this benchmark.
