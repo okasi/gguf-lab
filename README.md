@@ -45,7 +45,6 @@ Notes:
 
 | Model | Source / file | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| Smoffyy Gemma4 E4B Instruct Pure Q5_K_M | `Smoffyy/Gemma4-E4B-Instruct-Pure-GGUF` / `Gemma4-E4B-q5_k_m.gguf` | 8.76 GiB | 47.99 tok/s | 44.39 tok/s | 44.65 tok/s | 20/25 | 60/60 | 60/60 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-UD-Q5_K_XL.gguf` | 8.95 GiB | 46.39 tok/s | 42.36 tok/s | 42.82 tok/s | 23/25 | 60/60 | 60/60 |
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | `Jackrong/Qwopus3.5-4B-v3-GGUF` / `Qwen3.5-4B.Q5_K_M.gguf` | 10.07 GiB | 56.36 tok/s | 53.18 tok/s | 53.33 tok/s | 6/25 | 55/60 | 55/60 |
 | Unsloth Qwen3.5 4B Q5_K_M | `unsloth/Qwen3.5-4B-GGUF` / `Qwen3.5-4B-Q5_K_M.gguf` | 10.13 GiB | 54.90 tok/s | 52.30 tok/s | 52.38 tok/s | 12/25 | 48/60 | 55/60 |
@@ -74,7 +73,6 @@ Notes:
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
 | Unsloth Gemma4 E2B it Q6_K | 3/6 | 1/7 | 4/6 | 6/6 | 14/25 |
 | Unsloth Gemma4 E2B it UD Q6_K_XL | 0/6 | 0/7 | 4/6 | 6/6 | 10/25 |
-| Smoffyy Gemma4 E4B Instruct Pure Q5_K_M | 6/6 | 4/7 | 4/6 | 6/6 | 20/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
 | Unsloth Qwen3.5 4B Q5_K_M | 5/6 | 0/7 | 1/6 | 6/6 | 12/25 |
