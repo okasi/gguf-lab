@@ -38,8 +38,6 @@ Notes:
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | Unsloth Gemma4 E2B it Q5_K_M | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q5_K_XL.gguf` | 5.50 GiB | 85.34 tok/s | 76.75 tok/s | 74.92 tok/s | 20/25 | 60/60 | 60/60 |
-| Unsloth Gemma4 E2B it Q6_K | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q6_K.gguf` | 5.68 GiB | 77.43 tok/s | 69.36 tok/s | 67.74 tok/s | 14/25 | 60/60 | 60/60 |
-| Unsloth Gemma4 E2B it UD Q6_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q6_K_XL.gguf` | 5.96 GiB | 73.02 tok/s | 64.75 tok/s | 64.80 tok/s | 10/25 | 60/60 | 60/60 |
 
 ### Models Under 14 GiB Mem
 
@@ -71,8 +69,6 @@ Notes:
 |---|---:|---:|---:|---:|---:|
 | Unsloth Gemma4 E2B it Q5_K_M | 5/6 | 6/7 | 4/6 | 6/6 | 21/25 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
-| Unsloth Gemma4 E2B it Q6_K | 3/6 | 1/7 | 4/6 | 6/6 | 14/25 |
-| Unsloth Gemma4 E2B it UD Q6_K_XL | 0/6 | 0/7 | 4/6 | 6/6 | 10/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
 | Unsloth Qwen3.5 4B Q5_K_M | 5/6 | 0/7 | 1/6 | 6/6 | 12/25 |
