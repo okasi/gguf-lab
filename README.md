@@ -16,21 +16,52 @@ The Qwopus 35B files below are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF`. They s
 
 | Model | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Qwopus35 IQ4_XS | 23.43 GiB | 70.97 tok/s | 62.81 tok/s | 63.62 tok/s | 16/25 | 60/60 | 60/60 |
-| Qwopus35 Q5_K_M | 28.98 GiB | 65.68 tok/s | 59.20 tok/s | 59.84 tok/s | 23/25 | 60/60 | 60/60 |
-| TeichAI Gemma4 Opus Q5_K_M | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
+| Jackrong Qwopus3.6 35B A3B v1 IQ4_XS (`Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf`) | 23.43 GiB | 70.97 tok/s | 62.81 tok/s | 63.62 tok/s | 16/25 | 60/60 | 60/60 |
+| Jackrong Qwopus3.6 35B A3B v1 Q5_K_M (`Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf`) | 28.98 GiB | 65.68 tok/s | 59.20 tok/s | 59.84 tok/s | 23/25 | 60/60 | 60/60 |
+| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M (`gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf`) | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
+
+### Qwopus35 vs Gemma4 Q5 Params
+
+The text, vision, tool, and Hard TypeScript runs used these shared params:
+
+```bash
+--ctx-size 262144
+--cache-type-k q8_0
+--cache-type-v q8_0
+--ngl 99
+-np 1
+--flash-attn on
+--temp 0.75
+--top-p 0.95
+--top-k 20
+--min-p 0.0
+--presence-penalty 0.0
+--repeat-penalty 1.0
+--seed 3407
+-n 32768
+```
+
+Model-specific params:
+
+| Model | Repo | Model file | Vision file | Extra params |
+|---|---|---|---|---|
+| Jackrong Qwopus3.6 35B A3B v1 IQ4_XS | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | `mmproj.gguf` | `--image-min-tokens 1024`; no MTP/speculative flags |
+| Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | `mmproj.gguf` | `--image-min-tokens 1024`; no MTP/speculative flags |
+| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | `TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` | `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf` | `mmproj-gemma4-26B-A4B-F16.gguf` | `--reasoning auto` |
+
+Agent scoped/broad runs used the same model load settings, but with `--temp 0.2`, `-n 8192`, and the benchmark's OpenAI-style tool-calling scenarios.
 
 ## Hard TypeScript Breakdown
 
 | Model | LRU cache | Expression parser | Weighted grid Dijkstra | Topological scheduler | Total |
 |---|---:|---:|---:|---:|---:|
-| Qwopus35 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
-| Qwopus35 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
-| TeichAI Gemma4 Opus Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| Jackrong Qwopus3.6 35B A3B v1 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
+| Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 
 ## Current Takeaway
 
-Qwopus35 Q5_K_M is the best Qwopus35 balance from this set: it keeps most of the speed advantage over Gemma4 Q5 while matching its hard TypeScript score.
+Jackrong Qwopus3.6 35B A3B v1 Q5_K_M is the best Qwopus35 balance from this set: it keeps most of the speed advantage over Gemma4 Q5 while matching its hard TypeScript score.
 
 ## Requested Batch - 2026-05-26
 
