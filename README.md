@@ -58,11 +58,9 @@ Notes:
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | `Jackrong/Qwopus3.5-4B-v3-GGUF` / `Qwen3.5-4B.Q5_K_M.gguf` | 10.07 GiB | 56.36 tok/s | 53.18 tok/s | 53.33 tok/s | 6/25 | 55/60 | 55/60 |
 | Unsloth Qwen3.5 4B Q5_K_M | `unsloth/Qwen3.5-4B-GGUF` / `Qwen3.5-4B-Q5_K_M.gguf` | 10.13 GiB | 54.90 tok/s | 52.30 tok/s | 52.38 tok/s | 12/25 | 48/60 | 55/60 |
 | Unsloth Qwen3.5 9B Q4_K_M | `unsloth/Qwen3.5-9B-GGUF` / `Qwen3.5-9B-Q4_K_M.gguf` | 12.59 GiB | 37.46 tok/s | 36.56 tok/s | 36.58 tok/s | 11/25 | 44/60 | 53/60 |
-| Unsloth Qwen3.5 9B UD Q4_K_XL | `unsloth/Qwen3.5-9B-GGUF` / `Qwen3.5-9B-UD-Q4_K_XL.gguf` | 12.84 GiB | 35.58 tok/s | 34.82 tok/s | 35.13 tok/s | 11/25 | 40/60 | 53/60 |
 | Jackrong Qwopus3.5 9B Coder Exp Q5_K_M | `Jackrong/Qwopus3.5-9B-Coder-GGUF` / `Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf` | 13.21 GiB | 33.87 tok/s | 33.08 tok/s | 33.68 tok/s | 11/25 | 55/60 | 55/60 |
 | Smoffyy Qwen3.5 9B Revised Q5_K_M | `Smoffyy/Qwen3.5-9B-Instruct-Revised-GGUF` / `Qwen3.5-9B-Revised-q5_k_m.gguf` | 13.21 GiB | 33.82 tok/s | 33.04 tok/s | 33.26 tok/s | 5/25 | 55/60 | 60/60 |
 | Unsloth Qwen3.5 9B Q5_K_M | `unsloth/Qwen3.5-9B-GGUF` / `Qwen3.5-9B-Q5_K_M.gguf` | 13.31 GiB | 30.96 tok/s | 31.54 tok/s | 31.58 tok/s | 8/25 | 44/60 | 48/60 |
-| Unsloth Qwen3.5 9B UD Q5_K_XL | `unsloth/Qwen3.5-9B-GGUF` / `Qwen3.5-9B-UD-Q5_K_XL.gguf` | 13.47 GiB | 32.01 tok/s | 31.15 tok/s | 31.40 tok/s | 6/25 | 44/60 | 48/60 |
 | Smoffyy GPT-OSS 20B Instruct Pure | `Smoffyy/gpt-oss-20b-instruct-pure-gguf` / `gpt-oss.gguf` | 13.74 GiB | 47.13 tok/s | N/A | 44.78 tok/s | 23/25 | 53/60 | 56/60 |
 
 ### Models Over 14 GiB Mem
@@ -98,11 +96,9 @@ Notes:
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
 | Unsloth Qwen3.5 4B Q5_K_M | 5/6 | 0/7 | 1/6 | 6/6 | 12/25 |
 | Unsloth Qwen3.5 9B Q4_K_M | 5/6 | 4/7 | 0/6 | 2/6 | 11/25 |
-| Unsloth Qwen3.5 9B UD Q4_K_XL | 5/6 | 0/7 | 0/6 | 6/6 | 11/25 |
 | Jackrong Qwopus3.5 9B Coder Exp Q5_K_M | 5/6 | 0/7 | 0/6 | 6/6 | 11/25 |
 | Smoffyy Qwen3.5 9B Revised Q5_K_M | 0/6 | 0/7 | 4/6 | 1/6 | 5/25 |
 | Unsloth Qwen3.5 9B Q5_K_M | 1/6 | 4/7 | 3/6 | 0/6 | 8/25 |
-| Unsloth Qwen3.5 9B UD Q5_K_XL | 0/6 | 6/7 | 0/6 | 0/6 | 6/25 |
 | Smoffyy GPT-OSS 20B Instruct Pure | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Smoffyy Gemma4 26B A4B Instruct Pure Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.6 35B A3B v1 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
