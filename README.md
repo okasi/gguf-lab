@@ -29,6 +29,8 @@ Notes:
 - `Smoffyy GPT-OSS 20B Instruct Pure` was run at `--ctx-size 8192` with `--jinja` and `--reasoning auto`; the repo did not provide an `mmproj`.
 - `Unsloth Gemma4 E4B`, `Unsloth Gemma4 E2B`, `Smoffyy Gemma4 E4B`, and `Smoffyy Gemma4 26B A4B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
 - `Unsloth Gemma4 E4B it IQ4_NL` used a clean retry result after the first benchmark attempt closed the connection during the initial request.
+- `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
+- `Jackrong Qwopus3.6 27B v2 Q4_K_S` used a `4096` code-token retry after the first `12000`-token run stalled on the expression-parser harness; treat its Hard TS score as retry-limited.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 
 ## Combined Benchmark Results
@@ -72,9 +74,15 @@ Notes:
 | TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | `TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf` | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
 | Jackrong Qwopus3.6 35B A3B v1 Q4_K_M | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-Q4_K_M.gguf` | 25.50 GiB | 70.03 tok/s | 62.95 tok/s | 63.05 tok/s | 16/25 | 55/60 | 55/60 |
 | Unsloth Gemma4 26B A4B it UD Q5_K_M | `unsloth/gemma-4-26B-A4B-it-GGUF` / `gemma-4-26B-A4B-it-UD-Q5_K_M.gguf` | 26.32 GiB | 46.86 tok/s | 42.96 tok/s | 44.25 tok/s | 23/25 | 60/60 | 56/60 |
+| Jackrong Qwopus3.6 27B v2 IQ4_XS | `Jackrong/Qwopus3.6-27B-v2-GGUF` / `Qwopus3.6-27B-v2-IQ4_XS.gguf` | 26.41 GiB | 13.42 tok/s | 13.30 tok/s | 13.30 tok/s | 16/25 | 55/60 | 55/60 |
+| Jackrong Qwopus3.6 27B v2 Q4_K_S | `Jackrong/Qwopus3.6-27B-v2-GGUF` / `Qwopus3.6-27B-v2-Q4_K_S.gguf` | 26.57 GiB | 13.57 tok/s | 13.48 tok/s | 13.61 tok/s | 10/25 | 55/60 | 55/60 |
 | Smoffyy Qwen3.6 27B Revised Q4_K_M | `Smoffyy/Qwen3.6-27B-Instruct-Revised-GGUF` / `Qwen3.6-27B-Revised-q4_k_m.gguf` | 27.38 GiB | 12.80 tok/s | 12.71 tok/s | 12.82 tok/s | 16/25 | 55/60 | 55/60 |
+| Jackrong Qwopus3.6 27B v2 Q4_K_M | `Jackrong/Qwopus3.6-27B-v2-GGUF` / `Qwopus3.6-27B-v2-Q4_K_M.gguf` | 27.63 GiB | 12.78 tok/s | 12.72 tok/s | 12.86 tok/s | 16/25 | 55/60 | 55/60 |
+| Jackrong Qwopus3.6 27B v2 MTP IQ4_XS | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 28.63 GiB | 20.19 tok/s | 21.46 tok/s | 21.80 tok/s | 23/25 | 55/60 | 55/60 |
+| Jackrong Qwopus3.6 27B v2 MTP Q4_K_S | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_S.gguf` | 28.78 GiB | 21.78 tok/s | 23.53 tok/s | 25.74 tok/s | 13/25 | 55/60 | 55/60 |
 | Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 28.98 GiB | 65.68 tok/s | 59.20 tok/s | 59.84 tok/s | 23/25 | 60/60 | 60/60 |
 | Smoffyy Qwen3.6 35B A3B Revised Q5_K_M | `Smoffyy/Qwen3.6-35B-A3B-Instruct-Revised-GGUF` / `Qwen3.6-35B-A3B-Revised-q5_k_m.gguf` | 28.98 GiB | 65.12 tok/s | 59.22 tok/s | 59.38 tok/s | 23/25 | 56/60 | 55/60 |
+| Jackrong Qwopus3.6 27B v2 MTP Q4_K_M | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 29.85 GiB | 19.19 tok/s | 22.24 tok/s | 22.62 tok/s | 16/25 | 55/60 | 55/60 |
 
 ## Hard TypeScript Breakdown
 
@@ -105,15 +113,22 @@ Notes:
 | TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.6 35B A3B v1 Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 | Unsloth Gemma4 26B A4B it UD Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| Jackrong Qwopus3.6 27B v2 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
+| Jackrong Qwopus3.6 27B v2 Q4_K_S | 6/6 | 0/7 | 4/6 | 0/6 | 10/25 |
 | Smoffyy Qwen3.6 27B Revised Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
+| Jackrong Qwopus3.6 27B v2 Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
+| Jackrong Qwopus3.6 27B v2 MTP IQ4_XS | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| Jackrong Qwopus3.6 27B v2 MTP Q4_K_S | 6/6 | 0/7 | 1/6 | 6/6 | 13/25 |
 | Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Smoffyy Qwen3.6 35B A3B Revised Q5_K_M | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| Jackrong Qwopus3.6 27B v2 MTP Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 
 ## Current Takeaways
 
 - Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is still the strongest small model by quality at `21/25`, while `Unsloth Gemma4 E2B it Q4_K_M` is the fastest at `95.84 tok/s` text and `89.32 tok/s` image.
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
 - In the new E4B quant batch, `Q4_K_M` beat `Q5_K_M` on both speed and Hard TS; `Q4_1` matched the `23/25` code score but was slower.
-- New Unsloth Qwen3.5 9B rows all loaded vision successfully, but their hard TypeScript scores were weak; `Q4_K_M` and `UD Q4_K_XL` tied the best coding result in that set at `11/25`.
+- New Unsloth Qwen3.5 9B rows all loaded vision successfully, but their hard TypeScript scores were weak; `Q4_K_M` was the best remaining row in that set at `11/25`.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
+- Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`; MTP helped speed versus the non-MTP `13 tok/s` range, but most Q4 rows still failed the expression-parser task.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
