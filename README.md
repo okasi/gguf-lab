@@ -36,6 +36,8 @@ Notes:
 
 | Model | Source / file | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
+| Unsloth Gemma4 E2B it Q4_K_M | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q4_K_M.gguf` | 5.12 GiB | 95.84 tok/s | 89.32 tok/s | 82.61 tok/s | 20/25 | 55/60 | 60/60 |
+| Unsloth Gemma4 E2B it UD Q4_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | 5.23 GiB | 93.06 tok/s | 85.01 tok/s | 80.27 tok/s | 17/25 | 60/60 | 60/60 |
 | Unsloth Gemma4 E2B it Q5_K_M | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q5_K_XL.gguf` | 5.50 GiB | 85.34 tok/s | 76.75 tok/s | 74.92 tok/s | 20/25 | 60/60 | 60/60 |
 
@@ -67,6 +69,8 @@ Notes:
 
 | Model | LRU cache | Expression parser | Weighted grid Dijkstra | Topological scheduler | Total |
 |---|---:|---:|---:|---:|---:|
+| Unsloth Gemma4 E2B it Q4_K_M | 6/6 | 4/7 | 4/6 | 6/6 | 20/25 |
+| Unsloth Gemma4 E2B it UD Q4_K_XL | 6/6 | 1/7 | 4/6 | 6/6 | 17/25 |
 | Unsloth Gemma4 E2B it Q5_K_M | 5/6 | 6/7 | 4/6 | 6/6 | 21/25 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
@@ -86,7 +90,7 @@ Notes:
 
 ## Current Takeaways
 
-- Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is the strongest small model so far: `21/25` Hard TS, `86.95 tok/s` text, working vision, and `60/60` on both agent tests.
+- Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is still the strongest small model by quality at `21/25`, while `Unsloth Gemma4 E2B it Q4_K_M` is the fastest at `95.84 tok/s` text and `89.32 tok/s` image.
 - Best under 14 GiB: `Unsloth Gemma4 E4B it UD Q5_K_XL` now has the best all-around result in this bucket: `23/25`, working vision, and `60/60` on both agent tests.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
