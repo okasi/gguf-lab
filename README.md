@@ -2,6 +2,17 @@
 
 Benchmarks run locally on Windows with llama.cpp Vulkan.
 
+## Hardware
+
+Runs were done on a Strix Halo mini PC:
+
+- System: `GMKtec NucBox_EVO-X2`
+- APU: `AMD Ryzen AI Max+ 395 w/ Radeon 8060S`
+- CPU: `16` cores / `32` threads
+- GPU backend: llama.cpp Vulkan on `AMD Radeon(TM) 8060S Graphics`
+- System RAM reported by Windows: `32 GiB`
+- llama.cpp device log for these runs reported `Vulkan0 : AMD Radeon(TM) 8060S Graphics` and AVX512-capable CPU paths.
+
 Unless noted otherwise, runs used:
 
 - `--ctx-size 262144`
