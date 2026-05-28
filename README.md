@@ -132,6 +132,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | Source / model file | Overall | Quality | Speed | Reliability | Gen tok/s | Toolcall | Coding | Data extract | Instruct | Reason/math | Agent |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 72.2 | 73.6 | 78.7 | 64.0 | 73.82 | 80.0 | 83.3 | 43.6 | 64.4 | 73.3 | 96.9 |
+| `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 79.0 | 82.7 | 70.8 | 77.5 | 47.64 | 73.3 | 100.0 | 89.4 | 70.0 | 66.7 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q4_K_M.gguf` | 75.7 | 79.9 | 70.5 | 70.8 | 46.86 | 73.3 | 85.4 | 84.6 | 65.6 | 73.3 | 96.9 |
 | `TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf` | 65.6 | 65.0 | 70.6 | 62.9 | 47.03 | 83.3 | 93.8 | 42.6 | 33.3 | 40.0 | 96.9 |
 | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 72.3 | 73.5 | 73.3 | 68.5 | 54.89 | 81.7 | 83.3 | 46.8 | 65.6 | 73.3 | 90.6 |
@@ -141,7 +142,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is the strongest remaining small model by quality at `21/25`, and it is also the fastest remaining row in this bucket.
 - Compact E4B note: `IQ4_XS` is the best tested sub-8 GiB E4B quant at `20/25` Hard TS with working vision and full agent scores.
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
-- BenchLoop highlighted-model result: `Unsloth Gemma4 E4B it Q4_K_M` had the best BenchLoop overall score (`75.7`) and quality score (`79.9`) among the highlighted models, mainly because it was much stronger on BenchLoop data extraction than the larger highlighted models.
+- BenchLoop highlighted-model result: `Unsloth Gemma4 E4B it IQ4_XS` had the best BenchLoop overall score (`79.0`) and quality score (`82.7`) among the tested highlighted/small E4B models, with a perfect BenchLoop coding score (`100.0`) and strong data extraction (`89.4`).
 - BenchLoop caution: `TeichAI Gemma4 26B A4B Opus Distill Q5_K_M` scored highest on BenchLoop coding (`93.8`) and matched the best agent score (`96.9`), but its instruction-following and reason/math scores were weak in this harness.
 - In the E4B quant batch, `Q4_K_M` is the remaining standout: `23/25` Hard TS with full agent scores.
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
