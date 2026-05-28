@@ -39,6 +39,7 @@ Notes:
 - `Image gen` is `N/A` when no usable vision run was completed.
 - Jackrong Qwopus3.6 35B files are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF`; they support vision through `mmproj.gguf`, but the repo is not marked MTP-preserved, so these were run without speculative MTP flags.
 - `Smoffyy GPT-OSS 20B Instruct Pure` was run at `--ctx-size 8192` with `--jinja` and `--reasoning auto`; the repo did not provide an `mmproj`.
+- The BenchLoop `Smoffyy GPT-OSS 20B Instruct Pure` row required a stable server profile with prompt/cache reuse disabled: `--cache-ram 0 --no-cache-prompt --ctx-checkpoints 0 --checkpoint-every-n-tokens -1 --slot-prompt-similarity 0.0`. The default prompt-checkpoint path caused llama-server to disappear during early BenchLoop tool prompts.
 - `Unsloth Gemma4 E4B`, `Unsloth Gemma4 E2B`, `Smoffyy Gemma4 E4B`, and `Smoffyy Gemma4 26B A4B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
@@ -125,7 +126,7 @@ Notes:
 | Unsloth Gemma4 E2B it Q5_K_M | `q5_1/q5_1` | 5.13 GiB | 86.42 tok/s | 75.08 tok/s | 74.98 tok/s | 13/25 |
 | Unsloth Gemma4 E2B it Q5_K_M | `q4_0/q8_0` | 5.19 GiB | 87.15 tok/s | 75.36 tok/s | 75.52 tok/s | 14/25 |
 
-## BenchLoop Highlighted Models
+## BenchLoop Results
 
 BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint with `--harness raw`, `BENCHLOOP_NO_SUBMIT=1`, and suites `speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent`. The Qwopus3.6 27B MTP row used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`. These scores are not directly comparable with the custom tables above because BenchLoop uses its own tasks and scoring; it also has no image/vision suite.
 
@@ -137,6 +138,9 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 75.7 | 82.9 | 55.0 | 76.4 | 19.96 | 85.0 | 75.0 | 72.8 | 87.8 | 80.0 | 96.9 |
 | `TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf` | 65.6 | 65.0 | 70.6 | 62.9 | 47.03 | 83.3 | 93.8 | 42.6 | 33.3 | 40.0 | 96.9 |
 | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 72.3 | 73.5 | 73.3 | 68.5 | 54.89 | 81.7 | 83.3 | 46.8 | 65.6 | 73.3 | 90.6 |
+| `Jackrong/Qwopus3.5-9B-Coder-GGUF` / `Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf` | 67.8 | 71.7 | 63.2 | 62.9 | 31.34 | 91.7 | 85.4 | 38.5 | 60.0 | 73.3 | 81.2 |
+| `Smoffyy/gpt-oss-20b-instruct-pure-gguf` / `gpt-oss.gguf` | 78.4 | 83.2 | 67.9 | 76.4 | 40.55 | 88.3 | 93.8 | 76.4 | 83.3 | 66.7 | 90.6 |
+| `LiquidAI/LFM2.5-8B-A1B-GGUF` / `LFM2.5-8B-A1B-Q5_K_M.gguf` | 42.9 | 32.3 | 86.5 | 31.5 | 113.72 | 21.7 | 60.4 | 0.0 | 2.2 | 53.3 | 56.2 |
 
 ## Current Takeaways
 
@@ -145,6 +149,9 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
 - BenchLoop highlighted-model result: `Unsloth Gemma4 E4B it IQ4_XS` had the best BenchLoop overall score (`79.0`) and quality score (`82.7`) among the tested highlighted/small E4B models, with a perfect BenchLoop coding score (`100.0`) and strong data extraction (`89.4`).
 - BenchLoop Qwopus27 note: `Jackrong Qwopus3.6 27B v2 MTP IQ4_XS` had the highest BenchLoop quality score (`82.9`) and the strongest instruction/reasoning mix, but the lower speed score (`55.0`, `19.96 tok/s`) kept overall at `75.7`.
+- BenchLoop GPT-OSS note: `Smoffyy GPT-OSS 20B Instruct Pure` is now the second-best BenchLoop overall row (`78.4`) and the best newly added row, with strong coding (`93.8`), toolcall (`88.3`), and data extraction (`76.4`), but it needed the stable no-cache/no-checkpoint server profile above.
+- BenchLoop LFM note: `LiquidAI LFM2.5 8B A1B Q5_K_M` was by far the fastest BenchLoop row (`113.72 tok/s`, speed `86.5`), but quality collapsed (`32.3`) because tool-call grammar/data extraction/instruction-following failed badly in this harness.
+- BenchLoop Qwopus3.5 Coder note: `Jackrong Qwopus3.5 9B Coder Exp Q5_K_M` had good toolcall (`91.7`) and coding (`85.4`) scores, but it was very verbose in BenchLoop and took about 30.5 minutes to finish at `31.34 tok/s`.
 - BenchLoop caution: `TeichAI Gemma4 26B A4B Opus Distill Q5_K_M` scored highest on BenchLoop coding (`93.8`) and matched the best agent score (`96.9`), but its instruction-following and reason/math scores were weak in this harness.
 - In the E4B quant batch, `Q4_K_M` is the remaining standout: `23/25` Hard TS with full agent scores.
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
