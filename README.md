@@ -52,6 +52,9 @@ Notes:
 |---|---:|---:|---:|---:|---:|---:|---:|
 | **`unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf`** | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
 | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q5_K_XL.gguf` | 5.50 GiB | 85.34 tok/s | 76.75 tok/s | 74.92 tok/s | 20/25 | 60/60 | 60/60 |
+| `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-UD-IQ3_XXS.gguf` | 7.26 GiB | 57.73 tok/s | 51.98 tok/s | 52.76 tok/s | 12/25 | 60/60 | 60/60 |
+| `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q3_K_M.gguf` | 7.58 GiB | 54.17 tok/s | 49.34 tok/s | 49.77 tok/s | 17/25 | 60/60 | 60/60 |
+| `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 7.94 GiB | 52.62 tok/s | 48.81 tok/s | 49.70 tok/s | 20/25 | 60/60 | 60/60 |
 
 ### Models Under 14 GiB Mem
 
@@ -87,6 +90,9 @@ Notes:
 |---|---:|---:|---:|---:|---:|
 | **Unsloth Gemma4 E2B it Q5_K_M** | 5/6 | 6/7 | 4/6 | 6/6 | 21/25 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
+| Unsloth Gemma4 E4B it UD IQ3_XXS | 0/6 | 2/7 | 4/6 | 6/6 | 12/25 |
+| Unsloth Gemma4 E4B it Q3_K_M | 3/6 | 5/7 | 3/6 | 6/6 | 17/25 |
+| Unsloth Gemma4 E4B it IQ4_XS | 6/6 | 4/7 | 4/6 | 6/6 | 20/25 |
 | **Unsloth Gemma4 E4B it Q4_K_M** | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
@@ -126,6 +132,7 @@ Notes:
 ## Current Takeaways
 
 - Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is the strongest remaining small model by quality at `21/25`, and it is also the fastest remaining row in this bucket.
+- Compact E4B note: `IQ4_XS` is the best of the newly tested sub-8 GiB E4B quants at `20/25`; `Q3_K_M` and `UD-IQ3_XXS` save memory and gain speed, but the hard TypeScript score drops to `17/25` and `12/25`.
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
 - In the E4B quant batch, `Q4_K_M` is the remaining standout: `23/25` Hard TS with full agent scores.
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
