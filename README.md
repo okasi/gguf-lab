@@ -43,7 +43,7 @@ Notes:
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector, Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors, and Holo with the local 35B A3B projector. LFM2.5 and MiniCPM5 were run text-only.
 - `Unsloth Gemma4 E4B`, `Unsloth Gemma4 E2B`, `Smoffyy Gemma4 E4B`, and `Smoffyy Gemma4 26B A4B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
 - `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` was rerun on llama.cpp `b9518`, which can load Gemma4 vision through the local `mmproj-gemma-4-12B-it-Q8_0.gguf` sidecar. The main custom/agent rerun used the model-card sampler profile `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `--image-min-tokens 280`, and explicit non-thinking mode via `--reasoning off --chat-template-kwargs '{"enable_thinking":false}'`; without the non-thinking override, llama.cpp routed long scratchpad output into `reasoning_content` and exhausted the code benchmark token budget.
-- QAT Gemma4 rows were run on llama.cpp `b9534` with `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. `unsloth/gemma-4-12B-it-qat-GGUF` needed `--cache-ram 0 --ctx-checkpoints 0` for stable vision on b9534; with default prompt cache/checkpoints, the server closed the connection after image processing.
+- QAT Gemma4 E4B/12B rows were run on llama.cpp `b9534`; the 26B A4B QAT row was run on `b9535`. All used `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. The 12B and 26B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 - KV-cache comparison rows used the same benchmark harness as the main table, changing only `--cache-type-k` and `--cache-type-v`; agent suites were not rerun for KV variants.
@@ -85,6 +85,7 @@ Notes:
 
 | Source / model file | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---:|---:|---:|---:|---:|---:|---:|
+| `unsloth/gemma-4-26B-A4B-it-qat-GGUF` / `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 18.80 GiB | 67.89 tok/s | 61.85 tok/s | 64.84 tok/s | 23/25 | N/A | N/A |
 | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 23.43 GiB | 70.97 tok/s | 62.81 tok/s | 63.62 tok/s | 16/25 | 60/60 | 60/60 |
 | `Smoffyy/Gemma4-26B-A4B-Instruct-Pure-GGUF` / `Gemma4-26B-A4B-q5_k_m.gguf` | 24.27 GiB | 51.27 tok/s | 47.10 tok/s | 48.10 tok/s | 23/25 | 60/60 | 56/60 |
 | **`TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf`** | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
@@ -117,6 +118,7 @@ Notes:
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
 | Unsloth Qwen3.5 4B Q5_K_M | 5/6 | 0/7 | 1/6 | 6/6 | 12/25 |
 | Unsloth Gemma4 12B it QAT UD Q4_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
+| Unsloth Gemma4 26B A4B it QAT UD Q4_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Unsloth Gemma4 12B it UD Q4_K_XL | 0/6 | 0/7 | 1/6 | 4/6 | 5/25 |
 | Unsloth Qwen3.5 9B Q4_K_M | 5/6 | 4/7 | 0/6 | 2/6 | 11/25 |
 | Jackrong Qwopus3.5 9B Coder Exp Q5_K_M | 5/6 | 0/7 | 0/6 | 6/6 | 11/25 |
@@ -160,6 +162,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q5_K_M.gguf` | 78.3 | 83.7 | 68.5 | 74.2 | 41.93 | 73.3 | 100.0 | 83.3 | 75.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` | 56.3 | 57.5 | 55.8 | 53.9 | 20.77 | 80.0 | 85.4 | 23.8 | 25.6 | 33.3 | 96.9 |
 | `unsloth/gemma-4-12B-it-qat-GGUF` / `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 78.6 | 85.7 | 57.6 | 79.8 | 23.01 | 83.3 | 100.0 | 80.5 | 73.3 | 80.0 | 96.9 |
+| `unsloth/gemma-4-26B-A4B-it-qat-GGUF` / `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 79.0 | 82.7 | 73.6 | 75.3 | 56.01 | 83.3 | 83.3 | 80.4 | 78.9 | 73.3 | 96.9 |
 | `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `converted BF16 GGUF` | 42.8 | 46.0 | 38.5 | 39.3 | 7.98 | 36.7 | 100.0 | 0.0 | 6.7 | 73.3 | 59.4 |
 | `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `converted BF16 GGUF, recommended temp1/topk64/ctx65k` | 42.8 | 46.0 | 38.3 | 39.3 | 7.92 | 36.7 | 100.0 | 0.0 | 6.7 | 73.3 | 59.4 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 75.7 | 82.9 | 55.0 | 76.4 | 19.96 | 85.0 | 75.0 | 72.8 | 87.8 | 80.0 | 96.9 |
@@ -185,6 +188,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - BenchLoop Gemma E4B Q5 note: `Unsloth Gemma4 E4B it Q5_K_M` raised the E4B quality score to `83.7` and kept perfect coding/agent results, but the lower speed (`41.93 tok/s`) kept overall just behind IQ4_XS.
 - QAT E4B note: `Unsloth Gemma4 E4B it QAT UD-Q4_K_XL` is fast for its memory class (`59.10 tok/s` custom text, `49.25 tok/s` BenchLoop) and has perfect BenchLoop coding, but its custom Hard TS score was weak at `14/25`.
 - QAT 12B note: `Unsloth Gemma4 12B it QAT UD-Q4_K_XL` is a major improvement over the non-QAT 12B row in both custom Hard TS (`23/25` vs `5/25`) and BenchLoop (`78.6` vs `56.3` overall), while staying at about `10.39 GiB` load memory.
+- QAT 26B note: `Unsloth Gemma4 26B A4B it QAT UD-Q4_K_XL` is the strongest Gemma BenchLoop row so far at `79.0` overall, with working vision, `23/25` custom Hard TS, `67.89 tok/s` custom text, and `18.80 GiB` load memory.
 - Gemma4 12B caution: only `UD-Q4_K_XL` is retained from the `unsloth/gemma-4-12b-it-GGUF` batch. The b9518 recommended-settings rerun now has working vision (`22.02 tok/s`) and improved custom Hard TS from `1/25` to `5/25`, but it is still a weak local coding row compared with the smaller E4B/E2B Gemma rows.
 - Gemma4 12B no-overrides ablation: omitting `--min-p 0.0`, `--image-min-tokens 280`, `--reasoning off`, and `--chat-template-kwargs '{"enable_thinking":false}'` kept the simple vision test working (`21.65 tok/s`) and improved custom scoped-agent scoring to `60/60`, but custom Hard TS dropped to `0/25` because code generations again spent the full `4096` tokens in reasoning. BenchLoop was effectively unchanged (`56.3` overall, `20.87 tok/s`).
 - BenchLoop Gemma4 12B note: the retained `UD-Q4_K_XL` rerun landed at `56.3` overall with strong BenchLoop agent (`96.9`), improved BenchLoop coding (`85.4`), and working b9518 vision, but weak data extraction, instruction following, and reason/math.
