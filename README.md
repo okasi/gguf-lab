@@ -1,6 +1,6 @@
 # Local LLM Experiments
 
-Benchmarks run locally on Windows with llama.cpp Vulkan.
+Benchmarks run locally on Windows with llama.cpp Vulkan. New benchmark results should be added to this README when they are run.
 
 ## Hardware
 
@@ -43,6 +43,7 @@ Notes:
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector, Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors, and Holo with the local 35B A3B projector. LFM2.5 and MiniCPM5 were run text-only.
 - `Unsloth Gemma4 E4B`, `Unsloth Gemma4 E2B`, `Smoffyy Gemma4 E4B`, and `Smoffyy Gemma4 26B A4B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
 - `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` was rerun on llama.cpp `b9518`, which can load Gemma4 vision through the local `mmproj-gemma-4-12B-it-Q8_0.gguf` sidecar. The main custom/agent rerun used the model-card sampler profile `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `--image-min-tokens 280`, and explicit non-thinking mode via `--reasoning off --chat-template-kwargs '{"enable_thinking":false}'`; without the non-thinking override, llama.cpp routed long scratchpad output into `reasoning_content` and exhausted the code benchmark token budget.
+- QAT Gemma4 rows were run on llama.cpp `b9534` with `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. `unsloth/gemma-4-12B-it-qat-GGUF` needed `--cache-ram 0 --ctx-checkpoints 0` for stable vision on b9534; with default prompt cache/checkpoints, the server closed the connection after image processing.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 - KV-cache comparison rows used the same benchmark harness as the main table, changing only `--cache-type-k` and `--cache-type-v`; agent suites were not rerun for KV variants.
@@ -60,6 +61,7 @@ Notes:
 | **`unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf`** | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
 | `Smoffyy/Gemma4-E2B-Instruct-Pure-GGUF` / `Gemma4-E2B-q5_k_m.gguf` | 5.40 GiB | 88.77 tok/s | 81.19 tok/s | 76.48 tok/s | 19/25 | 55/60 | 60/60 |
 | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-UD-Q5_K_XL.gguf` | 5.50 GiB | 85.34 tok/s | 76.75 tok/s | 74.92 tok/s | 20/25 | 60/60 | 60/60 |
+| `unsloth/gemma-4-E4B-it-qat-GGUF` / `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 7.06 GiB | 59.10 tok/s | 56.15 tok/s | 56.15 tok/s | 14/25 | N/A | N/A |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 7.94 GiB | 52.62 tok/s | 48.81 tok/s | 49.70 tok/s | 20/25 | 60/60 | 60/60 |
 
 ### Models Under 14 GiB Mem
@@ -71,6 +73,7 @@ Notes:
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-UD-Q5_K_XL.gguf` | 8.95 GiB | 46.39 tok/s | 42.36 tok/s | 42.82 tok/s | 23/25 | 60/60 | 60/60 |
 | `Jackrong/Qwopus3.5-4B-v3-GGUF` / `Qwen3.5-4B.Q5_K_M.gguf` | 10.07 GiB | 56.36 tok/s | 53.18 tok/s | 53.33 tok/s | 6/25 | 55/60 | 55/60 |
 | `unsloth/Qwen3.5-4B-GGUF` / `Qwen3.5-4B-Q5_K_M.gguf` | 10.13 GiB | 54.90 tok/s | 52.30 tok/s | 52.38 tok/s | 12/25 | 48/60 | 55/60 |
+| `unsloth/gemma-4-12B-it-qat-GGUF` / `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 10.39 GiB | 25.40 tok/s | 24.56 tok/s | 25.45 tok/s | 23/25 | N/A | N/A |
 | `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` | 11.16 GiB | 22.06 tok/s | 22.02 tok/s | 22.72 tok/s | 5/25 | 55/60 | 56/60 |
 | `unsloth/Qwen3.5-9B-GGUF` / `Qwen3.5-9B-Q4_K_M.gguf` | 12.59 GiB | 37.46 tok/s | 36.56 tok/s | 36.58 tok/s | 11/25 | 44/60 | 53/60 |
 | `Jackrong/Qwopus3.5-9B-Coder-GGUF` / `Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf` | 13.21 GiB | 33.87 tok/s | 33.08 tok/s | 33.68 tok/s | 11/25 | 55/60 | 55/60 |
@@ -106,12 +109,14 @@ Notes:
 | openbmb MiniCPM5 1B Q4_K_M | 0/6 | 0/7 | 0/6 | 0/6 | 0/25 |
 | Smoffyy Gemma4 E2B Instruct Pure Q5_K_M | 6/6 | 3/7 | 4/6 | 6/6 | 19/25 |
 | Unsloth Gemma4 E2B it UD Q5_K_XL | 6/6 | 5/7 | 4/6 | 5/6 | 20/25 |
+| Unsloth Gemma4 E4B it QAT UD Q4_K_XL | 0/6 | 4/7 | 4/6 | 6/6 | 14/25 |
 | Unsloth Gemma4 E4B it IQ4_XS | 6/6 | 4/7 | 4/6 | 6/6 | 20/25 |
 | **Unsloth Gemma4 E4B it Q4_K_M** | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | LiquidAI LFM2.5 8B A1B Q5_K_M | 0/6 | 0/7 | 0/6 | 1/6 | 1/25 |
 | Unsloth Gemma4 E4B it UD Q5_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.5 4B v3 Q5_K_M | 0/6 | 0/7 | 0/6 | 6/6 | 6/25 |
 | Unsloth Qwen3.5 4B Q5_K_M | 5/6 | 0/7 | 1/6 | 6/6 | 12/25 |
+| Unsloth Gemma4 12B it QAT UD Q4_K_XL | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Unsloth Gemma4 12B it UD Q4_K_XL | 0/6 | 0/7 | 1/6 | 4/6 | 5/25 |
 | Unsloth Qwen3.5 9B Q4_K_M | 5/6 | 4/7 | 0/6 | 2/6 | 11/25 |
 | Jackrong Qwopus3.5 9B Coder Exp Q5_K_M | 5/6 | 0/7 | 0/6 | 6/6 | 11/25 |
@@ -141,15 +146,6 @@ Notes:
 | Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | `q4_0/q4_0` | 27.72 GiB | 65.59 tok/s | 59.04 tok/s | 58.86 tok/s | 23/25 |
 | Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | `q5_1/q5_1` | 28.16 GiB | 63.67 tok/s | 58.94 tok/s | 59.41 tok/s | 16/25 |
 | Jackrong Qwopus3.6 35B A3B v1 Q5_K_M | `q4_0/q8_0` | 28.38 GiB | 64.62 tok/s | 58.90 tok/s | 59.24 tok/s | 20/25 |
-| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | `q4_0/q4_0` | 22.93 GiB | 54.02 tok/s | 49.52 tok/s | 50.86 tok/s | 23/25 |
-| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | `q5_1/q5_1` | 23.40 GiB | 53.89 tok/s | 49.32 tok/s | 50.17 tok/s | 19/25 |
-| TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M | `q4_0/q8_0` | 23.59 GiB | 53.59 tok/s | 49.65 tok/s | 50.50 tok/s | 19/25 |
-| Unsloth Gemma4 E4B it Q4_K_M | `q4_0/q4_0` | 7.18 GiB | 52.60 tok/s | 47.88 tok/s | 48.52 tok/s | 17/25 |
-| Unsloth Gemma4 E4B it Q4_K_M | `q5_1/q5_1` | 7.53 GiB | 52.61 tok/s | 48.14 tok/s | 48.41 tok/s | 19/25 |
-| Unsloth Gemma4 E4B it Q4_K_M | `q4_0/q8_0` | 7.69 GiB | 52.44 tok/s | 48.00 tok/s | 48.22 tok/s | 16/25 |
-| Unsloth Gemma4 E2B it Q5_K_M | `q4_0/q4_0` | 5.01 GiB | 85.94 tok/s | 75.28 tok/s | 75.31 tok/s | 11/25 |
-| Unsloth Gemma4 E2B it Q5_K_M | `q5_1/q5_1` | 5.13 GiB | 86.42 tok/s | 75.08 tok/s | 74.98 tok/s | 13/25 |
-| Unsloth Gemma4 E2B it Q5_K_M | `q4_0/q8_0` | 5.19 GiB | 87.15 tok/s | 75.36 tok/s | 75.52 tok/s | 14/25 |
 
 ## BenchLoop Results
 
@@ -159,9 +155,11 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 72.2 | 73.6 | 78.7 | 64.0 | 73.82 | 80.0 | 83.3 | 43.6 | 64.4 | 73.3 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 79.0 | 82.7 | 70.8 | 77.5 | 47.64 | 73.3 | 100.0 | 89.4 | 70.0 | 66.7 | 96.9 |
+| `unsloth/gemma-4-E4B-it-qat-GGUF` / `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 78.4 | 82.8 | 71.3 | 74.2 | 49.25 | 75.0 | 100.0 | 81.8 | 63.3 | 80.0 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q4_K_M.gguf` | 75.7 | 79.9 | 70.5 | 70.8 | 46.86 | 73.3 | 85.4 | 84.6 | 65.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q5_K_M.gguf` | 78.3 | 83.7 | 68.5 | 74.2 | 41.93 | 73.3 | 100.0 | 83.3 | 75.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` | 56.3 | 57.5 | 55.8 | 53.9 | 20.77 | 80.0 | 85.4 | 23.8 | 25.6 | 33.3 | 96.9 |
+| `unsloth/gemma-4-12B-it-qat-GGUF` / `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 78.6 | 85.7 | 57.6 | 79.8 | 23.01 | 83.3 | 100.0 | 80.5 | 73.3 | 80.0 | 96.9 |
 | `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `converted BF16 GGUF` | 42.8 | 46.0 | 38.5 | 39.3 | 7.98 | 36.7 | 100.0 | 0.0 | 6.7 | 73.3 | 59.4 |
 | `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `converted BF16 GGUF, recommended temp1/topk64/ctx65k` | 42.8 | 46.0 | 38.3 | 39.3 | 7.92 | 36.7 | 100.0 | 0.0 | 6.7 | 73.3 | 59.4 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 75.7 | 82.9 | 55.0 | 76.4 | 19.96 | 85.0 | 75.0 | 72.8 | 87.8 | 80.0 | 96.9 |
@@ -185,6 +183,8 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
 - BenchLoop highlighted-model result: `Unsloth Gemma4 E4B it IQ4_XS` had the best BenchLoop overall score (`79.0`) and quality score (`82.7`) among the tested highlighted/small E4B models, with a perfect BenchLoop coding score (`100.0`) and strong data extraction (`89.4`).
 - BenchLoop Gemma E4B Q5 note: `Unsloth Gemma4 E4B it Q5_K_M` raised the E4B quality score to `83.7` and kept perfect coding/agent results, but the lower speed (`41.93 tok/s`) kept overall just behind IQ4_XS.
+- QAT E4B note: `Unsloth Gemma4 E4B it QAT UD-Q4_K_XL` is fast for its memory class (`59.10 tok/s` custom text, `49.25 tok/s` BenchLoop) and has perfect BenchLoop coding, but its custom Hard TS score was weak at `14/25`.
+- QAT 12B note: `Unsloth Gemma4 12B it QAT UD-Q4_K_XL` is a major improvement over the non-QAT 12B row in both custom Hard TS (`23/25` vs `5/25`) and BenchLoop (`78.6` vs `56.3` overall), while staying at about `10.39 GiB` load memory.
 - Gemma4 12B caution: only `UD-Q4_K_XL` is retained from the `unsloth/gemma-4-12b-it-GGUF` batch. The b9518 recommended-settings rerun now has working vision (`22.02 tok/s`) and improved custom Hard TS from `1/25` to `5/25`, but it is still a weak local coding row compared with the smaller E4B/E2B Gemma rows.
 - Gemma4 12B no-overrides ablation: omitting `--min-p 0.0`, `--image-min-tokens 280`, `--reasoning off`, and `--chat-template-kwargs '{"enable_thinking":false}'` kept the simple vision test working (`21.65 tok/s`) and improved custom scoped-agent scoring to `60/60`, but custom Hard TS dropped to `0/25` because code generations again spent the full `4096` tokens in reasoning. BenchLoop was effectively unchanged (`56.3` overall, `20.87 tok/s`).
 - BenchLoop Gemma4 12B note: the retained `UD-Q4_K_XL` rerun landed at `56.3` overall with strong BenchLoop agent (`96.9`), improved BenchLoop coding (`85.4`), and working b9518 vision, but weak data extraction, instruction following, and reason/math.
