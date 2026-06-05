@@ -42,7 +42,8 @@ Notes:
 - The BenchLoop `Smoffyy GPT-OSS 20B Instruct Pure` row required a stable server profile with prompt/cache reuse disabled: `--cache-ram 0 --no-cache-prompt --ctx-checkpoints 0 --checkpoint-every-n-tokens -1 --slot-prompt-similarity 0.0`. The default prompt-checkpoint path caused llama-server to disappear during early BenchLoop tool prompts.
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector, Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors, and Holo with the local 35B A3B projector. LFM2.5 was run text-only.
 - `Unsloth Gemma4 E4B` and `Unsloth Gemma4 E2B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
-- QAT Gemma4 E4B/12B rows were run on llama.cpp `b9534`; the 26B A4B QAT row was run on `b9535`. All used `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. The 12B and 26B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
+- QAT Gemma4 E4B/12B rows were run on llama.cpp `b9534`; the E2B QAT/mobile, E4B mobile, and 26B A4B QAT rows were run on `b9535`. All used `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. The 12B and 26B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
+- The 2026-06-06 QAT mobile repos did not include `mmproj` files; their vision runs used the matching non-mobile QAT F16 projector. llama.cpp capped the effective slot context to `131072` for these Gemma QAT/mobile rows.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 - KV-cache comparison rows used the same benchmark harness as the main table, changing only `--cache-type-k` and `--cache-type-v`; agent suites were not rerun for KV variants.
@@ -53,7 +54,10 @@ Notes:
 
 | Source / model file | Load mem | Text gen | Image gen | Tool gen | Hard TS | Agent scoped | Agent broad |
 |---|---:|---:|---:|---:|---:|---:|---:|
+| `unsloth/gemma-4-E2B-it-qat-mobile-GGUF` / `gemma-4-E2B-it-qat-UD-Q2_K_XL.gguf` | 3.25 GiB | 52.93 tok/s | 31.68 tok/s | 25.72 tok/s | 0/25 | N/A | N/A |
+| `unsloth/gemma-4-E2B-it-qat-GGUF` / `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 4.24 GiB | 105.28 tok/s | 94.38 tok/s | 94.39 tok/s | 13/25 | N/A | N/A |
 | **`unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf`** | 5.38 GiB | 86.95 tok/s | 76.96 tok/s | 75.01 tok/s | 21/25 | 60/60 | 60/60 |
+| `unsloth/gemma-4-E4B-it-qat-mobile-GGUF` / `gemma-4-E4B-it-qat-UD-Q2_K_XL.gguf` | 6.46 GiB | 37.21 tok/s | 38.31 tok/s | 39.71 tok/s | 0/25 | N/A | N/A |
 | `unsloth/gemma-4-E4B-it-qat-GGUF` / `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 7.06 GiB | 59.10 tok/s | 56.15 tok/s | 56.15 tok/s | 14/25 | N/A | N/A |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 7.94 GiB | 52.62 tok/s | 48.81 tok/s | 49.70 tok/s | 20/25 | 60/60 | 60/60 |
 
@@ -98,7 +102,10 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | Source / model file | Overall | Quality | Speed | Reliability | Gen tok/s | Toolcall | Coding | Data extract | Instruct | Reason/math | Agent |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `unsloth/gemma-4-E2B-it-GGUF` / `gemma-4-E2B-it-Q5_K_M.gguf` | 72.2 | 73.6 | 78.7 | 64.0 | 73.82 | 80.0 | 83.3 | 43.6 | 64.4 | 73.3 | 96.9 |
+| `unsloth/gemma-4-E2B-it-qat-GGUF` / `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 80.4 | 83.1 | 80.7 | 74.2 | 82.72 | 90.0 | 100.0 | 70.7 | 67.8 | 73.3 | 96.9 |
+| `unsloth/gemma-4-E2B-it-qat-mobile-GGUF` / `gemma-4-E2B-it-qat-UD-Q2_K_XL.gguf` | 22.6 | 12.7 | 62.3 | 12.4 | 29.93 | 23.3 | 0.0 | 0.0 | 0.0 | 0.0 | 53.1 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-IQ4_XS.gguf` | 79.0 | 82.7 | 70.8 | 77.5 | 47.64 | 73.3 | 100.0 | 89.4 | 70.0 | 66.7 | 96.9 |
+| `unsloth/gemma-4-E4B-it-qat-mobile-GGUF` / `gemma-4-E4B-it-qat-UD-Q2_K_XL.gguf` | 65.3 | 69.1 | 64.8 | 57.3 | 34.27 | 71.7 | 68.8 | 69.1 | 50.0 | 67.3 | 87.5 |
 | `unsloth/gemma-4-E4B-it-qat-GGUF` / `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 78.4 | 82.8 | 71.3 | 74.2 | 49.25 | 75.0 | 100.0 | 81.8 | 63.3 | 80.0 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q4_K_M.gguf` | 75.7 | 79.9 | 70.5 | 70.8 | 46.86 | 73.3 | 85.4 | 84.6 | 65.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q5_K_M.gguf` | 78.3 | 83.7 | 68.5 | 74.2 | 41.93 | 73.3 | 100.0 | 83.3 | 75.6 | 73.3 | 96.9 |
@@ -116,8 +123,9 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 
 ## Current Takeaways
 
-- Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` is the strongest remaining small model by quality at `21/25`, and it is also the fastest remaining row in this bucket.
+- Best under 8 GiB: `Unsloth Gemma4 E2B it Q5_K_M` remains the strongest small model by custom Hard TS quality at `21/25`; `Unsloth Gemma4 E2B it QAT UD-Q4_K_XL` is the speed/BenchLoop standout at `105.28 tok/s` custom text and `80.4` BenchLoop overall, but only `13/25` on the harder TypeScript set.
 - Compact E4B note: `IQ4_XS` is the best tested sub-8 GiB E4B quant at `20/25` Hard TS with working vision and full agent scores.
+- QAT mobile caution: the two Q2 mobile rows are memory-light and vision/tool smoke tests passed, but both scored `0/25` on custom Hard TS; the E2B mobile Q2 row also collapsed in BenchLoop quality (`22.6` overall).
 - Best under 14 GiB: `Unsloth Gemma4 E4B it Q4_K_M` is now the best all-around result in this bucket: `23/25`, `52.93 tok/s` text, working vision, and `60/60` on both agent tests.
 - BenchLoop highlighted-model result: `Unsloth Gemma4 E4B it IQ4_XS` had the best BenchLoop overall score (`79.0`) and quality score (`82.7`) among the tested highlighted/small E4B models, with a perfect BenchLoop coding score (`100.0`) and strong data extraction (`89.4`).
 - BenchLoop Gemma E4B Q5 note: `Unsloth Gemma4 E4B it Q5_K_M` raised the E4B quality score to `83.7` and kept perfect coding/agent results, but the lower speed (`41.93 tok/s`) kept overall just behind IQ4_XS.
