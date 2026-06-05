@@ -46,6 +46,9 @@ Notes:
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 - KV-cache comparison rows used the same benchmark harness as the main table, changing only `--cache-type-k` and `--cache-type-v`; agent suites were not rerun for KV variants.
+- `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` was published as a Transformers BF16 `model.safetensors`, not GGUF. It was converted locally to `AEON-Gemma-4-12B-it-AEON-Abliterated-K4-BF16.BF16.gguf` with llama.cpp `b9518` and latest Transformers source because older `b9222` did not support `Gemma4UnifiedForConditionalGeneration` conversion/runtime.
+- AEON Gemma4 12B reports `131072` max context, so it was run at `--ctx-size 131072` with the usual `q8_0/q8_0` KV cache and Vulkan settings. Its repo did not include `preprocessor_config.json`, so native mmproj conversion failed on missing `image_mean`; vision was tested with the base `ggml-org/gemma-4-12B-it-GGUF` / `mmproj-gemma-4-12B-it-Q8_0.gguf` sidecar, and the local image test passed.
+- AEON BenchLoop completed scoring but exited non-zero when BenchLoop tried to write under `C:\Users\Admin\.bench-loop\runs` from this restricted session. The row below is taken from BenchLoop stdout.
 
 ## Combined Benchmark Results
 
@@ -84,6 +87,7 @@ Notes:
 | **`TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf`** | 24.27 GiB | 54.14 tok/s | 49.73 tok/s | 50.81 tok/s | 23/25 | 60/60 | 57/60 |
 | `Hcompany/Holo-3.1-35B-A3B-GGUF` / `q4_k_m.gguf` | 25.50 GiB | 68.77 tok/s | 64.09 tok/s | 64.62 tok/s | 13/25 | 60/60 | 60/60 |
 | `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` / `Qwopus3.6-35B-A3B-v1-Q4_K_M.gguf` | 25.50 GiB | 70.03 tok/s | 62.95 tok/s | 63.05 tok/s | 16/25 | 55/60 | 55/60 |
+| `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `model.safetensors -> AEON-Gemma-4-12B-it-AEON-Abliterated-K4-BF16.BF16.gguf` | 26.74 GiB | 7.93 tok/s | 8.15 tok/s | 8.42 tok/s | 23/25 | 40/60 | 40/60 |
 | `Smoffyy/Qwen3.6-27B-Instruct-Revised-GGUF` / `Qwen3.6-27B-Revised-q4_k_m.gguf` | 27.38 GiB | 12.80 tok/s | 12.71 tok/s | 12.82 tok/s | 16/25 | 55/60 | 55/60 |
 | `Jackrong/Qwopus3.6-27B-v2-GGUF` / `Qwopus3.6-27B-v2-Q4_K_M.gguf` | 27.63 GiB | 12.78 tok/s | 12.72 tok/s | 12.86 tok/s | 16/25 | 55/60 | 55/60 |
 | `jcbtc/qwen3.6-35b-a3b-crown-halo-mtp-dynamic` / `Qwen3.6-35B-A3B-HaloStrix-Dyn-MTP-v7.gguf` | 28.42 GiB | 63.37 tok/s | 59.11 tok/s | 58.92 tok/s | 6/25 | 56/60 | 30/60 |
@@ -118,6 +122,7 @@ Notes:
 | Jackrong Qwopus3.6 35B A3B v1 IQ4_XS | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 | **TeichAI Gemma4 26B A4B Claude Opus Distill v2 Q5_K_M** | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Jackrong Qwopus3.6 35B A3B v1 Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
+| AEON-7 Gemma4 12B it AEON Abliterated K4 BF16 converted BF16 | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
 | Smoffyy Qwen3.6 27B Revised Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 | Jackrong Qwopus3.6 27B v2 Q4_K_M | 6/6 | 0/7 | 4/6 | 6/6 | 16/25 |
 | Jackrong Qwopus3.6 27B v2 MTP IQ4_XS | 6/6 | 7/7 | 4/6 | 6/6 | 23/25 |
@@ -155,6 +160,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q4_K_M.gguf` | 75.7 | 79.9 | 70.5 | 70.8 | 46.86 | 73.3 | 85.4 | 84.6 | 65.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-E4B-it-GGUF` / `gemma-4-E4B-it-Q5_K_M.gguf` | 78.3 | 83.7 | 68.5 | 74.2 | 41.93 | 73.3 | 100.0 | 83.3 | 75.6 | 73.3 | 96.9 |
 | `unsloth/gemma-4-12b-it-GGUF` / `gemma-4-12b-it-UD-Q4_K_XL.gguf` | 56.2 | 56.5 | 58.2 | 53.9 | 23.75 | 80.0 | 77.1 | 17.5 | 27.8 | 40.0 | 96.9 |
+| `AEON-7/Gemma-4-12B-it-AEON-Abliterated-K4-BF16` / `converted BF16 GGUF` | 42.8 | 46.0 | 38.5 | 39.3 | 7.98 | 36.7 | 100.0 | 0.0 | 6.7 | 73.3 | 59.4 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 75.7 | 82.9 | 55.0 | 76.4 | 19.96 | 85.0 | 75.0 | 72.8 | 87.8 | 80.0 | 96.9 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 74.0 | 80.1 | 55.7 | 75.3 | 20.69 | 85.0 | 77.1 | 73.3 | 74.4 | 80.0 | 90.6 |
 | `TeichAI/gemma-4-26B-A4B-it-Claude-Opus-Distill-v2-GGUF` / `gemma-4-26B-A4B-it-Claude-Opus-Distill.q5_k_m.gguf` | 65.6 | 65.0 | 70.6 | 62.9 | 47.03 | 83.3 | 93.8 | 42.6 | 33.3 | 40.0 | 96.9 |
@@ -178,6 +184,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - BenchLoop Gemma E4B Q5 note: `Unsloth Gemma4 E4B it Q5_K_M` raised the E4B quality score to `83.7` and kept perfect coding/agent results, but the lower speed (`41.93 tok/s`) kept overall just behind IQ4_XS.
 - Gemma4 12B caution: only `UD-Q4_K_XL` is retained from the `unsloth/gemma-4-12b-it-GGUF` batch. It loaded at `11.46 GiB`, but the local llama.cpp build could not load the repo's `gemma4uv` projector, and custom Hard TS was weak at `1/25`.
 - BenchLoop Gemma4 12B note: the retained `UD-Q4_K_XL` row was verbose in BenchLoop raw mode and landed at `56.2` overall despite a strong agent score (`96.9`) and decent BenchLoop coding score (`77.1`).
+- AEON Gemma4 12B BF16 note: the converted BF16 row has strong custom Hard TS (`23/25`) and working image input via the base Q8 mmproj, but it is slow on Strix Halo Vulkan (`7.93 tok/s` text, `26.74 GiB` load memory) and weak in custom agent/tool-loop scoring (`40/60` scoped and broad). BenchLoop was mixed: perfect coding (`100.0`) and decent reason/math (`73.3`), but poor toolcall/data-extract/instruction scores, for `42.8` overall.
 - BenchLoop Qwopus27 note: `Jackrong Qwopus3.6 27B v2 MTP IQ4_XS` remains the better Qwopus27 BenchLoop row overall (`75.7` vs `74.0`), while Q4_K_M was slightly faster (`20.69 tok/s`) but weaker on instruction/agent scores.
 - BenchLoop GPT-OSS note: `Smoffyy GPT-OSS 20B Instruct Pure` is now the second-best BenchLoop overall row (`78.4`) and the best newly added row, with strong coding (`93.8`), toolcall (`88.3`), and data extraction (`76.4`), but it needed the stable no-cache/no-checkpoint server profile above.
 - BenchLoop LFM note: the 2026-06-03 rerun of `LiquidAI LFM2.5 8B A1B Q5_K_M` improved sharply to `69.0` overall and `67.9` quality at `114.66 tok/s`; it is still weak on the custom Hard TS test (`1/25`).
