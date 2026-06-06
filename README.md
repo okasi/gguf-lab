@@ -43,7 +43,7 @@ Notes:
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector, Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors, and Holo with the local 35B A3B projector. LFM2.5 was run text-only.
 - `Unsloth Gemma4 E4B` and `Unsloth Gemma4 E2B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
 - QAT Gemma4 E4B/12B rows were run on llama.cpp `b9534`; the E2B QAT and 26B A4B QAT rows were run on `b9535`. All used `--temp 1.0 --top-p 0.95 --top-k 64`, `--ctx-size 262144`, `q8_0/q8_0` KV cache, and `--reasoning off`. The 12B and 26B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
-- `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the MTP repo did not include an `mmproj`, so vision used `mmproj.gguf` from `Jackrong/Qwopus3.6-27B-v2-GGUF`.
+- `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the 2026-06-06 sampler sweep used `mmproj-F32.gguf` from the MTP repo snapshot.
 - TeichAI Gemma4 Opus Q5 used `--reasoning auto`.
 - KV-cache comparison rows used the same benchmark harness as the main table, changing only `--cache-type-k` and `--cache-type-v`; agent suites were not rerun for KV variants.
 
@@ -133,6 +133,23 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | 0.95 | 28.25 GiB | 63.19 tok/s | 59.32 tok/s | 60.06 tok/s | 10/25 | 74.3 | 75.8 | 58.63 tok/s | 77.1 | 88.3 | 96.9 |
 | 1.00 | 28.25 GiB | 63.25 tok/s | 59.50 tok/s | 60.17 tok/s | 16/25 | 74.3 | 75.8 | 58.28 tok/s | 77.1 | 88.3 | 96.9 |
 
+## Qwopus27 MTP Sampler Sweep
+
+`Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` was rerun on 2026-06-06 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0` KV cache, `--ctx-size 262144`, llama.cpp `b9535`, and `CodeMaxTokens 7168`. BenchLoop was not repeated for this sampler sweep because its active requests override the server sampler to `temperature=0.0`; the retained BenchLoop quant-level rows above remain the useful BenchLoop reference.
+
+| Source / model file | Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS |
+|---|---:|---:|---:|---:|---:|---:|
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 0.80 | 27.65 GiB | 18.19 tok/s | 22.98 tok/s | 23.89 tok/s | 16/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 0.85 | 27.65 GiB | 19.53 tok/s | 23.01 tok/s | 23.17 tok/s | 13/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 0.90 | 27.65 GiB | 19.39 tok/s | 23.18 tok/s | 24.10 tok/s | 12/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 0.95 | 27.65 GiB | 20.34 tok/s | 23.48 tok/s | 24.45 tok/s | 13/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 1.00 | 27.65 GiB | 19.65 tok/s | 22.56 tok/s | 23.91 tok/s | 6/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.80 | 28.87 GiB | 20.11 tok/s | 23.62 tok/s | 23.57 tok/s | 12/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.85 | 28.87 GiB | 21.54 tok/s | 23.26 tok/s | 23.24 tok/s | 16/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.90 | 28.87 GiB | 20.60 tok/s | 23.84 tok/s | 23.45 tok/s | 16/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.95 | 28.87 GiB | 21.36 tok/s | 24.18 tok/s | 23.46 tok/s | 16/25 |
+| `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 1.00 | 28.87 GiB | 21.22 tok/s | 24.30 tok/s | 24.89 tok/s | 10/25 |
+
 ## Current Takeaways
 
 - Best under 8 GiB: `Unsloth Gemma4 E4B it IQ4_XS` is the strongest retained small model by custom Hard TS quality at `20/25`; `Unsloth Gemma4 E2B it QAT UD-Q4_K_XL` is the speed/BenchLoop standout at `105.28 tok/s` custom text and `80.4` BenchLoop overall, but only `13/25` on the harder TypeScript set.
@@ -155,5 +172,6 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - KV cache caution: the smaller highlighted Gemma models lost substantial Hard TS score with all three tested lower-precision KV settings, so their main `q8_0/q8_0` rows remain the safer quality choice.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
 - Qwopus35 Q5 sampler sweep: `temp=0.80` and `temp=0.85` tied for best custom coding quality at `23/25` Hard TS. BenchLoop stayed almost flat from `0.60` through `1.00`, so the custom hard TypeScript score is the useful separator here.
+- Qwopus27 MTP sampler sweep: none of the tested `0.80-1.00` temperatures beat the retained `0.75` IQ4_XS baseline. In this sweep, IQ4_XS was best at `temp=0.80` (`16/25`), while Q4_K_M tied at `16/25` for `temp=0.85`, `0.90`, and `0.95`.
 - Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
