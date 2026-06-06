@@ -120,6 +120,12 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 
 | Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS | BenchLoop overall | BenchLoop quality | BenchLoop gen | BenchLoop coding | BenchLoop toolcall | BenchLoop agent |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.60 | 28.25 GiB | 62.91 tok/s | 59.77 tok/s | 60.02 tok/s | 16/25 | 74.0 | 75.8 | 54.62 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.65 | 28.25 GiB | 63.72 tok/s | 59.47 tok/s | 60.75 tok/s | 16/25 | 74.1 | 75.8 | 55.62 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.70 | 28.25 GiB | 62.01 tok/s | 60.38 tok/s | 60.32 tok/s | 12/25 | 74.1 | 75.8 | 55.21 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.75 | 28.25 GiB | 60.63 tok/s | 60.37 tok/s | 58.81 tok/s | 16/25 | 74.1 | 75.8 | 55.43 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.80 | 28.25 GiB | 60.54 tok/s | 54.20 tok/s | 60.98 tok/s | 23/25 | 74.2 | 75.8 | 57.80 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.82 | 28.25 GiB | 62.38 tok/s | 56.73 tok/s | 59.14 tok/s | 16/25 | 74.2 | 75.8 | 57.25 tok/s | 77.1 | 88.3 | 96.9 |
 | 0.85 | 28.25 GiB | 58.82 tok/s | 58.51 tok/s | 59.95 tok/s | 23/25 | 74.2 | 75.8 | 57.19 tok/s | 77.1 | 88.3 | 96.9 |
 | 0.88 | 28.25 GiB | 63.27 tok/s | 59.64 tok/s | 59.57 tok/s | 16/25 | 74.3 | 75.8 | 58.41 tok/s | 77.1 | 88.3 | 96.9 |
 | 0.90 | 28.25 GiB | 63.44 tok/s | 59.25 tok/s | 59.49 tok/s | 16/25 | 74.2 | 75.8 | 57.98 tok/s | 77.1 | 88.3 | 96.9 |
@@ -148,6 +154,6 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
 - KV cache caution: the smaller highlighted Gemma models lost substantial Hard TS score with all three tested lower-precision KV settings, so their main `q8_0/q8_0` rows remain the safer quality choice.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
-- Qwopus35 Q5 sampler sweep: `temp=0.85` is the best retained coding setting in this sweep (`23/25` Hard TS). BenchLoop was almost flat from `0.85` through `1.00`, but the custom hard TypeScript benchmark degraded above `0.85`.
+- Qwopus35 Q5 sampler sweep: `temp=0.80` and `temp=0.85` tied for best custom coding quality at `23/25` Hard TS. BenchLoop stayed almost flat from `0.60` through `1.00`, so the custom hard TypeScript score is the useful separator here.
 - Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
