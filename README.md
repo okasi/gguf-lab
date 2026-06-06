@@ -114,6 +114,19 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `jcbtc/qwen3.6-35b-a3b-crown-halo-mtp-dynamic` / `Qwen3.6-35B-A3B-HaloStrix-Dyn-MTP-v7.gguf` | 26.8 | 15.2 | 73.8 | 14.6 | 56.26 | 38.3 | 0.0 | 0.0 | 0.0 | 0.0 | 53.1 |
 | `Hcompany/Holo-3.1-35B-A3B-GGUF` / `q4_k_m.gguf` | 76.6 | 79.0 | 74.7 | 73.0 | 59.33 | 81.7 | 75.0 | 85.7 | 67.8 | 66.7 | 96.9 |
 
+## Qwopus35 Q5 Sampler Sweep
+
+`Jackrong/Qwopus3.6-35B-A3B-v1-GGUF / Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` was rerun on 2026-06-06 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0` KV cache, `--ctx-size 262144`, and llama.cpp `b9535`. The custom benchmark used `CodeMaxTokens 7168`.
+
+| Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS | BenchLoop overall | BenchLoop quality | BenchLoop gen | BenchLoop coding | BenchLoop toolcall | BenchLoop agent |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.85 | 28.25 GiB | 58.82 tok/s | 58.51 tok/s | 59.95 tok/s | 23/25 | 74.2 | 75.8 | 57.19 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.88 | 28.25 GiB | 63.27 tok/s | 59.64 tok/s | 59.57 tok/s | 16/25 | 74.3 | 75.8 | 58.41 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.90 | 28.25 GiB | 63.44 tok/s | 59.25 tok/s | 59.49 tok/s | 16/25 | 74.2 | 75.8 | 57.98 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.92 | 28.25 GiB | 61.80 tok/s | 59.49 tok/s | 59.99 tok/s | 16/25 | 74.3 | 75.8 | 58.90 tok/s | 77.1 | 88.3 | 96.9 |
+| 0.95 | 28.25 GiB | 63.19 tok/s | 59.32 tok/s | 60.06 tok/s | 10/25 | 74.3 | 75.8 | 58.63 tok/s | 77.1 | 88.3 | 96.9 |
+| 1.00 | 28.25 GiB | 63.25 tok/s | 59.50 tok/s | 60.17 tok/s | 16/25 | 74.3 | 75.8 | 58.28 tok/s | 77.1 | 88.3 | 96.9 |
+
 ## Current Takeaways
 
 - Best under 8 GiB: `Unsloth Gemma4 E4B it IQ4_XS` is the strongest retained small model by custom Hard TS quality at `20/25`; `Unsloth Gemma4 E2B it QAT UD-Q4_K_XL` is the speed/BenchLoop standout at `105.28 tok/s` custom text and `80.4` BenchLoop overall, but only `13/25` on the harder TypeScript set.
@@ -135,5 +148,6 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
 - KV cache caution: the smaller highlighted Gemma models lost substantial Hard TS score with all three tested lower-precision KV settings, so their main `q8_0/q8_0` rows remain the safer quality choice.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
+- Qwopus35 Q5 sampler sweep: `temp=0.85` is the best retained coding setting in this sweep (`23/25` Hard TS). BenchLoop was almost flat from `0.85` through `1.00`, but the custom hard TypeScript benchmark degraded above `0.85`.
 - Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
