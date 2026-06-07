@@ -135,7 +135,7 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 
 ## Qwopus27 MTP Sampler Sweep
 
-`Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` was rerun on 2026-06-06 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0` KV cache, `--ctx-size 262144`, llama.cpp `b9535`, and `CodeMaxTokens 7168`. BenchLoop was not repeated for this sampler sweep because its active requests override the server sampler to `temperature=0.0`; the retained BenchLoop quant-level rows above remain the useful BenchLoop reference.
+`Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` was rerun on 2026-06-06/2026-06-07 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0` KV cache, `--ctx-size 262144`, llama.cpp `b9535`, and `CodeMaxTokens 7168`. BenchLoop was patched locally before the 2026-06-07 rerun so its OpenAI-compatible requests pass through the requested sampler instead of forcing `temperature=0.0`; `/slots` verified live request temperature as `0.80` on the first fixed run.
 
 | Source / model file | Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS |
 |---|---:|---:|---:|---:|---:|---:|
@@ -149,6 +149,21 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.90 | 28.87 GiB | 20.60 tok/s | 23.84 tok/s | 23.45 tok/s | 16/25 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 0.95 | 28.87 GiB | 21.36 tok/s | 24.18 tok/s | 23.46 tok/s | 16/25 |
 | `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF` / `Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` | 1.00 | 28.87 GiB | 21.22 tok/s | 24.30 tok/s | 24.89 tok/s | 10/25 |
+
+BenchLoop fixed sampler rerun:
+
+| Quant | Temp | Overall | Quality | Speed | Reliability | Gen tok/s | Toolcall | Coding | Data extract | Instruct | Reason/math | Agent |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| IQ4_XS | 0.80 | 75.2 | 81.2 | 55.8 | 77.5 | 20.83 tok/s | 91.7 | 83.3 | 67.3 | 87.8 | 60.0 | 96.9 |
+| IQ4_XS | 0.85 | 76.5 | 83.4 | 56.4 | 77.5 | 21.50 tok/s | 91.7 | 75.0 | 82.6 | 81.1 | 73.3 | 96.9 |
+| IQ4_XS | 0.90 | 73.1 | 78.8 | 56.2 | 74.2 | 21.28 tok/s | 91.7 | 66.7 | 70.1 | 81.1 | 66.7 | 96.9 |
+| IQ4_XS | 0.95 | 77.1 | 83.6 | 56.0 | 79.8 | 21.02 tok/s | 91.7 | 75.0 | 70.3 | 94.5 | 73.3 | 96.9 |
+| IQ4_XS | 1.00 | 75.6 | 81.8 | 56.0 | 77.5 | 21.10 tok/s | 91.7 | 75.0 | 72.6 | 87.8 | 73.3 | 90.6 |
+| Q4_K_M | 0.80 | 71.5 | 76.7 | 56.6 | 71.9 | 21.78 tok/s | 91.7 | 50.0 | 73.6 | 74.5 | 73.3 | 96.9 |
+| Q4_K_M | 0.85 | 70.6 | 75.1 | 56.7 | 71.9 | 21.88 tok/s | 91.7 | 50.0 | 72.4 | 63.3 | 73.3 | 100.0 |
+| Q4_K_M | 0.90 | 72.5 | 78.0 | 56.9 | 73.0 | 22.08 tok/s | 96.7 | 75.0 | 56.0 | 70.0 | 73.3 | 96.9 |
+| Q4_K_M | 0.95 | 75.1 | 81.2 | 56.7 | 76.4 | 21.81 tok/s | 85.0 | 77.1 | 65.2 | 83.3 | 80.0 | 96.9 |
+| Q4_K_M | 1.00 | 72.7 | 78.5 | 56.5 | 73.0 | 21.60 tok/s | 85.0 | 75.0 | 68.4 | 72.2 | 73.3 | 96.9 |
 
 ## Current Takeaways
 
@@ -172,6 +187,6 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 - KV cache caution: the smaller highlighted Gemma models lost substantial Hard TS score with all three tested lower-precision KV settings, so their main `q8_0/q8_0` rows remain the safer quality choice.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
 - Qwopus35 Q5 sampler sweep: `temp=0.80` and `temp=0.85` tied for best custom coding quality at `23/25` Hard TS. BenchLoop stayed almost flat from `0.60` through `1.00`, so the custom hard TypeScript score is the useful separator here.
-- Qwopus27 MTP sampler sweep: none of the tested `0.80-1.00` temperatures beat the retained `0.75` IQ4_XS baseline. In this sweep, IQ4_XS was best at `temp=0.80` (`16/25`), while Q4_K_M tied at `16/25` for `temp=0.85`, `0.90`, and `0.95`.
+- Qwopus27 MTP sampler sweep: none of the tested `0.80-1.00` temperatures beat the retained `0.75` IQ4_XS custom baseline. In the custom sweep, IQ4_XS was best at `temp=0.80` (`16/25`), while Q4_K_M tied at `16/25` for `temp=0.85`, `0.90`, and `0.95`. In the fixed BenchLoop rerun, IQ4_XS `temp=0.95` was best overall (`77.1`), while Q4_K_M `temp=0.95` was its best row (`75.1`).
 - Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
