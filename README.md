@@ -119,6 +119,23 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `jcbtc/qwen3.6-35b-a3b-crown-halo-mtp-dynamic` / `Qwen3.6-35B-A3B-HaloStrix-Dyn-MTP-v7.gguf` | 26.8 | 15.2 | 73.8 | 14.6 | 56.26 | 38.3 | 0.0 | 0.0 | 0.0 | 0.0 | 53.1 |
 | `Hcompany/Holo-3.1-35B-A3B-GGUF` / `q4_k_m.gguf` | 76.6 | 79.0 | 74.7 | 73.0 | 59.33 | 81.7 | 75.0 | 85.7 | 67.8 | 66.7 | 96.9 |
 
+## Chadrock ROCmFP4 Attempt
+
+The requested Chadrock ROCmFP4 GGUFs were downloaded and smoke-tested on 2026-06-08. Both model cards state that stock llama.cpp cannot load these files and require `charlie12345/rocmfp4-llama` from the `mtp-rocmfp4-strix` branch. Local smoke tests confirmed the stock runtimes cannot read the custom ROCmFP4 GGUF tensor type.
+
+| Source / model file | Required profile from model card | Local stock smoke test | Hard TS | BenchLoop |
+|---|---|---|---:|---:|
+| `jcbtc/qwopus3.6-27b-v2-chadrock-rocmfp4-mtp` / `Qwopus3.6-27B-v2-MTP-BF16-to-ROCmFP4-STRIX_LEAN.gguf` | Custom `rocmfp4-llama`; 262k ctx; `ROCm0`; q4/q4 KV; draft-MTP depth 4; optional `mmproj-F32.mmproj` only with MTP off for vision | `llama.cpp b9535 Vulkan` and `b9222 HIP` both failed at load: `tensor 'output.weight' has invalid ggml type 101` | blocked | blocked |
+| `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` / `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | Custom `rocmfp4-llama`; 262k ctx; `Vulkan0`; f16/f16 KV; text-only `--no-mmproj`; draft-MTP depth 4 | `llama.cpp b9535 Vulkan` and `b9222 HIP` both failed at load: `tensor 'output.weight' has invalid ggml type 101` | blocked | blocked |
+
+Local blocker details:
+
+- `charlie12345/rocmfp4-llama` was cloned to the benchmark workspace.
+- WSL cannot start on this machine: `Wsl/0x80070422`.
+- No local `cmake`, `ninja`, `g++`, `cl`, `hipcc`, or `glslc` was available.
+- Chocolatey package install was attempted but failed because the shell is not elevated and cannot write to `C:\ProgramData\chocolatey`.
+- No Docker/Podman runtime was available.
+
 ## Qwopus35 Q5 Sampler Sweep
 
 `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF / Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` was rerun on 2026-06-06 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0` KV cache, `--ctx-size 262144`, and llama.cpp `b9535`. The custom benchmark used `CodeMaxTokens 7168`.
@@ -236,6 +253,7 @@ BenchLoop fixed sampler rerun:
 - BenchLoop LFM note: the 2026-06-03 rerun of `LiquidAI LFM2.5 8B A1B Q5_K_M` improved sharply to `69.0` overall and `67.9` quality at `114.66 tok/s`; it is still weak on the custom Hard TS test (`1/25`).
 - New requested large-model note: `Hcompany Holo 3.1 35B A3B Q4_K_M` was the strongest new large row overall: working vision, `13/25` Hard TS, `60/60` on both custom agent passes, and `76.6` BenchLoop overall with `96.9` BenchLoop agent.
 - New requested MTP caution: the jcbtc HaloStrix MTP variant loaded and ran, but its custom Hard TS score was poor at `6/25`.
+- Chadrock ROCmFP4 blocker: the requested jcbtc Chadrock ROCmFP4 models downloaded successfully, but both stock Vulkan and stock HIP llama.cpp builds failed to load them with unsupported GGUF tensor type `101`. Hard TS and BenchLoop are blocked until the custom `charlie12345/rocmfp4-llama` runtime can be built or obtained.
 - BenchLoop Qwopus3.5 Coder note: `Jackrong Qwopus3.5 9B Coder Exp Q5_K_M` had good toolcall (`91.7`) and coding (`85.4`) scores, but it was very verbose in BenchLoop and took about 30.5 minutes to finish at `31.34 tok/s`.
 - BenchLoop caution: `TeichAI Gemma4 26B A4B Opus Distill Q5_K_M` scored highest on BenchLoop coding (`93.8`) and matched the best agent score (`96.9`), but its instruction-following and reason/math scores were weak in this harness.
 - In the E4B quant batch, `Q4_K_M` is the remaining standout: `23/25` Hard TS with full agent scores.
