@@ -119,18 +119,20 @@ BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint 
 | `LiquidAI/LFM2.5-8B-A1B-GGUF` / `LFM2.5-8B-A1B-Q5_K_M.gguf` | 69.0 | 67.9 | 86.7 | 57.3 | 114.66 | 85.0 | 64.6 | 65.3 | 61.1 | 53.3 | 78.1 |
 | `jcbtc/qwen3.6-35b-a3b-crown-halo-mtp-dynamic` / `Qwen3.6-35B-A3B-HaloStrix-Dyn-MTP-v7.gguf` | 26.8 | 15.2 | 73.8 | 14.6 | 56.26 | 38.3 | 0.0 | 0.0 | 0.0 | 0.0 | 53.1 |
 | `Hcompany/Holo-3.1-35B-A3B-GGUF` / `q4_k_m.gguf` | 76.6 | 79.0 | 74.7 | 73.0 | 59.33 | 81.7 | 75.0 | 85.7 | 67.8 | 66.7 | 96.9 |
-| `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` / `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | 25.6 | 14.4 | 71.4 | 13.5 | 50.34 | 33.3 | 0.0 | 0.0 | 0.0 | 0.0 | 53.1 |
+| `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` / `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | 78.5 | 82.4 | 71.9 | 75.3 | 51.57 | 81.7 | 100.0 | 79.3 | 63.3 | 73.3 | 96.9 |
 
 ## Chadrock ROCmFP4 Results
 
-Tested on 2026-06-08. Stock llama.cpp b9535 Vulkan and b9222 HIP still fail to load these files with unsupported GGUF tensor type `101`, matching the model-card warning that they require `charlie12345/rocmfp4-llama` from the `mtp-rocmfp4-strix` branch. After installing build dependencies through elevated Chocolatey, the custom fork was built as native Windows Vulkan-only at `tools\rocmfp4-llama\build-rocmfp4-vulkan-win`; native HIP/ROCm was not built because this Windows install does not provide `hipcc`.
+Tested on 2026-06-08. Stock llama.cpp b9535 Vulkan and b9222 HIP still fail to load these files with unsupported GGUF tensor type `101`, matching the model-card warning that they require `charlie12345/rocmfp4-llama` from the `mtp-rocmfp4-strix` branch. After installing build dependencies through elevated Chocolatey, the custom fork was built as native Windows Vulkan at `tools\rocmfp4-llama\build-rocmfp4-vulkan-win`.
+
+HIP was fixed separately: AMD HIP SDK 7.1.1, MSVC Build Tools, and the Windows SDK were installed; `hipcc` works, `hipInfo` sees `gfx1151`, and the custom fork builds a HIP server at `tools\rocmfp4-llama\build-rocmfp4-hip-win-msvc`. The CHADROCK35 HIP runtime smoke still failed during model load with `ROCm error: unspecified launch failure`, so the trusted CHADROCK35 benchmark row remains the model-card Vulkan0 path.
 
 The custom runtime reported `Vulkan0 : AMD Radeon(TM) 8060S Graphics (114507 MiB, 108782 MiB free)` at startup. Exact post-load VRAM deltas were not captured by this harness, so this section reports load smoke data, throughput, and scores separately from the standard memory tables.
 
 | Source / model file | Runtime profile used | Smoke load | Hard TS | Hard TS gen | BenchLoop overall | BenchLoop quality | BenchLoop gen | BenchLoop coding | BenchLoop toolcall | Note |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | `jcbtc/qwopus3.6-27b-v2-chadrock-rocmfp4-mtp` / `Qwopus3.6-27B-v2-MTP-BF16-to-ROCmFP4-STRIX_LEAN.gguf` | Custom `rocmfp4-llama` Vulkan0; 262k ctx; q4/q4 KV; draft-MTP depth 4; temp 0.75/top_p 0.95/top_k 20; no mmproj for text runs | Ready in about 10s; 27.32B params; 14.81 GB model file | 22/25 | 29.86 tok/s | 72.5 | 78.2 | 20.13 tok/s | 75.0 | 85.0 | Solid BenchLoop/tool-agent result; the run was verbose because the server template kept thinking enabled. |
-| `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` / `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | Custom `rocmfp4-llama` Vulkan0; 262k ctx; f16/f16 KV; text-only `--no-mmproj`; draft-MTP depth 4; temp 0.2/top_p 0.9/top_k 20; reasoning disabled | Ready in about 18s; 35.51B params; 19.04 GB model file | 22/25 | 84.04 tok/s | 25.6 | 14.4 | 50.34 tok/s | 0.0 | 33.3 | Fast and strong on custom Hard TS, but BenchLoop quality collapsed even after a no-thinking rerun. |
+| `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` / `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | Custom `rocmfp4-llama` Vulkan0; 262k ctx; f16/f16 KV; text-only `--no-mmproj`; draft-MTP depth 4; temp 0.91/top_p 0.9/top_k 20; `--reasoning off --reasoning-format deepseek` | Ready in about 18s; 35.51B params; 19.04 GB model file | 21/25 | 87.77 tok/s | 78.5 | 82.4 | 51.57 tok/s | 100.0 | 81.7 | The previous `25.6` BenchLoop row was a bad serving profile: `--reasoning-format none` left `<think>` in content and broke exact JSON/code scoring. |
 
 ## Qwopus35 Q5 Sampler Sweep
 
@@ -249,7 +251,7 @@ BenchLoop fixed sampler rerun:
 - BenchLoop LFM note: the 2026-06-03 rerun of `LiquidAI LFM2.5 8B A1B Q5_K_M` improved sharply to `69.0` overall and `67.9` quality at `114.66 tok/s`; it is still weak on the custom Hard TS test (`1/25`).
 - New requested large-model note: `Hcompany Holo 3.1 35B A3B Q4_K_M` was the strongest new large row overall: working vision, `13/25` Hard TS, `60/60` on both custom agent passes, and `76.6` BenchLoop overall with `96.9` BenchLoop agent.
 - New requested MTP caution: the jcbtc HaloStrix MTP variant loaded and ran, but its custom Hard TS score was poor at `6/25`.
-- Chadrock ROCmFP4 update: after installing build deps through elevated Chocolatey and building `charlie12345/rocmfp4-llama` as native Windows Vulkan, both Chadrock models loaded at 262k context with MTP. Qwopus27 Chadrock scored `22/25` Hard TS and `72.5` BenchLoop overall; CHADROCK35 scored `22/25` Hard TS but only `25.6` BenchLoop overall despite `50.34 tok/s`, so it is not recommended for BenchLoop/tool-agent style work.
+- Chadrock ROCmFP4 update: after installing build deps through elevated Chocolatey and building `charlie12345/rocmfp4-llama`, both Chadrock models loaded at 262k context with MTP on Vulkan. Qwopus27 Chadrock scored `22/25` Hard TS and `72.5` BenchLoop overall. CHADROCK35 needed `temp=0.91` plus `--reasoning-format deepseek`; the corrected BenchLoop row is strong at `78.5` overall, `100.0` coding, and `96.9` agent, while custom Hard TS is `21/25`.
 - BenchLoop Qwopus3.5 Coder note: `Jackrong Qwopus3.5 9B Coder Exp Q5_K_M` had good toolcall (`91.7`) and coding (`85.4`) scores, but it was very verbose in BenchLoop and took about 30.5 minutes to finish at `31.34 tok/s`.
 - BenchLoop caution: `TeichAI Gemma4 26B A4B Opus Distill Q5_K_M` scored highest on BenchLoop coding (`93.8`) and matched the best agent score (`96.9`), but its instruction-following and reason/math scores were weak in this harness.
 - In the E4B quant batch, `Q4_K_M` is the remaining standout: `23/25` Hard TS with full agent scores.
