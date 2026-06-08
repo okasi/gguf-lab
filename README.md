@@ -170,6 +170,55 @@ BenchLoop fixed sampler rerun:
 | Q4_K_M | 0.95 | 75.1 | 81.2 | 56.7 | 76.4 | 21.81 tok/s | 85.0 | 77.1 | 65.2 | 83.3 | 80.0 | 96.9 |
 | Q4_K_M | 1.00 | 72.7 | 78.5 | 56.5 | 73.0 | 21.60 tok/s | 85.0 | 75.0 | 68.4 | 72.2 | 73.3 | 96.9 |
 
+## Qwopus Fine Temp Sweep 0.81-0.94
+
+`Jackrong/Qwopus3.6-35B-A3B-v1-GGUF / Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf`, `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF / Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf`, and `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF / Qwopus3.6-27B-v2-MTP-Q4_K_M.gguf` were rerun on 2026-06-07/2026-06-08 with `top_p=0.95`, `top_k=20`, `q8_0/q8_0`, `--ctx-size 262144`, llama.cpp `b9535`, and `CodeMaxTokens 7168`. BenchLoop was run after fixing sampler passthrough; `/slots` verified live request temperatures for the sweep.
+
+### Qwopus35 Q5_K_M
+
+| Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.81 | 28.3 GiB | 66.42 tok/s | 60.86 tok/s | 61.30 tok/s | 16/25 | 67.0 | 65.6 | 58.16 tok/s | 50.0 | 81.7 | 93.8 |
+| 0.83 | 28.3 GiB | 66.09 tok/s | 58.79 tok/s | 61.10 tok/s | 15/25 | 72.9 | 74.3 | 59.03 tok/s | 75.0 | 81.7 | 90.6 |
+| 0.84 | 28.3 GiB | 66.46 tok/s | 61.13 tok/s | 61.29 tok/s | 12/25 | 75.6 | 77.1 | 58.85 tok/s | 91.7 | 88.3 | 96.9 |
+| 0.86 | 28.3 GiB | 65.20 tok/s | 61.13 tok/s | 61.52 tok/s | 13/25 | 67.7 | 67.4 | 59.09 tok/s | 66.7 | 81.7 | 93.8 |
+| 0.87 | 28.3 GiB | 66.57 tok/s | 61.05 tok/s | 61.62 tok/s | 16/25 | 68.0 | 66.9 | 58.92 tok/s | 52.1 | 88.3 | 87.5 |
+| 0.89 | 28.3 GiB | 65.33 tok/s | 61.15 tok/s | 61.63 tok/s | 16/25 | 72.9 | 73.9 | 58.12 tok/s | 77.1 | 80.0 | 93.8 |
+| 0.91 | 28.3 GiB | 66.36 tok/s | 61.12 tok/s | 61.50 tok/s | 17/25 | 73.1 | 73.1 | 59.11 tok/s | 50.0 | 80.0 | 96.9 |
+| 0.92 | 28.3 GiB | 65.14 tok/s | 61.21 tok/s | 61.68 tok/s | 16/25 | 67.8 | 66.6 | 58.45 tok/s | 58.3 | 81.7 | 84.4 |
+| 0.93 | 28.3 GiB | 66.62 tok/s | 61.30 tok/s | 61.65 tok/s | 16/25 | 72.8 | 73.8 | 55.78 tok/s | 75.0 | 81.7 | 93.8 |
+| 0.94 | 28.3 GiB | 65.07 tok/s | 61.13 tok/s | 61.62 tok/s | 11/25 | 68.7 | 68.8 | 57.65 tok/s | 60.4 | 81.7 | 87.5 |
+
+### Qwopus27 IQ4_XS MTP
+
+| Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.81 | 27.7 GiB | 20.42 tok/s | 23.66 tok/s | 24.60 tok/s | 4/25 | 73.9 | 79.7 | 21.36 tok/s | 50.0 | 91.7 | 96.9 |
+| 0.83 | 27.7 GiB | 20.16 tok/s | 23.70 tok/s | 24.45 tok/s | 10/25 | 78.0 | 85.2 | 21.17 tok/s | 83.3 | 91.7 | 96.9 |
+| 0.84 | 27.7 GiB | 20.16 tok/s | 23.72 tok/s | 23.96 tok/s | 17/25 | 75.6 | 82.2 | 21.41 tok/s | 83.3 | 91.7 | 96.9 |
+| 0.86 | 27.7 GiB | 19.95 tok/s | 23.73 tok/s | 24.65 tok/s | 18/25 | 77.1 | 84.0 | 21.55 tok/s | 68.8 | 96.7 | 96.9 |
+| 0.87 | 27.7 GiB | 20.38 tok/s | 23.75 tok/s | 24.25 tok/s | 14/25 | 75.4 | 82.5 | 21.27 tok/s | 60.4 | 96.7 | 93.8 |
+| 0.89 | 27.7 GiB | 21.15 tok/s | 23.65 tok/s | 24.64 tok/s | 23/25 | 73.0 | 78.6 | 21.40 tok/s | 60.4 | 91.7 | 96.9 |
+| 0.91 | 27.7 GiB | 21.51 tok/s | 23.85 tok/s | 24.77 tok/s | 17/25 | 76.9 | 84.1 | 21.37 tok/s | 91.7 | 91.7 | 96.9 |
+| 0.92 | 27.7 GiB | 21.52 tok/s | 23.86 tok/s | 24.74 tok/s | 17/25 | 77.9 | 84.3 | 21.36 tok/s | 83.3 | 91.7 | 96.9 |
+| 0.93 | 27.7 GiB | 21.74 tok/s | 23.86 tok/s | 24.75 tok/s | 13/25 | 74.9 | 80.5 | 21.42 tok/s | 47.9 | 96.7 | 96.9 |
+| 0.94 | 27.7 GiB | 20.74 tok/s | 23.88 tok/s | 24.77 tok/s | 19/25 | 77.4 | 84.2 | 21.15 tok/s | 75.0 | 91.7 | 96.9 |
+
+### Qwopus27 Q4_K_M MTP
+
+| Temp | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.81 | 28.9 GiB | 20.08 tok/s | 23.90 tok/s | 23.84 tok/s | 16/25 | 73.5 | 79.3 | 21.67 tok/s | 60.4 | 91.7 | 96.9 |
+| 0.83 | 28.9 GiB | 21.41 tok/s | 24.19 tok/s | 23.91 tok/s | 16/25 | 73.8 | 80.4 | 21.85 tok/s | 83.3 | 91.7 | 96.9 |
+| 0.84 | 28.9 GiB | 21.59 tok/s | 24.19 tok/s | 23.90 tok/s | 12/25 | 73.8 | 79.4 | 21.38 tok/s | 66.7 | 91.7 | 100.0 |
+| 0.86 | 28.9 GiB | 21.59 tok/s | 24.18 tok/s | 23.58 tok/s | 16/25 | 72.0 | 77.1 | 21.82 tok/s | 58.3 | 91.7 | 96.9 |
+| 0.87 | 28.9 GiB | 20.13 tok/s | 24.18 tok/s | 23.57 tok/s | 16/25 | 73.8 | 79.7 | 22.03 tok/s | 66.7 | 96.7 | 96.9 |
+| 0.89 | 28.9 GiB | 20.69 tok/s | 24.14 tok/s | 23.59 tok/s | 6/25 | 71.4 | 76.9 | 22.16 tok/s | 66.7 | 96.7 | 96.9 |
+| 0.91 | 28.9 GiB | 21.21 tok/s | 25.23 tok/s | 23.57 tok/s | 16/25 | 74.2 | 80.6 | 21.84 tok/s | 77.1 | 96.7 | 96.9 |
+| 0.92 | 28.9 GiB | 21.22 tok/s | 25.20 tok/s | 23.58 tok/s | 16/25 | 71.2 | 76.7 | 21.70 tok/s | 66.7 | 90.0 | 96.9 |
+| 0.93 | 28.9 GiB | 21.43 tok/s | 25.22 tok/s | 23.58 tok/s | 12/25 | 74.0 | 79.7 | 21.78 tok/s | 75.0 | 85.0 | 96.9 |
+| 0.94 | 28.9 GiB | 21.42 tok/s | 24.41 tok/s | 23.60 tok/s | 10/25 | 72.0 | 77.7 | 21.68 tok/s | 68.8 | 85.0 | 96.9 |
+
 ## Current Takeaways
 
 - Best under 8 GiB: `Unsloth Gemma4 E4B it IQ4_XS` is the strongest retained small model by custom Hard TS quality at `20/25`; `Unsloth Gemma4 E2B it QAT UD-Q4_K_XL` is the speed/BenchLoop standout at `105.28 tok/s` custom text and `80.4` BenchLoop overall, but only `13/25` on the harder TypeScript set.
@@ -193,7 +242,8 @@ BenchLoop fixed sampler rerun:
 - KV cache result: `q4_0/q4_0` was the only tested lower-memory KV setting that preserved `23/25` Hard TS on the two larger highlighted models.
 - KV cache caution: the smaller highlighted Gemma models lost substantial Hard TS score with all three tested lower-precision KV settings, so their main `q8_0/q8_0` rows remain the safer quality choice.
 - Best over 14 GiB: `Jackrong Qwopus3.6 35B A3B v1 Q5_K_M` had the best all-around mix: `23/25`, strong vision speed, and `60/60` on both agent tests.
-- Qwopus35 Q5 sampler sweep: `temp=0.80` and `temp=0.85` tied for best custom coding quality at `23/25` Hard TS. BenchLoop stayed almost flat from `0.60` through `1.00`, so the custom hard TypeScript score is the useful separator here.
-- Qwopus27 MTP sampler sweep: none of the tested `0.80-1.00` temperatures beat the retained `0.75` IQ4_XS custom baseline. In the custom sweep, IQ4_XS was best at `temp=0.80` (`16/25`), while Q4_K_M tied at `16/25` for `temp=0.85`, `0.90`, and `0.95`. In the fixed BenchLoop rerun, IQ4_XS `temp=0.95` was best overall (`77.1`), while Q4_K_M `temp=0.95` was its best row (`75.1`).
-- Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` clearly won this batch with `23/25` Hard TS and around `20-22 tok/s`.
+- Qwopus35 Q5 sampler sweep: the older coarse sweep still has the best custom Hard TS rows at `temp=0.80` and `0.85` (`23/25`). In the fine `0.81-0.94` sweep, `temp=0.84` was best for BenchLoop overall (`75.6`) and BenchLoop coding (`91.7`), while `temp=0.91` was best on custom Hard TS (`17/25`).
+- Qwopus27 MTP fine sampler sweep: `MTP IQ4_XS temp=0.89` is the standout custom row at `23/25` Hard TS, matching the best retained Qwopus27 coding score while staying around `21 tok/s` text and `24 tok/s` vision/tool generation. For BenchLoop, IQ4_XS `temp=0.83` was best overall (`78.0`) and quality (`85.2`); IQ4_XS `temp=0.91` had the best BenchLoop coding score (`91.7`).
+- Qwopus27 Q4_K_M fine sampler sweep: Q4_K_M never beat IQ4_XS on custom Hard TS in this fine sweep; its best custom rows were `16/25`, and its best BenchLoop overall was `temp=0.91` (`74.2`).
+- Best Qwopus3.6 27B v2 row: `MTP IQ4_XS` remains the stronger choice. Use `temp=0.89` when prioritizing the custom hard TypeScript benchmark, or `temp=0.83` when prioritizing BenchLoop overall/quality.
 - The non-MTP replacement rows are generally stronger than the deleted MTP rows on this benchmark, especially `Jackrong Qwopus3.6 35B A3B v1 Q4_K_M`, which restored vision and improved Hard TS from `10/25` to `16/25`.
