@@ -144,6 +144,9 @@ function Build-LlamaArgs {
                 break
             }
         }
+        if ($args -notcontains "--reasoning") {
+            $args += @("--reasoning", "auto")
+        }
         return $args
     }
 
@@ -190,10 +193,13 @@ function Build-LlamaArgs {
         }
     }
     if ($ModelConfig.ContainsKey("GptOss") -and $ModelConfig.GptOss) {
-        $args += @("--reasoning", "auto", "--jinja")
+        $args += @("--jinja")
     }
     if ($ModelConfig.ContainsKey("ExtraServerArgs") -and $null -ne $ModelConfig.ExtraServerArgs) {
         $args += $ModelConfig.ExtraServerArgs
+    }
+    if ($args -notcontains "--reasoning") {
+        $args += @("--reasoning", "auto")
     }
     return $args
 }

@@ -248,6 +248,12 @@ foreach ($m in $Models) {
         if ($m.ContainsKey("ExtraServerArgs") -and $null -ne $m.ExtraServerArgs) {
             $serverArgs += $m.ExtraServerArgs
         }
+        if ($m.ContainsKey("GptOss") -and $m.GptOss) {
+            $serverArgs += @("--jinja")
+        }
+        if ($serverArgs -notcontains "--reasoning") {
+            $serverArgs += @("--reasoning", "auto")
+        }
     }
 
     $serverProcess = $null

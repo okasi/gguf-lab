@@ -6,6 +6,16 @@ Run scripts from this directory (`windows-strix-halo/`). Paths below are relativ
 
 All benchmark results should be written to `..\README.md` (repo root; same content as [okasi/local-llm-experiments](https://github.com/okasi/local-llm-experiments)).
 
+## Defaults
+
+Every model uses these unless a row-specific override is documented in the README:
+
+- `--reasoning auto`
+- `--ctx-size` at the model's largest practical setting (`262144` on Strix Halo)
+- Lower `--ctx-size` only when the model fails to load or serve with the full window
+
+Do not add `--batch-size`, `--ubatch-size`, or `--split-mode` by default. Local tests showed llama.cpp defaults were as good or better and used less memory.
+
 ## Runtime Base
 
 Start `llama-server` with the model file, then add the shared runtime, KV cache, family sampler, and any family add-ons.
@@ -19,11 +29,10 @@ Start `llama-server` with the model file, then add the shared runtime, KV cache,
   --ngl 99 `
   -np 1 `
   --flash-attn on `
+  --reasoning auto `
   --seed 3407 `
   -n 32768
 ```
-
-Do not add `--batch-size`, `--ubatch-size`, or `--split-mode` by default. Local tests showed llama.cpp defaults were as good or better and used less memory.
 
 ## KV Cache
 
@@ -44,6 +53,8 @@ Memory fallback for large models only:
 Keep q8/q8 for small Gemma E2B/E4B unless you are deliberately retesting quality loss.
 
 ## Qwen/Qwopus/Holo
+
+Use the shared defaults for `--reasoning auto` and `--ctx-size 262144`.
 
 Sampler:
 
@@ -88,8 +99,7 @@ Sampler:
 --min-p 0.0 `
 --presence-penalty 0.0 `
 --repeat-penalty 1.0 `
---reasoning off `
---chat-template-kwargs '{"enable_thinking":false}'
+--reasoning auto
 ```
 
 Models covered by this preset:
@@ -111,10 +121,9 @@ Vision:
 Notes:
 
 - Use llama.cpp b9518 or newer.
-- Keep thinking disabled for coding and agent benchmarks.
-- Use `--reasoning auto` only as a separately labeled Gemma reasoning test.
 - For 12B QAT vision on b9535, add `--cache-ram 0 --ctx-checkpoints 0`.
 - If a large Gemma file does not fit, lower `--ctx-size` to `131072` before lowering KV precision.
+- CHADROCK35 keeps `--reasoning-format deepseek` with `--reasoning auto`.
 
 ## Tool Calling
 

@@ -95,13 +95,16 @@ function New-BatchRun {
         $args += @("--image-min-tokens", "$ImageMinTokens")
     }
     if ($GptOss) {
-        $args += @("--reasoning", "auto", "--jinja")
+        $args += @("--jinja")
     }
     if ($Mtp) {
         $args += @("--spec-type", "draft-mtp", "--spec-draft-n-min", "1", "--spec-draft-n-max", "2")
     }
     if ($ExtraServerArgs.Count -gt 0) {
         $args += $ExtraServerArgs
+    }
+    if ($args -notcontains "--reasoning") {
+        $args += @("--reasoning", "auto")
     }
     return @{
         Name = $Name
