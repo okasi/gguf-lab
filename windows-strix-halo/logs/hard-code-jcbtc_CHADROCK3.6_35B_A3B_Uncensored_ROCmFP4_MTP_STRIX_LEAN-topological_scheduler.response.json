@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "\u003cthink\u003e\n\n\u003c/think\u003e\n\n```typescript\nimport * as fs from \"fs\";\n\nclass MinHeap {\n  private data: string[] = [];\n\n  constructor() {}\n\n  public size(): number {\n    return this.data.length;\n  }\n\n  public isEmpty(): boolean {\n    return this.data.length === 0;\n  }\n\n  public push(item: string): void {\n    this.data.push(item);\n    this.bubbleUp(this.data.length - 1);\n  }\n\n  public pop(): string | undefined {\n    if (this.isEmpty()) {\n      return undefined;\n    }\n    const top = this.data[0];\n    const last = this.data.pop();\n    if (!this.isEmpty() \u0026\u0026 last !== undefined) {\n      this.data[0] = last;\n      this.sinkDown(0);\n    }\n    return top;\n  }\n\n  public peek(): string | undefined {\n    return this.isEmpty() ? undefined : this.data[0];\n  }\n\n  private bubbleUp(index: number): void {\n    while (index \u003e 0) {\n      const parentIndex = (index - 1) \u003e\u003e 1;\n      if (this.compare(this.data[index], this.data[parentIndex]) \u003e= 0) {\n        break;\n      }\n      this.swap(index, parentIndex);\n      index = parentIndex;\n    }\n  }\n\n  private sinkDown(index: number): void {\n    const length = this.data.length;\n    while (true) {\n      let leftChild = 2 * index + 1;\n      let rightChild = 2 * index + 2;\n      let smallest = index;\n\n      if (leftChild \u003c length \u0026\u0026 this.compare(this.data[leftChild], this.data[smallest]) \u003c 0) {\n        smallest = leftChild;\n      }\n      if (rightChild \u003c length \u0026\u0026 this.compare(this.data[rightChild], this.data[smallest]) \u003c 0) {\n        smallest = rightChild;\n      }\n      if (smallest === index) {\n        break;\n      }\n      this.swap(index, smallest);\n      index = smallest;\n    }\n  }\n\n  private compare(a: string, b: string): number {\n    if (a \u003c b) return -1;\n    if (a \u003e b) return 1;\n    return 0;\n  }\n\n  private swap(i: number, j: number): void {\n    const temp = this.data[i];\n    this.data[i] = this.data[j];\n    this.data[j] = temp;\n  }\n}\n\nfunction solve(): void {\n  const input = fs.readFileSync(0, \"utf8\").trim().split(\"\\n\");\n  let lineIndex = 0;\n\n  const firstLine = input[lineIndex++].split(/\\s+/).map(Number);\n  const N = firstLine[0];\n  const M = firstLine[1];\n\n  const taskNamesLine = input[lineIndex++].split(/\\s+/);\n  const taskNames: string[] = taskNamesLine;\n\n  // Map task name to index 0..N-1\n  const nameToIndex: Map\u003cstring, number\u003e = new Map();\n  for (let i = 0; i \u003c N; i++) {\n    nameToIndex.set(taskNames[i], i);\n  }\n\n  // Adjacency list and in-degree array\n  const adj: number[][] = new Array(N);\n  const inDegree: number[] = new Array(N).fill(0);\n  for (let i = 0; i \u003c N; i++) {\n    adj[i] = [];\n  }\n\n  for (let i = 0; i \u003c M; i++) {\n    const parts = input[lineIndex++].split(/\\s+/);\n    const aName = parts[0];\n    const bName = parts[1];\n    const a = nameToIndex.get(aName)!;\n    const b = nameToIndex.get(bName)!;\n    adj[a].push(b);\n    inDegree[b]++;\n  }\n\n  const pq = new MinHeap();\n  // Initialize heap with tasks that have in-degree 0\n  for (let i = 0; i \u003c N; i++) {\n    if (inDegree[i] === 0) {\n      pq.push(taskNames[i]);\n    }\n  }\n\n  const result: string[] = [];\n\n  while (!pq.isEmpty()) {\n    const currentName = pq.pop()!;\n    const currentIndex = nameToIndex.get(currentName)!;\n    result.push(currentName);\n\n    for (const neighbor of adj[currentIndex]) {\n      inDegree[neighbor]--;\n      if (inDegree[neighbor] === 0) {\n        pq.push(taskNames[neighbor]);\n      }\n    }\n  }\n\n  if (result.length !== N) {\n    console.log(\"IMPOSSIBLE\");\n  } else {\n    console.log(result.join(\" \"));\n  }\n}\n\nsolve();\n```"
+                                    }
+                    }
+                ],
+    "created":  1780933331,
+    "model":  "jcbtc-chadrock35-uncensored-rocmfp4-mtp",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1106,
+                  "prompt_tokens":  220,
+                  "total_tokens":  1326,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-bGwIX79CFQPwn2iybvubd8z441bhQJUd",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  220,
+                    "prompt_ms":  377.067,
+                    "prompt_per_token_ms":  1.713940909090909,
+                    "prompt_per_second":  583.4506864827737,
+                    "predicted_n":  1106,
+                    "predicted_ms":  12864.138,
+                    "predicted_per_token_ms":  11.631227848101267,
+                    "predicted_per_second":  85.97544584798452,
+                    "draft_n":  1044,
+                    "draft_n_accepted":  845
+                }
+}

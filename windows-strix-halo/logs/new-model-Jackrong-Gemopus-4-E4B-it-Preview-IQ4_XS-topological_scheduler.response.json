@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \"fs\";\nimport { createMinHeap } from \"./minHeap\";\n\ntype TaskName = string;\ntype Dependency = [TaskName, TaskName];\n\nfunction solve(input: string): void {\n    const lines = input.trim().split(\"\\n\");\n    const [N, M] = lines[0].split(\" \").map(Number);\n\n    const tasks: Map\u003cTaskName, number\u003e = new Map();\n    for (let i = 0; i \u003c N; i++) {\n        tasks.set(lines[1 + i], i);\n    }\n\n    const inDegree: Map\u003cTaskName, number\u003e = new Map();\n    for (let i = 0; i \u003c M; i++) {\n        const [a, b] = lines[2 + i].split(\" \").map((val) =\u003e val as TaskName);\n        inDegree.set(a, (inDegree.get(a) || 0) + 1);\n        inDegree.set(b, (inDegree.get(a) || 0) + 1);\n    }\n\n    const queue = createMinHeap\u003cTaskName\u003e();\n    for (let i = 0; i \u003c N; i++) {\n        const task = tasks.get(i)!;\n        if (inDegree.get(task) === 0) {\n            queue.insert(task);\n        }\n    }\n\n    const buildOrder: TaskName[] = [];\n    const processed = new Set\u003cTaskName\u003e();\n\n    while (queue.size() \u003e 0) {\n        const currentTask = queue.extractMin();\n        buildOrder.push(currentTask);\n        processed.add(currentTask);\n\n        for (const dependency of tasks.get(currentTask)! || []) {\n            const task = dependency[0];\n            inDegree.set(task, inDegree.get(task) || 0) - 1;\n            if (inDegree.get(task) === 0) {\n                queue.insert(task);\n            }\n        }\n    }\n\n    if (buildOrder.length !== N) {\n        process.exit(1);\n    }\n\n    console.log(buildOrder.join(\" \"\"));\n}\n\n// Standard Binary Heap Implementation (Min Heap)\nclass MinHeap\u003cT\u003e implements Heap\u003cT\u003e {\n    private data: T[] = [];\n\n    constructor() {}\n\n    private getLeft(i: number): number { return 2 * i + 1; }\n    private getRight(i: number): number { return 2 * i + 2; }\n    private swap(i: number, j: number): void {\n        this.data = [...this.data];\n        [this.data[i], this.data[j]] = [this.data[i], this.data[j]];\n    }\n\n    private bubbleUp(i: number): void {\n        while (i \u003e 0 \u0026\u0026 this.data[i] \u003e this.data[this.getParent(i)] ) {\n            this.swap(i, this.getParent(i));\n            i = this.getParent(i);\n        }\n    }\n\n    private bubbleDown(i: number): void {\n        let smallest = i;\n        let left = this.getLeft(i);\n        let right = this.getRight(i);\n\n        if (this.data[left] \u003c this.data[smallest]) {\n            smallest = left;\n        }\n        if (this.data[right] \u003c this.data[smallest]) {\n            smallest = right;\n        }\n\n        while (smallest !== i \u0026\u0026 this.data[smallest] \u003c this.data[i]) {\n            this.swap(smallest, i);\n            smallest = this.getLeft(smallest);\n            i = this.getParent(smallest);\n        }\n    }\n\n    private getParent(i: number): number { return Math.floor((i - 1) / 2); }\n    \n    get size(): number { return this.data.length; }\n    \n    insert(item: T): void {\n        this.data.push(item);\n        this.bubbleUp(this.data.length - 1);\n    }\n\n    extractMin(): T {\n        const min = this.data[0];\n        this.data = this.data.slice(1);\n        this.heapifyDown(0);\n        return min;\n    }\n\n    private heapifyDown(i: number): void {\n        let smallest = i;\n        let left = this.getLeft(i);\n        let right = this.getRight(i);\n\n        if (this.data[left] \u003c this.data[smallest]) {\n            smallest = left;\n        }\n        if (this.data[right] \u003c this.data[smallest]) {\n            smallest = right;\n        }\n\n        while (smallest !== i \u0026\u0026 this.data[smallest] \u003c this.data[i]) {\n            this.swap(smallest, i);\n            smallest = this.getLeft(i);\n            i = this.getParent(smallest);\n        }\n    }\n}\n\nexport { MinHeap };\n\n// Helper to simulate reading from stdin for environments like online judges\nif (typeof process !== \u0027undefined\u0027 \u0026\u0026 process.stdin) {\n    const fs = require(\"fs\");\n    try {\n        solve(fs.readFileSync(0, \"utf8\"));\n    } catch (e) {\n        // Ignore errors if stdin is not connected (e.g., testing environment)\n    }\n}\n"
+                                    }
+                    }
+                ],
+    "created":  1780826533,
+    "model":  "jackrong-gemopus-4-e4b-it-preview-iq4-xs",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1256,
+                  "prompt_tokens":  190,
+                  "total_tokens":  1446,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-LkZaDlrzi0LHC1KJALD92nXoDlEDYnqN",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  189,
+                    "prompt_ms":  143.233,
+                    "prompt_per_token_ms":  0.7578465608465609,
+                    "prompt_per_second":  1319.528320987482,
+                    "predicted_n":  1256,
+                    "predicted_ms":  25434.029,
+                    "predicted_per_token_ms":  20.25002308917197,
+                    "predicted_per_second":  49.38265974297663
+                }
+}

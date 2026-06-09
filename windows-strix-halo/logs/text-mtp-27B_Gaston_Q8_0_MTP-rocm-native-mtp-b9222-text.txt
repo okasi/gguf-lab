@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9222-9a532ae4b
+model      : Qwen3.6-27B-abliterated-Gaston-MTP-Q8_0.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a concise but technical explanation of how native multi-token prediction changes local LLM decoding throughput. Focus on what affects tokens per second and latency. Do not use bullet points.
+
+Native multi-token prediction, often implemented via speculative or parallel sampling, alters local LLM throughput by decoupling the generation of candidate tokens from the sequential autoreressive constraint of the base model. In standard autoreressive generation, throughput is strictly limited by the forward pass latency of a single token, as each subsequent token depends on the previous one. Multi-token prediction introduces a draft mechanism, typically using a smaller auxiliary model or a shared attention head, to generate a sequence of *k* candidate tokens in a single forward pass. These candidates are then validated by the larger base model in parallel, rather than sequentially. The critical performance metric becomes the acceptance rate of these candidates; if the draft model’s distribution closely approximates the base model’s, a high percentage of tokens are accepted in bulk, effectively amortizing the computational cost of the large model’s forward pass across multiple tokens. Consequently, tokens per second (TPS) increase significantly because the expensive base model is invoked
+
+[ Prompt: 105.5 t/s | Generation: 11.2 t/s ]
+
+Exiting...
+

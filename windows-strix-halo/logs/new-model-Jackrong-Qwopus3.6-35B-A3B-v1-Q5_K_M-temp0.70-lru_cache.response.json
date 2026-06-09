@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \"fs\";\n\nclass Node {\n  key: string;\n  value: number;\n  prev: Node | null;\n  next: Node | null;\n\n  constructor(key: string, value: number) {\n    this.key = key;\n    this.value = value;\n    this.prev = null;\n    this.next = null;\n  }\n}\n\nclass LRUCache {\n  private capacity: number;\n  private size: number;\n  private cache: Map\u003cstring, Node\u003e;\n  private head: Node; // dummy node\n  private tail: Node; // dummy node\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.size = 0;\n    this.cache = new Map();\n    this.head = new Node(\"\", 0);\n    this.tail = new Node(\"\", 0);\n    this.head.next = this.tail;\n    this.tail.prev = this.head;\n  }\n\n  private addToHead(node: Node): void {\n    node.next = this.head.next;\n    node.prev = this.head;\n    this.head.next!.prev = node;\n    this.head.next = node;\n  }\n\n  private removeNode(node: Node): void {\n    const prev = node.prev;\n    const next = node.next;\n    if (prev \u0026\u0026 next) {\n      prev.next = next;\n      next!.prev = prev;\n    }\n  }\n\n  private moveToHead(node: Node): void {\n    this.removeNode(node);\n    this.addToHead(node);\n  }\n\n  private removeTail(): Node | null {\n    const node = this.tail.prev;\n    if (node \u0026\u0026 node !== this.head) {\n      this.removeNode(node);\n      return node;\n    }\n    return null;\n  }\n\n  get(key: string): number {\n    const node = this.cache.get(key);\n    if (!node) {\n      return -1;\n    }\n    this.moveToHead(node);\n    return node.value;\n  }\n\n  put(key: string, value: number): void {\n    const node = this.cache.get(key);\n    if (node) {\n      node.value = value;\n      this.moveToHead(node);\n    } else {\n      const newNode = new Node(key, value);\n      this.cache.set(key, newNode);\n      this.addToHead(newNode);\n      this.size++;\n      if (this.size \u003e this.capacity) {\n        const tail = this.removeTail();\n        if (tail) {\n          this.cache.delete(tail.key);\n          this.size--;\n        }\n      }\n    }\n  }\n\n  delete(key: string): void {\n    const node = this.cache.get(key);\n    if (node) {\n      this.removeNode(node);\n      this.cache.delete(key);\n      this.size--;\n    }\n  }\n\n  getKeys(): string[] {\n    const keys: string[] = [];\n    let current = this.head.next;\n    while (current \u0026\u0026 current !== this.tail) {\n      keys.push(current.key);\n      current = current.next;\n    }\n    return keys;\n  }\n}\n\nconst input = fs.readFileSync(0, \"utf8\");\nconst lines = input.trim().split(\"\\n\");\nconst firstLine = lines[0].split(\" \");\nconst capacity = parseInt(firstLine[0]);\nconst n = parseInt(firstLine[1]);\n\nconst cache = new LRUCache(capacity);\nconst getResults: string[] = [];\n\nfor (let i = 1; i \u003c= n; i++) {\n  const line = lines[i].trim();\n  const parts = line.split(\" \");\n  const op = parts[0];\n  const key = parts[1];\n\n  if (op === \"PUT\") {\n    const value = parseInt(parts[2]);\n    cache.put(key, value);\n  } else if (op === \"GET\") {\n    const result = cache.get(key);\n    getResults.push(result.toString());\n  } else if (op === \"DEL\") {\n    cache.delete(key);\n  }\n}\n\nif (getResults.length \u003e 0) {\n  console.log(getResults.join(\" \"));\n} else {\n  console.log(\"EMPTY\");\n}\n\nconst remainingKeys = cache.getKeys();\nif (remainingKeys.length \u003e 0) {\n  console.log(remainingKeys.join(\" \"));\n} else {\n  console.log(\"EMPTY\");\n}\n```",
+                                        "reasoning_content":  "We are going to implement a LRU cache using a doubly linked list and a hash map.\n The doubly linked list will maintain the order of usage (most recent at head, least recent at tail).\n The hash map will map keys to nodes in the doubly linked list.\n\n Steps:\n 1. We\u0027ll create a Node class for the doubly linked list.\n 2. We\u0027ll have a hash map (Map) to store key -\u003e node.\n 3. We\u0027ll have a head and tail sentinel nodes to avoid edge cases.\n 4. We\u0027ll have a capacity (C) and a current size.\n\n Operations:\n - GET(key):\n    - If key not in map, return -1.\n    - If key is in map, move the node to the front (most recently used) and return the value.\n - PUT(key, value):\n    - If key exists, update the value and move the node to the front.\n    - If key doesn\u0027t exist, create a new node, add to the front, and add to map.\n    - If after adding, size exceeds capacity, remove the least recently used (from the tail).\n - DEL(key):\n    - If key exists, remove the node from the list and the map.\n\n We\u0027ll read the input, process each operation, and collect GET results.\n\n Note: We are using fs.readFileSync(0, \"utf8\") to read from stdin.\n\n Let\u0027s design the doubly linked list:\n\n We\u0027ll have:\n   head: sentinel node (dummy)\n   tail: sentinel node (dummy)\n\n Each node has:\n   key: string\n   value: number\n   prev: Node | null\n   next: Node | null\n\n We\u0027ll also have a Map\u003cstring, Node\u003e called cache.\n\n We\u0027ll also have a number for the current size.\n\n Helper functions:\n   - addToHead(node): add node right after head.\n   - removeNode(node): remove node from the list.\n   - moveToHead(node): remove node and then add to head (for GET and PUT update).\n   - removeTail(): remove the node just before tail (least recently used).\n\n We\u0027ll process the operations and collect GET results.\n\n Finally, we\u0027ll output:\n   First line: GET results separated by spaces, or EMPTY if no GET.\n   Second line: remaining keys in order from most recent to least recent (which is from head.next to tail.prev), or EMPTY if cache is empty.\n\n Let\u0027s code accordingly.\n"
+                                    }
+                    }
+                ],
+    "created":  1780727798,
+    "model":  "jackrong-qwopus35-q5-t070",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1527,
+                  "prompt_tokens":  282,
+                  "total_tokens":  1809,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-785QjkJ59XhDuBiVQ18tDdZ2TPJwr9Kp",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  282,
+                    "prompt_ms":  588.275,
+                    "prompt_per_token_ms":  2.086081560283688,
+                    "prompt_per_second":  479.36764268411883,
+                    "predicted_n":  1527,
+                    "predicted_ms":  25695.43,
+                    "predicted_per_token_ms":  16.827393582187295,
+                    "predicted_per_second":  59.4269097656665
+                }
+}

@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * Tokenizer to break the string into Numbers, Operators, and Parentheses\n */\nclass Tokenizer {\n    constructor(input: string) {\n        this.input = input;\n        this.pos = 0;\n    }\n\n    tokenize(): Token[] {\n        const tokens: Token[] = [];\n        while (this.pos \u003c this.input.length) {\n            const char = this.input[this.pos];\n\n            if (/\\s/.test(char)) {\n                this.pos++;\n                continue;\n            }\n\n            if (/\\d/.test(char)) {\n                let numStr = \"\";\n                while (this.pos \u003c this.input.length \u0026\u0026 /\\d/.test(this.input[this.pos])) {\n                    numStr += this.input[this.pos];\n                    this.pos++;\n                }\n                tokens.push({ type: \u0027NUMBER\u0027, value: parseInt(numStr, 10) });\n                continue;\n            }\n\n            if (\"+-*/()\".includes(char)) {\n                tokens.push({ type: \u0027OPERATOR\u0027, value: char });\n                this.pos++;\n                continue;\n            }\n\n            this.pos++;\n        }\n        return tokens;\n    }\n}\n\ntype Token = { type: \u0027NUMBER\u0027 | \u0027OPERATOR\u0027; value: number | string };\n\n/**\n * Parser that handles precedence:\n * 1. Unary (+, -)\n * 2. Multiplication/Division (*, /)\n * 3. Addition/Subtraction (+, -)\n */\nclass Parser {\n    private tokens: Token[];\n    private current = 0;\n\n    constructor(tokens: Token[]) {\n        this.tokens = tokens;\n    }\n\n    parse(): number {\n        return this.expression();\n    }\n\n    private expression(): number {\n        let result = this.term();\n        while (this.current \u003c this.tokens.length \u0026\u0026 (this.tokens[this.current].value === \u0027+\u0027 || this.tokens[this.current].value === \u0027-\u0027)) {\n            const op = this.tokens[this.current].value;\n            this.current++;\n            const right = this.term();\n            if (op === \u0027+\u0027) result += right;\n            else result -= right;\n        }\n        return result;\n    }\n\n    private term(): number {\n        let result = this.unary();\n        while (this.current \u003c this.tokens.length \u0026\u0026 (this.tokens[this.current].value === \u0027*\u0027 || this.tokens[this.current].value === \u0027/\u0027)) {\n            const op = this.tokens[this.current].value;\n            this.current++;\n            const right = this.unary();\n            if (op === \u0027*\u0027) {\n                result *= right;\n            } else {\n                // Division truncates toward zero\n                const div = result / right;\n                result = div \u003e 0 ? Math.floor(div) : Math.ceil(div);\n            }\n        }\n        return result;\n    }\n\n    private unary(): number {\n        if (this.current \u003c this.tokens.length \u0026\u0026 (this.tokens[this.current].value === \u0027+\u0027 || this.tokens[this.current].value === \u0027-\u0027)) {\n            const op = this.tokens[this.current].value;\n            this.current++;\n            const value = this.unary();\n            return op === \u0027+\u0027 ? value : -value;\n        }\n        return this.factor();\n    }\n\n    private factor(): number {\n        const token = this.tokens[this.current];\n        if (token.type === \u0027NUMBER\u0027) {\n            this.current++;\n            return token.value;\n        } else if (token.value === \u0027(\u0027) {\n            this.current++;\n            const result = this.expression();\n            this.current++; // skip \u0027)\u0027\n            return result;\n        }\n        return 0;\n    }\n}\n\nfunction solve() {\n    try {\n        const input = fs.readFileSync(0, \"utf8\").trim();\n        if (!input) return;\n        const tokens = new Tokenizer(input).tokenize();\n        const parser = new Parser(tokens);\n        const result = parser.parse();\n        process.stdout.write(result.toString() + \u0027\\n\u0027);\n    } catch (e) {\n        // Silent fail for invalid inputs\n    }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780961833,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  997,
+                  "prompt_tokens":  172,
+                  "total_tokens":  1169,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-xYgv6I4lik7MnQACMQN9FoRe2gsMamkc",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  172,
+                    "prompt_ms":  305.75,
+                    "prompt_per_token_ms":  1.7776162790697674,
+                    "prompt_per_second":  562.551103843009,
+                    "predicted_n":  997,
+                    "predicted_ms":  42332.335,
+                    "predicted_per_token_ms":  42.45971414242728,
+                    "predicted_per_second":  23.551736515361128
+                }
+}

@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\nimport { performance } from \u0027node:perf\u0027;\n\nclass LRUCache\u003cK, V\u003e implements Cache\u003cK, V\u003e {\n  private readonly capacity: number;\n  private readonly map = new Map\u003cK, V\u003e();\n  private readonly usageOrder = new Map\u003cK, number\u003e();\n  private readonly timestamp = Date.now();\n  private lastAccess = 0;\n\n  constructor(private readonly capacity: number) {\n    this.usageOrder.set(null as K, this.timestamp);\n  }\n\n  /**\n   * O(1) amortized. Moves key to most recently used position.\n   */\n  private access(key: K): void {\n    const now = Date.now();\n    this.usageOrder.set(key, now);\n  }\n\n  /**\n   * O(1) amortized. Returns value or undefined.\n   */\n  get\u003cV\u003e(key: K): V | undefined {\n    const value = this.map.get(key);\n    if (value !== undefined) {\n      this.access(key);\n      return value;\n    }\n    return undefined;\n  }\n\n  /**\n   * O(1) amortized. Puts new item or updates existing.\n   */\n  put\u003cV\u003e(key: K, value: V): void {\n    this.map.set(key, value);\n    this.access(key);\n    if (this.map.size \u003e this.capacity) {\n      this.evict();\n    }\n  }\n\n  /**\n   * O(1) amortized. Removes key.\n   */\n  delete\u003cK\u003e(key: K): boolean {\n    const oldValue = this.map.delete(key);\n    if (oldValue !== undefined) {\n      this.usageOrder.delete(key);\n      return true;\n    }\n    return false;\n  }\n\n  /**\n   * O(1) amortized. Evicts LRU item.\n   */\n  private evict(): void {\n    const lruKey = this.usageOrder.keys().next().value;\n    this.map.delete(lruKey);\n    this.usageOrder.delete(lruKey);\n  }\n\n  /**\n   * Returns keys in MRU to LRU order.\n   */\n  getKeysInOrder(): readonly K[] {\n    const keys = Array.from(this.usageOrder.keys());\n    return keys.reverse();\n  }\n}\n\ninterface Cache\u003cK, V\u003e {\n  get\u003cV\u003e(key: K): V | undefined;\n  put\u003cV\u003e(key: K, value: V): void;\n  delete\u003cK\u003e(key: K): boolean;\n  getKeysInOrder(): readonly K[];\n}\n\nfunction solve(): void {\n  const input = fs.readFileSync(0, \"utf8\") as string;\n  const lines = input.trim().split(\u0027\\n\u0027);\n  \n  const [C, N] = lines[0].trim().split(/\\s+/).map(Number);\n  \n  const getResults: number[] = [];\n  const usageOrder = new LRUCache\u003cstring, number\u003e(C);\n\n  for (let i = 1; i \u003c= N; i++) {\n    const parts = lines[i].trim().split(/\\s+/);\n    const command = parts[0];\n    const key = parts[1];\n\n    switch (command)) {\n      case \u0027PUT\u0027:\n        const value = parseInt(parts[2], 10);\n        usageOrder.put(key, value);\n        break;\n      case \u0027GET\u0027:\n        const result = usageOrder.get(key);\n        getResults.push(result === undefined ? -1 : result);\n        break;\n      case \u0027DEL\u0027:\n        return usageOrder.delete(key);\n        break;\n    }\n  }\n\n  console.log(getResults.length \u003e 0 ? getResults.join(\u0027 \u0027) : \u0027EMPTY\u0027);\n  console.log(usageOrder.getKeysInOrder().length \u003e 0 ? usageOrder.getKeysInOrder().join(\u0027 \u0027) : \u0027EMPTY\u0027);\n}\n\nsolve();\n"
+                                    }
+                    }
+                ],
+    "created":  1780826449,
+    "model":  "jackrong-gemopus-4-e4b-it-preview-iq4-xs",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  941,
+                  "prompt_tokens":  285,
+                  "total_tokens":  1226,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-EaQxojL5KBDiKpS31L0svUc4DJHYBMZs",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  284,
+                    "prompt_ms":  266.897,
+                    "prompt_per_token_ms":  0.9397781690140845,
+                    "prompt_per_second":  1064.080900122519,
+                    "predicted_n":  941,
+                    "predicted_ms":  19064.443,
+                    "predicted_per_token_ms":  20.259769394261422,
+                    "predicted_per_second":  49.358903378399255
+                }
+}

@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nfunction solve(): void {\n    const input = fs.readFileSync(\u0027/dev/stdin\u0027, \u0027utf-8\u0027).trim().split(/\\s+/);\n    let idx = 0;\n\n    const N = parseInt(input[idx++], 10);\n    const Q = parseInt(input[idx++], 10);\n\n    const intervals: [number, number][] = [];\n    for (let i = 0; i \u003c N; i++) {\n        const l = parseInt(input[idx++], 10);\n        const r = parseInt(input[idx++], 10);\n        intervals.push([l, r]);\n    }\n\n    const queries: number[] = [];\n    for (let i = 0; i \u003c Q; i++) {\n        queries.push(parseInt(input[idx++], 10));\n    }\n\n    // Collect all critical points: interval starts, interval ends+1, and query points\n    // We need to associate each critical point with its type and index to preserve order\n    interface CriticalPoint {\n        coord: number;\n        type: \u0027start\u0027 | \u0027end\u0027 | \u0027query\u0027;\n        index: number; // For queries, this is the query index; for intervals, not used in final output\n    }\n\n    const criticalPoints: CriticalPoint[] = [];\n\n    // Add interval boundaries\n    for (let i = 0; i \u003c N; i++) {\n        const [l, r] = intervals[i];\n        criticalPoints.push({ coord: l, type: \u0027start\u0027, index: i });\n        criticalPoints.push({ coord: r + 1, type: \u0027end\u0027, index: i });\n    }\n\n    // Add query points\n    for (let i = 0; i \u003c Q; i++) {\n        criticalPoints.push({ coord: queries[i], type: \u0027query\u0027, index: i });\n    }\n\n    // Sort critical points by coordinate, then by type:\n    // \u0027start\u0027 comes before \u0027query\u0027, \u0027query\u0027 comes before \u0027end\u0027\n    // This ensures that at a point x:\n    // - All intervals starting at x are counted\n    // - All queries at x are processed\n    // - All intervals ending at x-1 (i.e., end+1 = x) are removed\n    criticalPoints.sort((a, b) =\u003e {\n        if (a.coord !== b.coord) {\n            return a.coord - b.coord;\n        }\n        // Order: start \u003c query \u003c end\n        const typeOrder: { [key: string]: number } = { \u0027start\u0027: 0, \u0027query\u0027: 1, \u0027end\u0027: 2 };\n        return typeOrder[a.type] - typeOrder[b.type];\n    });\n\n    // Sweep line\n    let currentCount = 0;\n    const answers: number[] = new Array(Q);\n\n    for (const cp of criticalPoints) {\n        if (cp.type === \u0027start\u0027) {\n            currentCount++;\n        } else if (cp.type === \u0027end\u0027) {\n            currentCount--;\n        } else { // query\n            answers[cp.index] = currentCount;\n        }\n    }\n\n    // Output answers space-separated\n    console.log(answers.join(\u0027 \u0027));\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1779304783,
+    "model":  "typescript-quality-bench",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  713,
+                  "prompt_tokens":  181,
+                  "total_tokens":  894,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-meTIfCc71UBxSORFMb6HKkH8cwX7Wz37",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  181,
+                    "prompt_ms":  991.966,
+                    "prompt_per_token_ms":  5.480475138121547,
+                    "prompt_per_second":  182.4659312919999,
+                    "predicted_n":  713,
+                    "predicted_ms":  31587.717,
+                    "predicted_per_token_ms":  44.30254838709678,
+                    "predicted_per_second":  22.57206495803416,
+                    "draft_n":  542,
+                    "draft_n_accepted":  441
+                }
+}

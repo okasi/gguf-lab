@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    let ptr = 0;\n\n    const C = parseInt(input[ptr++]);\n    const N = parseInt(input[ptr++]);\n\n    // Using a Map to store key -\u003e {value, prev, next}\n    // This simulates a Doubly Linked List for O(1) LRU\n    const cache = new Map\u003cstring, { value: number, prev: string | null, next: string | null }\u003e();\n    let head: string | null = null; // Most Recently Used\n    let tail: string | null = null; // Least Recently Used\n\n    const results: number[] = [];\n\n    function moveToFront(key: string) {\n        const node = cache.get(key)!;\n        if (node.prev === null) return; // Already head\n\n        // Remove from current position\n        if (node.next !== null) {\n            cache.get(node.next)!.prev = node.prev;\n        } else {\n            tail = node.prev;\n        }\n        if (node.prev !== null) {\n            cache.get(node.prev)!.next = node.next;\n        }\n\n        // Move to head\n        node.prev = null;\n        node.next = head;\n        if (head !== null) {\n            cache.get(head)!.prev = key;\n        }\n        head = key;\n        if (tail === null) tail = key;\n    }\n\n    for (let i = 0; i \u003c N; i++) {\n        const op = input[ptr++];\n        if (op === \"PUT\") {\n            const key = input[ptr++];\n            const val = parseInt(input[ptr++]);\n\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                node.value = val;\n                moveToFront(key);\n            } else {\n                if (cache.size === C) {\n                    if (tail !== null) {\n                        cache.delete(tail);\n                        if (tail.prev !== null) {\n                            cache.get(tail.prev)!.next = null;\n                            tail = tail.prev;\n                        } else {\n                            head = null;\n                            tail = null;\n                        }\n                    }\n                }\n                const newNode = { value: val, prev: null, next: head };\n                if (head !== null) {\n                    cache.get(head)!.prev = key;\n                }\n                head = key;\n                if (tail === null) tail = key;\n                cache.set(key, newNode);\n            }\n        } else if (op === \"GET\") {\n            const key = input[ptr++];\n            if (cache.has(key)) {\n                results.push(cache.get(key)!.value);\n                moveToFront(key);\n            } else {\n                results.push(-1);\n            }\n        } else if (op === \"DEL\") {\n            const key = input[ptr++];\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                if (node.prev !== null) {\n                    cache.get(node.prev)!.next = node.next;\n                } else {\n                    head = node.next;\n                }\n                if (node.next !== null) {\n                    cache.get(node.next)!.prev = node.prev;\n                } else {\n                    tail = node.prev;\n                }\n                cache.delete(key);\n            }\n        }\n    }\n\n    if (results.length === 0) {\n        process.stdout.write(\"EMPTY\\n\");\n    } else {\n        process.stdout.write(results.join(\" \") + \"\\n\");\n    }\n\n    if (cache.size === 0) {\n        process.stdout.write(\"EMPTY\\n\");\n    } else {\n        const finalKeys: string[] = [];\n        let curr: string | null = head;\n        while (curr !== null) {\n            finalKeys.push(curr);\n            const node = cache.get(curr)!;\n            curr = node.next;\n        }\n        process.stdout.write(finalKeys.join(\" \") + \"\\n\");\n    }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780685999,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-textonly",
+    "system_fingerprint":  "b9534-e82beaa60",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1001,
+                  "prompt_tokens":  289,
+                  "total_tokens":  1290,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-t4wiCD5qB9yPwWOWbR19FBMPNDa3FMGi",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  288,
+                    "prompt_ms":  632.45,
+                    "prompt_per_token_ms":  2.1960069444444446,
+                    "prompt_per_second":  455.37196616333307,
+                    "predicted_n":  1001,
+                    "predicted_ms":  45237.358,
+                    "predicted_per_token_ms":  45.192165834165834,
+                    "predicted_per_second":  22.127729033158833
+                }
+}

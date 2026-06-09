@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * A custom Priority Queue implementation optimized for this problem.\n * It prioritizes lexicographically smaller task names among those with an in-degree of 0.\n */\nclass PriorityQueue {\n    constructor() {\n        this.heap = [];\n    }\n\n    size() {\n        return this.heap.length;\n    }\n\n    enqueue(taskName: string): void {\n        this.heap.push(taskName);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    dequeue(): string | undefined {\n        if (this.size() === 0) {\n            return undefined;\n        }\n        if (this.size() === 1) {\n            return this.heap.pop();\n        }\n\n        const top = this.heap[0];\n        this.heap[0] = this.heap.pop()!;\n        this.bubbleDown(0);\n        return top;\n    }\n\n    bubbleUp(index: number): void {\n        while (index \u003e 0) {\n            let parentIndex = Math.floor((index - 1) / 2);\n            if (this.heap[index] \u003c this.heap[parentIndex]) {\n                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];\n                index = parentIndex;\n            } else {\n                break;\n            }\n        }\n    }\n\n    bubbleDown(index: number): void {\n        const lastIndex = this.size() - 1;\n        while (true) {\n            let leftChildIndex = 2 * index + 1;\n            let rightChildIndex = 2 * index + 2;\n            let smallest = index;\n\n            if (leftChildIndex \u003c= lastIndex \u0026\u0026 this.heap[leftChildIndex] \u003c this.heap[smallest]) {\n                smallest = leftChildIndex;\n            }\n\n            if (rightChildIndex \u003c= lastIndex \u0026\u0026 this.heap[rightChildIndex] \u003c this.heap[smallest]) {\n                smallest = rightChildIndex;\n            }\n\n            if (smallest !== index) {\n                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n                index = smallest;\n            } else {\n                break;\n            }\n        }\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").trim().split(\u0027\\n\u0027);\n    if (input.length === 0 || input[0].length === 0) return;\n\n    const [N, M] = input[0].split(\u0027 \u0027).map(Number);\n    const tasks = input[1].trim().split(/\\s+/).filter(t =\u003e t.length \u003e 0);\n    const N_tasks = tasks.length;\n\n    if (N_tasks === 0) return;\n\n    const adj = Array(N_tasks).fill(0).map(() =\u003e []);\n    const inDegree = Array(N_tasks).fill(0);\n\n    for (let i = 0; i \u003c M; i++) {\n        const line = input[2 + i];\n        if (!line) continue;\n        const [u, v] = line.trim().split(/\\s+/);\n        if (u \u0026\u0026 v) {\n            const uIdx = parseInt(u);\n            const vIdx = parseInt(v);\n            adj[uIdx].push(vIdx);\n            inDegree[vIdx]++;\n        }\n    }\n\n    // 1. Initialize Priority Queue with tasks having in-degree 0\n    const pq = new PriorityQueue();\n    for (let i = 0; i \u003c N_tasks; i++) {\n        if (inDegree[i] === 0) {\n            pq.enqueue(tasks[i]);\n        }\n    }\n\n    const buildOrder: string[] = [];\n    let processedCount = 0;\n\n    // 2. Process using Kahn\u0027s Algorithm with PQ\n    while (pq.size() \u003e 0) {\n        const uTask = pq.dequeue()!;\n        buildOrder.push(uTask);\n        processedCount++;\n\n        // Process neighbors\n        for (const vIdx of adj[tasks.indexOf(uTask)]) {\n            inDegree[vIdx]--;\n            if (inDegree[vIdx] === 0) {\n                pq.enqueue(tasks[vIdx]);\n            }\n        }\n    }\n\n    // 3. Check for cycles\n    if (processedCount !== N_tasks) {\n        console.log(\"IMPOSSIBLE\");\n    } else {\n        console.log(buildOrder.join(\u0027 \u0027));\n    }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780960451,
+    "model":  "unsloth-gemma4-e2b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1077,
+                  "prompt_tokens":  190,
+                  "total_tokens":  1267,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-jpCQHiKngDa47gh6eboV8lfVemQ6MuSK",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  189,
+                    "prompt_ms":  73.402,
+                    "prompt_per_token_ms":  0.38837037037037037,
+                    "prompt_per_second":  2574.86172038909,
+                    "predicted_n":  1077,
+                    "predicted_ms":  12156.75,
+                    "predicted_per_token_ms":  11.287604456824512,
+                    "predicted_per_second":  88.59275711024739
+                }
+}

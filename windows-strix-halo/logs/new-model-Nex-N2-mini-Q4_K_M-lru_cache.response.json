@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "We need answer only TS code no explanation. Need craft complete TypeScript Node program. Need read stdin fs.readFileSync(0,\"utf8\"). Need simulate LRU cache. Need O(1). Keys strings no spaces. Values signed 32-bit ints. Capacity up to 2e5, N 3e5. TypeScript. Need output.\n\nNeed decide data structures. TypeScript Node. Could use Map with deletion/reinsertion O(1) amortized. For LRU, Map maintains insertion order, delete then set. GET get and delete set. PUT update or set/delete. DEL delete. O(1) average. Good.\n\nNeed parse input robustly. First line C N. Next N lines operations. Keys no spaces; value signed 32-bit. Need maybe values can be -2147483648 etc. Number ok.\n\nNeed produce first line all GET results separated by spaces or EMPTY. Second line remaining keys MRU to LRU separated by spaces or EMPTY.\n\nNeed \"complete TypeScript program for Node.js\" maybe include imports. Need no markdown.\n\nPotential issue operation lines may have multiple spaces? Problem says one of \"PUT key value\" but robust split. Need first token. Values signed 32-bit. Use BigInt? No, Number fine for signed 32-bit.\n\nPotential issue input may have trailing spaces/newlines. Use split(/\\s+/). If empty skip. But N known. Need parse N ops. Could read all tokens? Input structure with ops and values. Since keys no spaces, value numeric. Simpler:\nconst input = fs.readFileSync(0,\u0027utf8\u0027).trim();\nconst lines = input.split(/\\n/); const [C,N] = lines[0].split(\u0027 \u0027);\nfor i=1..N parse lines[i].split(/\\s+/).\nBut if empty? N\u003e=1. If input.trim() could remove empty ops? Operation lines nonempty. OK. If there are empty first? no.\n\nNeed output arrays. const getResults: string[] = []; const keysOut: string[] = [];\nAfter operations:\nprocess.stdout.write(getResults.length ? getResults.join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\nprocess.stdout.write([...cache.keys()].length ? [...cache.keys()].join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\nNeed TS target. NodeJS type? no need.\n\nNeed \"Return only TypeScript code\". Include import fs from \u0027fs\u0027;? Node. Complete.\n\nNeed maybe use process.exit(0)? no.\n\nNeed no explanation. Final code.\n\nBut let\u0027s think if Map order is exactly MRU to LRU. Map insertion order: when get existing, delete then set moves to end. PUT update delete then set moves. PUT insert set end. DEL delete. Yes.\n\nPotential \"amortized O(1)\" Map operations are O(1) average. Good.\n\nNeed maybe \"keys from MRU to LRU\" use cache.keys() iterator. In output if cache empty, EMPTY. If cache keys empty but get results none? output separate lines. Good.\n\nPotential if GET result values signed 32-bit, output number as string.\n\nNow final with imports.\n\u003c/think\u003e\n\nimport fs from \"fs\";\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nconst lines = input.split(/\\r?\\n/);\n\nconst [capacityText, operationCountText] = lines[0].split(/\\s+/);\nconst capacity = Number(capacityText);\nconst operationCount = Number(operationCountText);\n\nconst cache = new Map\u003cstring, number\u003e();\nconst getResults: string[] = [];\n\nfor (let i = 1; i \u003c= operationCount; i += 1) {\n  const parts = lines[i].split(/\\s+/);\n  const command = parts[0];\n\n  if (command === \"GET\") {\n    const key = parts[1];\n    const value = cache.get(key);\n\n    if (value === undefined) {\n      getResults.push(\"-1\");\n    } else {\n      cache.delete(key);\n      cache.set(key, value);\n      getResults.push(String(value));\n    }\n  } else if (command === \"PUT\") {\n    const key = parts[1];\n    const value = Number(parts[2]);\n\n    cache.delete(key);\n    cache.set(key, value);\n\n    while (cache.size \u003e capacity) {\n      const oldestKey = cache.keys().next().value as string;\n      cache.delete(oldestKey);\n    }\n  } else if (command === \"DEL\") {\n    cache.delete(parts[1]);\n  }\n}\n\nconst remainingKeys = [...cache.keys()];\n\nprocess.stdout.write(getResults.length \u003e 0 ? getResults.join(\" \") + \"\\n\" : \"EMPTY\\n\");\nprocess.stdout.write(remainingKeys.length \u003e 0 ? remainingKeys.join(\" \") + \"\\n\" : \"EMPTY\\n\");"
+                                    }
+                    }
+                ],
+    "created":  1780967671,
+    "model":  "nex-n2-mini-q4-k-m-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1051,
+                  "prompt_tokens":  281,
+                  "total_tokens":  1332,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-MYkL2iURMRiPuP1qeWFv6nxbR26UvTyI",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  281,
+                    "prompt_ms":  469.171,
+                    "prompt_per_token_ms":  1.6696476868327401,
+                    "prompt_per_second":  598.928748793084,
+                    "predicted_n":  1051,
+                    "predicted_ms":  16006.45,
+                    "predicted_per_token_ms":  15.229733587059943,
+                    "predicted_per_second":  65.66103039712115
+                }
+}

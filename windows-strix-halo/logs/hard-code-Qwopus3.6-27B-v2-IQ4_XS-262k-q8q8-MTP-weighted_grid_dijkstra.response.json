@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import fs from \u0027fs\u0027;\n\nfunction main() {\n    const data = fs.readFileSync(0, \"utf8\").trim();\n    const lines = data.split(/\\r?\\n/);\n    const [H, W] = lines[0].split(\" \").map(Number);\n    const grid: string[] = [];\n    for (let i = 1; i \u003c= H; i++) {\n        grid.push(lines[i]);\n    }\n\n    let startY = -1;\n    let startX = -1;\n    let targetY = -1;\n    let targetX = -1;\n\n    for (let y = 0; y \u003c H; y++) {\n        for (let x = 0; x \u003c W; x++) {\n            if (grid[y][x] === \u0027S\u0027) {\n                startY = y;\n                startX = x;\n            } else if (grid[y][x] === \u0027T\u0027) {\n                targetY = y;\n                targetX = x;\n            }\n        }\n    }\n\n    const INF = Number.MAX_SAFE_INTEGER;\n    const dist: number[][] = Array.from({ length: H }, () =\u003e new Array(W).fill(INF));\n    dist[startY][startX] = 0;\n\n    const pq: [number, number, number][] = []; // [cost, y, x]\n    pq.push([0, startY, startX]);\n\n    const dy = [-1, 1, 0, 0];\n    const dx = [0, 0, -1, 1];\n\n    while (pq.length \u003e 0) {\n        // Find the element with the minimum cost (simple linear search since we are not using a heap library)\n        // To optimize, we can use a proper priority queue, but for H*W \u003c= 300,000, a simple array with sorting or a heap is better.\n        // Let\u0027s implement a simple min-heap for efficiency.\n    }\n\n    // Re-implementing with a proper Min-Heap for Dijkstra\n    class MinHeap {\n        private heap: [number, number, number][] = [];\n\n        push(cost: number, y: number, x: number) {\n            this.heap.push([cost, y, x]);\n            this._bubbleUp(this.heap.length - 1);\n        }\n\n        pop(): [number, number, number] | undefined {\n            if (this.heap.length === 0) return undefined;\n            const top = this.heap[0];\n            const bottom = this.heap.pop();\n            if (bottom \u0026\u0026 this.heap.length \u003e 0) {\n                this.heap[0] = bottom;\n                this._bubbleDown(0);\n            }\n            return top;\n        }\n\n        isEmpty(): boolean {\n            return this.heap.length === 0;\n        }\n\n        private _bubbleUp(idx: number) {\n            const val = this.heap[idx];\n            while (idx \u003e 0) {\n                const parentIdx = Math.floor((idx - 1) / 2);\n                const parent = this.heap[parentIdx];\n                if (val[0] \u003e= parent[0]) break;\n                this.heap[idx] = parent;\n                idx = parentIdx;\n            }\n            this.heap[idx] = val;\n        }\n\n        private _bubbleDown(idx: number) {\n            const val = this.heap[idx];\n            const length = this.heap.length;\n            while (true) {\n                let leftChildIdx = 2 * idx + 1;\n                let rightChildIdx = 2 * idx + 2;\n                let swapIdx = null;\n\n                if (leftChildIdx \u003c length) {\n                    if (this.heap[leftChildIdx][0] \u003c val[0]) {\n                        swapIdx = leftChildIdx;\n                    }\n                }\n                if (rightChildIdx \u003c length) {\n                    if (this.heap[rightChildIdx][0] \u003c val[0]) {\n                        if (swapIdx === null || this.heap[rightChildIdx][0] \u003c this.heap[leftChildIdx][0]) {\n                            swapIdx = rightChildIdx;\n                        }\n                    } else if (swapIdx === null \u0026\u0026 this.heap[leftChildIdx][0] \u003c val[0]) {\n                        swapIdx = leftChildIdx;\n                    }\n                }\n\n                if (swapIdx === null) break;\n                this.heap[idx] = this.heap[swapIdx];\n                idx = swapIdx;\n            }\n            this.heap[idx] = val;\n        }\n    }\n\n    const pq2 = new MinHeap();\n    pq2.push(0, startY, startX);\n\n    const visited: boolean[][] = Array.from({ length: H }, () =\u003e new Array(W).fill(false));\n\n    while (!pq2.isEmpty()) {\n        const [cost, y, x] = pq2.pop()!;\n\n        if (visited[y][x]) continue;\n        visited[y][x] = true;\n\n        if (y === targetY \u0026\u0026 x === targetX) {\n            console.log(cost);\n            return;\n        }\n\n        for (let i = 0; i \u003c 4; i++) {\n            const ny = y + dy[i];\n            const nx = x + dx[i];\n\n            if (ny \u003c 0 || ny \u003e= H || nx \u003c 0 || nx \u003e= W) continue;\n            if (visited[ny][nx]) continue;\n            if (grid[ny][nx] === \u0027#\u0027) continue;\n\n            let moveCost = 0;\n            const cell = grid[ny][nx];\n            if (cell \u003e= \u00270\u0027 \u0026\u0026 cell \u003c= \u00279\u0027) {\n                moveCost = parseInt(cell, 10);\n            }\n            // S and T cost 0\n\n            const newCost = cost + moveCost;\n            if (newCost \u003c dist[ny][nx]) {\n                dist[ny][nx] = newCost;\n                pq2.push(newCost, ny, nx);\n            }\n        }\n    }\n\n    console.log(-1);\n}\n\nmain();"
+                                    }
+                    }
+                ],
+    "created":  1779630014,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1344,
+                  "prompt_tokens":  220,
+                  "total_tokens":  1564,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-p6ti6PDTu9orOa7qK49aMAf2lbPjFL23",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  220,
+                    "prompt_ms":  1264.774,
+                    "prompt_per_token_ms":  5.748972727272727,
+                    "prompt_per_second":  173.94411966090388,
+                    "predicted_n":  1344,
+                    "predicted_ms":  59025.566,
+                    "predicted_per_token_ms":  43.9178318452381,
+                    "predicted_per_second":  22.769794363344186,
+                    "draft_n":  1010,
+                    "draft_n_accepted":  838
+                }
+}

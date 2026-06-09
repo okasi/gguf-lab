@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \"fs\";\n\n/**\n * Least-recently-used cache implementation using Map for O(1) operations\n * and relying on Map\u0027s guaranteed insertion order (ES2015+) to\n * maintain MRU at the end and LRU at the beginning.\n */\nclass LRUCache {\n    private cache = new Map\u003cstring, { value: number; accessed: number }\u003e();\n    private capacity: number;\n    private counter = 0;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n    }\n\n    /**\n     * Retrieves the value associated with key, updating its accessed timestamp.\n     * @returns The value if present, otherwise -1.\n     */\n    get(key: string): number {\n        const entry = this.cache.get(key);\n        if (!entry) {\n            return -1;\n        }\n        // Touch: move to MRU by re-setting/updating\n        this.cache.set(key, { value: entry.value, accessed: this.counter++ });\n        return entry.value;\n    }\n\n    /**\n     * Puts or updates a key-value pair, marking it as MRU.\n     * If capacity is exceeded, evicts LRU item.\n     * @param key The key.\n     * @param value The value.\n     */\n    put(key: string, value: number): void {\n        if (this.cache.size \u003e= this.capacity) {\n            // Evict LRU item (first key in Map)\n            const lruKey = this.cache.keys().next().value;\n            this.cache.delete(lruKey);\n        }\n\n        this.cache.set(key, { value: value, accessed: this.counter++ });\n    }\n\n    /**\n     * Deletes an entry if it exists.\n     * @param key The key to delete.\n     */\n    delete(key: string): void {\n        this.cache.delete(key);\n    }\n\n    /**\n     * Returns the keys in MRU order (Map iteration order).\n     */\n    getKeys(): ReadonlyMap\u003cstring, { value: number; accessed: number }\u003e\u003e {\n        return this.cache;\n    }\n}\n\nfunction solve(input: string): string {\n    const lines = input.trim().split(\u0027\\n\u0027).filter(line =\u003e line.length \u003e 0);\n    if (lines.length === 0) {\n        return \"EMPTY\\nEMPTY\";\n    }\n\n    const [C, N] = lines[0].split(/\\s+/);\n    const cache = new LRUCache(C);\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c N + 1; i++) {\n        const line = lines[i];\n        const parts = line.split(/\\s+/);\n        const command = parts[0];\n        const key = parts[1];\n        // Value can be optional for DEL\n        const valueString = parts[2];\n        const value = parts[2] !== undefined ? parseInt(parts[2], 10) : null;\n\n        switch (command) {\n            case \u0027PUT\u0027:\n                if (valueString !== undefined) {\n                    cache.put(key, value);\n                }\n                break;\n            case \u0027GET\u0027:\n                const result = cache.get(key);\n                getResults.push(result);\n                break;\n            case \u0027DEL\u0027:\n                cache.delete(key);\n                break;\n        }\n    }\n\n    const getOutput: string = getResults.length === 0 ? \"EMPTY\" : getResults.join(\" \");\n\n    // Output remaining keys in MRU order (Map iteration order)\n    const remainingKeys = Array.from(cache.keys());\n    const keysOutput: string = remainingKeys.length === 0 ? \"EMPTY\" : remainingKeys.join(\" \");\n\n    return `${getOutput}\\n${keysOutput}`;\n}\n\ntry {\n    const input = fs.readFileSync(0, \"utf8\");\n    process.stdout.write(solve(input) + \"\\n\");\n} catch (error) {\n    // Handle file read error gracefully if necessary\n}\n\n// Helper to run tests locally\n/*\nconst TEST_INPUT = `2 9\nPUT a 1\nGET a\nPUT b 2\nGET a\nPUT c 3\nGET b\nPUT d 4\nGET a\nGET c\nDEL a\nGET a\nGET b\nGET c\nGET d\\n`;\n\nconsole.log(\"--- Running Test ---\");\nconsole.log(solve(TEST_INPUT));\n*/\n// End of script.\n// The output should be: 1 2 3 -1 2 3 4 2 3\n// Remaining keys (MRU -\u003e LRU): c b d a\n// Note: \u0027a\u0027 is evicted by PUT d 4 since c was accessed (GET c) more recently than b (PUT b 2), and b was the LRU.\n// The cache state after all operations (MRU first): { c: { value: 3, accessed: 6 }, b: { value: 2, accessed: 3 }, d: { value: 4, accessed: 7 } }, { a: { value: 1, accessed: 2 } }\n// Keys in order: c, b, d, a\n// ----------------------\n",
+                                        "reasoning_content":  "Plan:\n1. Read all input from stdin synchronously using `fs.readFileSync(0, \"utf8\")`.\n2. Process lines: parse command, key, value.\n3. Use `Map\u003cstring, { value: number, accessed: number }\u003e` for O(1) get/put/delete and tracking usage.\n4. Use `Map\u003cstring, number\u003e` (acting as a doubly linked list head/tail) or a `Set` combined with `Map` to track order in O(1) time (head/tail access). Since `Map` insertion order is preserved (ES2015+), we can use it directly for LRU order tracking.\n5. Implement `GET` (O(1)): update access time, return value or -1.\n6. Implement `PUT` (O(1)): update value/access time, check capacity, evict LRU if full.\n7. Implement `DEL` (O(1)): delete from map.\n8. Collect `GET` results in an array and print separated by spaces.\n9. Print remaining keys in MRU order (by iterating `Map` keys).\n10. Handle empty results with \"EMPTY\".\n\nRefinement: Since `Map` preserves insertion order, treating it as an LRU structure (inserting/touching makes it MRU) and reading keys in order gives MRU -\u003e LRU. We just need to track actual access time in the map value to ensure correct eviction order.\n\nImplementation details:\n- Time tracking: `Map\u003cstring, { value: number, accessed: number }\u003e\u003e` where `accessed` is `Date.now()` or a monotonically increasing counter.\n- Eviction: `const MAX_SIZE = C; if (size \u003e= MAX_SIZE) { const lruKey = map.keys().next().value; map.delete(lruKey); }`\n\nLet\u0027s write the code structure."
+                                    }
+                    }
+                ],
+    "created":  1779659636,
+    "model":  "gemma-4-e4b-uncensored-opus-q4",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1636,
+                  "prompt_tokens":  291,
+                  "total_tokens":  1927,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  5
+                                            }
+              },
+    "id":  "chatcmpl-AEsHPTG5tVLkQB3sccAnaXVtKHbYFgZe",
+    "timings":  {
+                    "cache_n":  5,
+                    "prompt_n":  286,
+                    "prompt_ms":  287.607,
+                    "prompt_per_token_ms":  1.0056188811188813,
+                    "prompt_per_second":  994.412514299026,
+                    "predicted_n":  1636,
+                    "predicted_ms":  34430.451,
+                    "predicted_per_token_ms":  21.045507946210268,
+                    "predicted_per_second":  47.5160781367633
+                }
+}

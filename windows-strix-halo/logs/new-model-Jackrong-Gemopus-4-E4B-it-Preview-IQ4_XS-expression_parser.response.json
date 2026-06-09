@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \"fs\";\n\ntype Token = number | string;\ntype Value = number;\n\n/**\n * Determines the precedence of an operator.\n * @param op The operator\n * @returns A number representing precedence (lower is weaker)\n */\nfunction getPrecedence(op: string): number {\n    switch (op) {\n        case \u0027+\u0027:\n        case \u0027-\u0027:\n            return 1;\n        case \u0027*\u0027:\n        case \u0027/\u0027:\n            return 2;\n        default:\n            return 3;\n    }\n}\n\n/**\n * Applies an operator to two operands.\n * @param left The left operand\n * @param right The right operand\n * @param op The operator\n * @returns The result of the operation\n */\nfunction applyOperator(left: Value, right: Value, op: string): Value {\n    switch (op) {\n        case \u0027+\u0027:\n            return left + right;\n        case \u0027-\u0027:\n            return left - right;\n        case \u0027*\u0027:\n            return left * right;\n        case \u0027/\u0027:\n            return Math.trunc(left / right);\n        default:\n            throw new Error(`Unknown operator: ${op}`);\n    }\n}\n\n/**\n * Tokenizes the input string into numbers and operators.\n * @param input The expression string\n * @returns An array of tokens\n */\nfunction tokenize(input: string): Token[] {\n    const tokens: Token[] = [];\n    // Regex to match numbers (including optional leading sign), operators, and parentheses\n    const tokenRegex = /[-+]?\\d+|[+\\-*/()]|/g;\n    const matches = input.match(tokenRegex);\n\n    if (!matches) {\n        throw new Error(\"No tokens found in input\");\n    }\n\n    return matches.map(t =\u003e {\n        if (/^[-+]?\\d+$/.test(t))) {\n            return Number(t);\n        }\n        return t;\n    });\n}\n\n/**\n * Converts infix tokens to postfix (RPN) using the Shunting-Yard algorithm.\n * @param tokens The array of tokens\n * @returns The array of postfix operators and operands\n */\nfunction toPostfix(tokens: Token[]): Token[] {\n    const output: Token[] = [];\n    const operators: string[] = [];\n\n    for (const token of tokens) {\n        if (typeof token === \u0027number\u0027) {\n            output.push(token);\n        } else if (token === \u0027(\u0027) {\n            operators.push(token);\n        } else if (token === \u0027)\u0027) {\n            while (operators.length \u003e 0 \u0026\u0026 operators[operators.length - 1] !== \u0027(\u0027) {\n                output.push(operators.pop() as Token);\n            }\n            if (operators.length === 0 || operators[operators.length - 1] !== \u0027(\u0027) {\n                throw new Error(\"Mismatched parentheses\");\n            }\n            operators.pop() as Token; // Pop \u0027(\u0027\n        } else if (token === \u0027+\u0027 || token === \u0027-\u0027) {\n            const currentPrecedence = getPrecedence(token);\n            while (operators.length \u003e 0 \u0026\u0026 operators[operators.length - 1] !== \u0027(\u0027) {\n                const top = operators[operators.length - 1] as Token;\n                if (getPrecedence(operators[operators.length - 1]) \u003e= currentPrecedence) {\n                    output.push(operators.pop() as Token);\n                } else {\n                    break;\n                }\n            }\n            operators.push(token) as Token;\n        } else {\n            throw new Error(`Unknown token: ${token}`);\n        }\n    }\n\n    while (operators.length \u003e 0) {\n        if (operators[operators.length - 1] !== \u0027(\u0027) {\n            output.push(operators.pop() as Token);\n        } else {\n            throw new Error(\"Mismatched parentheses\");\n        }\n    }\n\n    return output;\n}\n\n/**\n * Evaluates a Reverse Polish Notation (RPN) expression.\n * @param tokens The array of postfix operators and operands\n * @returns The result of the evaluation\n */\nfunction evaluateRPN(tokens: Token[]): Value {\n    const stack: Value[] = [];\n\n    for (const token of tokens) {\n        if (typeof token === \u0027number\u0027) {\n            stack.push(token);\n        } else if (token === \u0027(\u0027) {\n            throw new Error(\"Unexpected open parenthesis in RPN\");\n        } else if (token === \u0027)\u0027) {\n            const op = operators.pop() as Token;\n            if (op === \u0027(\u0027) {\n                throw new Error(\"Mismatched parentheses\");\n            }\n            const right = stack.pop() as Value;\n            const left = stack.pop() as Value;\n            const result = applyOperator(left, right, op);\n            stack.push(result);\n        } else if (token === \u0027+\u0027 || token === \u0027-\u0027) {\n            const currentPrecedence = getPrecedence(token);\n            while (operators.length \u003e 0 \u0026\u0026 operators[operators.length - 1] !== \u0027(\u0027) {\n                const top = operators[operators.length - 1] as Token;\n                if (getPrecedence(operators[operators.length - 1]) \u003e= currentPrecedence) {\n                    output.push(operators.pop() as Token);\n                } else {\n                    break;\n                }\n            }\n            operators.push(token) as Token;\n        } else {\n            throw new Error(`Unknown token: ${token}`);\n        }\n    }\n\n    while (operators.length \u003e 0) {\n        if (operators[operators.length - 1] !== \u0027(\u0027) {\n            output.push(operators.pop() as Token);\n        } else {\n            throw new Error(\"Mismatched parentheses\");\n        }\n    }\n\n    return stack.pop() as Value;\n}\n\ntry {\n    const input = fs.readFileSync(0, \"utf8\");\n    const tokens = tokenize(input);\n    const postfix = toPostfix(tokens);\n    const result = evaluateRPN(postfix);\n\n    console.log(result);\n} catch (e) {\n    process.exit(1);\n}\n"
+                                    }
+                    }
+                ],
+    "created":  1780826479,
+    "model":  "jackrong-gemopus-4-e4b-it-preview-iq4-xs",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1381,
+                  "prompt_tokens":  168,
+                  "total_tokens":  1549,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  18
+                                            }
+              },
+    "id":  "chatcmpl-agPQkCVPKrGLhIQX8hJ6rrdBza07IPXm",
+    "timings":  {
+                    "cache_n":  18,
+                    "prompt_n":  150,
+                    "prompt_ms":  146.501,
+                    "prompt_per_token_ms":  0.9766733333333334,
+                    "prompt_per_second":  1023.8837960150443,
+                    "predicted_n":  1381,
+                    "predicted_ms":  28150.491,
+                    "predicted_per_token_ms":  20.384135409123825,
+                    "predicted_per_second":  49.05775888598178
+                }
+}

@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \"fs\";\n\nfunction evaluateExpression(expr: string): number {\n    const tokens: string[] = tokenize(expr);\n    const parser = new Parser(tokens);\n    return parser.parseExpression();\n}\n\nfunction tokenize(expr: string): string[] {\n    const tokens: string[] = [];\n    let i = 0;\n    const s = expr.trim();\n    while (i \u003c s.length) {\n        const c = s[i];\n        if (c === \u0027 \u0027 || c === \u0027\\t\u0027) {\n            i++;\n            continue;\n        }\n        if (isDigit(c) || c === \u0027.\u0027) {\n            let num = \u0027\u0027;\n            while (i \u003c s.length \u0026\u0026 (isDigit(s[i]) || s[i] === \u0027.\u0027)) {\n                num += s[i];\n                i++;\n            }\n            tokens.push(num);\n        } else if (c === \u0027+\u0027 || c === \u0027-\u0027 || c === \u0027*\u0027 || c === \u0027/\u0027 || c === \u0027(\u0027 || c === \u0027)\u0027) {\n            // Handle unary + and - by checking context\n            if (c === \u0027+\u0027 || c === \u0027-\u0027) {\n                // It\u0027s unary if it\u0027s at the start or after an operator or opening paren\n                if (tokens.length === 0 || isOperatorOrOpenParen(tokens[tokens.length - 1])) {\n                    tokens.push(c);\n                    i++;\n                    continue;\n                }\n            }\n            tokens.push(c);\n            i++;\n        } else {\n            i++; // skip unknown chars\n        }\n    }\n    return tokens;\n}\n\nfunction isDigit(c: string): boolean {\n    return c \u003e= \u00270\u0027 \u0026\u0026 c \u003c= \u00279\u0027;\n}\n\nfunction isOperatorOrOpenParen(token: string): boolean {\n    return [\u0027+\u0027, \u0027-\u0027, \u0027*\u0027, \u0027/\u0027, \u0027(\u0027].includes(token);\n}\n\nclass Parser {\n    private tokens: string[];\n    private pos: number;\n\n    constructor(tokens: string[]) {\n        this.tokens = tokens;\n        this.pos = 0;\n    }\n\n    peek(): string | undefined {\n        return this.tokens[this.pos];\n    }\n\n    consume(): string {\n        return this.tokens[this.pos++];\n    }\n\n    parseExpression(): number {\n        return this.parseAddSub();\n    }\n\n    parseAddSub(): number {\n        let left = this.parseMulDiv();\n        while (this.peek() === \u0027+\u0027 || this.peek() === \u0027-\u0027) {\n            const op = this.consume();\n            const right = this.parseMulDiv();\n            if (op === \u0027+\u0027) {\n                left = left + right;\n            } else {\n                left = left - right;\n            }\n        }\n        return left;\n    }\n\n    parseMulDiv(): number {\n        let left = this.parseUnary();\n        while (this.peek() === \u0027*\u0027 || this.peek() === \u0027/\u0027) {\n            const op = this.consume();\n            const right = this.parseUnary();\n            if (op === \u0027*\u0027) {\n                left = left * right;\n            } else {\n                // Truncate toward zero\n                left = this.truncateDiv(left, right);\n            }\n        }\n        return left;\n    }\n\n    parseUnary(): number {\n        if (this.peek() === \u0027+\u0027 || this.peek() === \u0027-\u0027) {\n            const op = this.consume();\n            const val = this.parseUnary();\n            if (op === \u0027-\u0027) {\n                return -val;\n            } else {\n                return val;\n            }\n        }\n        return this.parsePrimary();\n    }\n\n    parsePrimary(): number {\n        const token = this.peek();\n        if (!token) {\n            throw new Error(\"Unexpected end of input\");\n        }\n\n        if (token === \u0027(\u0027) {\n            this.consume(); // consume \u0027(\u0027\n            const val = this.parseExpression();\n            const close = this.consume(); // consume \u0027)\u0027\n            if (close !== \u0027)\u0027) {\n                throw new Error(\"Expected \u0027)\u0027\");\n            }\n            return val;\n        } else if (isDigit(token)) {\n            this.consume();\n            return parseInt(token, 10);\n        } else {\n            throw new Error(`Unexpected token: ${token}`);\n        }\n    }\n\n    truncateDiv(a: number, b: number): number {\n        if (b === 0) {\n            throw new Error(\"Division by zero\");\n        }\n        const res = a / b;\n        if (res \u003e= 0) {\n            return Math.floor(res);\n        } else {\n            return Math.ceil(res);\n        }\n    }\n}\n\nconst input = fs.readFileSync(0, \"utf8\");\ntry {\n    const result = evaluateExpression(input);\n    console.log(result);\n} catch (e) {\n    console.error(e);\n    process.exit(1);\n}"
+                                    }
+                    }
+                ],
+    "created":  1780941904,
+    "model":  "jcbtc-chadrock35-uncensored-rocmfp4-mtp-temp091",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1062,
+                  "prompt_tokens":  171,
+                  "total_tokens":  1233,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-Ub8JUUITUCxQdF4aVxGs9ZgWrVRDIVJb",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  171,
+                    "prompt_ms":  307.407,
+                    "prompt_per_token_ms":  1.7977017543859648,
+                    "prompt_per_second":  556.2657974606955,
+                    "predicted_n":  1062,
+                    "predicted_ms":  12596.801,
+                    "predicted_per_token_ms":  11.861394538606403,
+                    "predicted_per_second":  84.30711892646396,
+                    "draft_n":  1044,
+                    "draft_n_accepted":  800
+                }
+}

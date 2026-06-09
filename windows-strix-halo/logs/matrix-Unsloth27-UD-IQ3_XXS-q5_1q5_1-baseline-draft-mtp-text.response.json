@@ -1,0 +1,39 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "length",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "",
+                                        "reasoning_content":  "Here\u0027s a thinking process:\n\n1.  **Analyze User Input:**\n   - **Topic:** Multi-token prediction and its effect on local LLM decoding throughput\n   - **Format:** Concise technical explanation\n   - **Constraint:** Under 200 words\n\n2.  **Identify Key Concepts:**\n   - What is multi-token prediction? (Predicting multiple tokens per forward pass instead of one)\n   - How does it work technically? (Parallel decoding, speculative decoding, multi-token sampling, or architectures like Medusa, LLaMA-Turbo, etc.)\n   - How does it affect throughput? (Reduces sequential bottleneck, increases tokens/sec, but may introduce overhead like memory/compute trade-offs, accuracy trade-offs, or verification steps)\n   - Local LLM context: Resource-constrained environments, CPU/GPU limits, memory bandwidth, latency sensitivity\n\n3.  **Draft - Mental Refinement (aiming for technical precision \u0026 conciseness):**\n   Multi-token prediction accelerates local LLM decoding throughput by breaking the sequential token-by-token generation bottleneck. Instead of performing one forward pass per token, the model predicts multiple tokens simultaneously (e.g., via parallel heads, speculative decoding, or multi-token sampling). Each forward pass outputs a set of candidate tokens, which are then either directly sampled or verified by a teacher model. This reduces the number of expensive autoregressive steps, significantly increasing tokens-per-second, especially on memory-bound local hardware where kernel launch overhead and KV-cache updates dominate latency. However, throughput gains are constrained by the accuracy of the multi-token head: incorrect predictions require backtracking or rejection, adding verification overhead. Additionally, parallel prediction increases activation memory and compute per step, which can saturate local GPU/CPU resources. When properly tuned, multi-token prediction typically yields 2–5× throughput improvements on local deployments by amortizing"
+                                    }
+                    }
+                ],
+    "created":  1779301713,
+    "model":  "qwen3.6-27b-bench",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  384,
+                  "prompt_tokens":  36,
+                  "total_tokens":  420,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-h69ESBTOZgInJtRrreSXl35O0ri07wzM",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  36,
+                    "prompt_ms":  324.124,
+                    "prompt_per_token_ms":  9.003444444444446,
+                    "prompt_per_second":  111.06860337401734,
+                    "predicted_n":  384,
+                    "predicted_ms":  20174.114,
+                    "predicted_per_token_ms":  52.53675520833334,
+                    "predicted_per_second":  19.034293154088452,
+                    "draft_n":  355,
+                    "draft_n_accepted":  204
+                }
+}

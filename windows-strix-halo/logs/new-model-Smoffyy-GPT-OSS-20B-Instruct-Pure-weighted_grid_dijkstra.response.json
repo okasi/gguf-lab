@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).trimEnd().split(/\\r?\\n/);\nconst [H, W] = input[0].trim().split(/\\s+/).map(Number);\nconst grid = input.slice(1, H + 1);\n\nlet startIdx = -1;\nlet targetIdx = -1;\nconst cost: number[] = new Array(H * W);\n\nfor (let i = 0; i \u003c H; i++) {\n  const line = grid[i];\n  for (let j = 0; j \u003c W; j++) {\n    const ch = line[j];\n    const idx = i * W + j;\n    if (ch === \u0027S\u0027) {\n      startIdx = idx;\n      cost[idx] = 0;\n    } else if (ch === \u0027T\u0027) {\n      targetIdx = idx;\n      cost[idx] = 0;\n    } else if (ch === \u0027#\u0027) {\n      cost[idx] = -1; // wall\n    } else {\n      cost[idx] = Number(ch); // digit 0-9\n    }\n  }\n}\n\nif (startIdx === -1 || targetIdx === -1) {\n  console.log(-1);\n  process.exit(0);\n}\n\nclass MinHeap {\n  private data: Array\u003c[number, number]\u003e = [];\n  push(item: [number, number]) {\n    this.data.push(item);\n    this.bubbleUp(this.data.length - 1);\n  }\n  pop(): [number, number] | undefined {\n    if (this.data.length === 0) return undefined;\n    const top = this.data[0];\n    const last = this.data.pop()!;\n    if (this.data.length \u003e 0) {\n      this.data[0] = last;\n      this.bubbleDown(0);\n    }\n    return top;\n  }\n  size() {\n    return this.data.length;\n  }\n  private bubbleUp(idx: number) {\n    while (idx \u003e 0) {\n      const parent = (idx - 1) \u003e\u003e 1;\n      if (this.data[parent][0] \u003c= this.data[idx][0]) break;\n      [this.data[parent], this.data[idx]] = [this.data[idx], this.data[parent]];\n      idx = parent;\n    }\n  }\n  private bubbleDown(idx: number) {\n    const n = this.data.length;\n    while (true) {\n      let left = (idx \u003c\u003c 1) + 1;\n      let right = left + 1;\n      let smallest = idx;\n      if (left \u003c n \u0026\u0026 this.data[left][0] \u003c this.data[smallest][0]) smallest = left;\n      if (right \u003c n \u0026\u0026 this.data[right][0] \u003c this.data[smallest][0]) smallest = right;\n      if (smallest === idx) break;\n      [this.data[smallest], this.data[idx]] = [this.data[idx], this.data[smallest]];\n      idx = smallest;\n    }\n  }\n}\n\nconst dist = new Array(H * W).fill(Infinity);\ndist[startIdx] = 0;\nconst heap = new MinHeap();\nheap.push([0, startIdx]);\n\nconst dirs = [\n  [1, 0],\n  [-1, 0],\n  [0, 1],\n  [0, -1],\n];\n\nwhile (heap.size() \u003e 0) {\n  const [d, idx] = heap.pop()!;\n  if (d !== dist[idx]) continue;\n  if (idx === targetIdx) break;\n  const i = Math.floor(idx / W);\n  const j = idx % W;\n  for (const [di, dj] of dirs) {\n    const ni = i + di;\n    const nj = j + dj;\n    if (ni \u003c 0 || ni \u003e= H || nj \u003c 0 || nj \u003e= W) continue;\n    const nidx = ni * W + nj;\n    if (cost[nidx] === -1) continue; // wall\n    const nd = d + cost[nidx];\n    if (nd \u003c dist[nidx]) {\n      dist[nidx] = nd;\n      heap.push([nd, nidx]);\n    }\n  }\n}\n\nconst result = dist[targetIdx] === Infinity ? -1 : dist[targetIdx];\nconsole.log(result.toString());\n",
+                                        "reasoning_content":  "We need to write full TS program. We\u0027ll parse input, find grid, find S and T. Use Dijkstra with priority queue. Since grid size up to? Not given, but typical up to maybe 1000x1000. We\u0027ll implement binary min-heap.\n\nEdge weights are cost of entering the destination cell. So from cell (i,j) to neighbor (ni,nj), weight = cost[ni][nj] (0 if S/T). We\u0027ll treat cost matrix.\n\nImplement min-heap. Use array of [dist, idx] where idx = i*W + j. Use typical push/pop.\n\nReturn -1 if unreachable.\n\nEdge cases: S==T? then cost 0.\n\nLet\u0027s craft.\n\nImplementation details:\n\n- Read all lines, split by newline, trim last? Use .trim().split(/\\s+/)? But grid lines may contain characters including \u0027#\u0027, digits, S, T. They are contiguous strings. So we can read lines array. The first line has H W. Then next H lines each string of length W.\n\nWe\u0027ll parse H and W using split.\n\nThen iterate over grid lines.\n\nDefine dist array of size H*W, init Infinity.\n\nFind start index and target index.\n\nInitialize priority queue with start dist 0.\n\nWhile pq not empty: pop min. If popped dist \u003e dist[idx] continue. If idx==target return dist. For each neighbor within bounds and not \u0027#\u0027, compute newDist = dist + cost[ni][nj]. If newDist \u003c dist[neighbor] update and push.\n\nIf finished loop without reaching target, output -1.\n\nDefine cost function: if char is digit, parseInt. else 0.\n\nAlso treat \u0027#\u0027 as wall skip.\n\nImplement min-heap:\n\nclass MinHeap { arr: [number, number][]; ... } with push, pop, size.\n\nWe can use standard binary heap.\n\nEdge: If start or target missing? assume present.\n\nLet\u0027s craft code.\n\nAlso handle reading. Use fs.readFileSync(0, \"utf8\").trimEnd() to avoid trailing newline issues. But if grid lines contain trailing spaces? Not likely. We\u0027ll use .split(\u0027\\n\u0027).\n\nBut if input ends with newline, .trimEnd() will remove newline but also maybe remove trailing spaces? Not needed. Use .split(/\\r?\\n/) for windows.\n\nLet\u0027s code.\n\nAlso we must output via console.log.\n\nOk. Let\u0027s produce final TS code."
+                                    }
+                    }
+                ],
+    "created":  1780968519,
+    "model":  "smoffyy-gpt-oss-20b-pure-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1407,
+                  "prompt_tokens":  241,
+                  "total_tokens":  1648,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-8y48OHPbw3ghfwbluRh4wdFhUFKTPkQm",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  241,
+                    "prompt_ms":  427.363,
+                    "prompt_per_token_ms":  1.7732904564315353,
+                    "prompt_per_second":  563.9234093732963,
+                    "predicted_n":  1407,
+                    "predicted_ms":  30481.271,
+                    "predicted_per_token_ms":  21.664016346837244,
+                    "predicted_per_second":  46.15949249622825
+                }
+}

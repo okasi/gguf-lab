@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "\u003cthink\u003e\n\n\u003c/think\u003e\n\n```typescript\nimport * as fs from \"fs\";\n\nfunction evaluateExpression(expression: string): number {\n  const tokens: string[] = tokenize(expression);\n  const parser = new Parser(tokens);\n  return parser.parseExpression();\n}\n\ninterface Token {\n  type: \"number\" | \"op\" | \"lparen\" | \"rparen\";\n  value: string;\n}\n\nfunction tokenize(input: string): string[] {\n  const tokens: string[] = [];\n  let i = 0;\n  const s = input.trim();\n  while (i \u003c s.length) {\n    if (s[i] === \" \") {\n      i++;\n      continue;\n    }\n    if (s[i] === \"(\") {\n      tokens.push(\"(\");\n      i++;\n    } else if (s[i] === \")\") {\n      tokens.push(\")\");\n      i++;\n    } else if (s[i] === \"+\" || s[i] === \"-\" || s[i] === \"*\" || s[i] === \"/\") {\n      // Check if it\u0027s unary\n      if (s[i] === \"+\" || s[i] === \"-\") {\n        // Unary if it\u0027s the first token, or after an operator or opening paren\n        const isUnary =\n          tokens.length === 0 ||\n          tokens[tokens.length - 1] === \"(\" ||\n          isOperator(tokens[tokens.length - 1]);\n        if (isUnary) {\n          // Consume the sign\n          let sign = s[i];\n          i++;\n          // Skip spaces after sign\n          while (i \u003c s.length \u0026\u0026 s[i] === \" \") i++;\n          // Next must be a number\n          if (i \u003c s.length \u0026\u0026 (s[i] \u003e= \"0\" \u0026\u0026 s[i] \u003c= \"9\" || s[i] === \"(\")) {\n            if (sign === \"-\") {\n              // We\u0027ll handle the sign by prepending a negative number or using a unary op\n              // Let\u0027s just push the sign as part of the number parsing logic or as a unary operator\n              // Simpler: push a unary operator token\n              tokens.push(sign);\n            } else {\n              // unary +, just skip\n            }\n          } else {\n            // Unexpected\n            throw new Error(\"Unexpected token after unary operator\");\n          }\n          continue;\n        }\n      }\n      tokens.push(s[i]);\n      i++;\n    } else if (s[i] \u003e= \"0\" \u0026\u0026 s[i] \u003c= \"9\") {\n      let num = \"\";\n      while (i \u003c s.length \u0026\u0026 s[i] \u003e= \"0\" \u0026\u0026 s[i] \u003c= \"9\") {\n        num += s[i];\n        i++;\n      }\n      tokens.push(num);\n    } else {\n      throw new Error(`Unexpected character: ${s[i]}`);\n    }\n  }\n  return tokens;\n}\n\nfunction isOperator(op: string): boolean {\n  return op === \"+\" || op === \"-\" || op === \"*\" || op === \"/\";\n}\n\nclass Parser {\n  private tokens: string[];\n  private pos: number;\n\n  constructor(tokens: string[]) {\n    this.tokens = tokens;\n    this.pos = 0;\n  }\n\n  private peek(): string | undefined {\n    return this.pos \u003c this.tokens.length ? this.tokens[this.pos] : undefined;\n  }\n\n  private consume(): string {\n    const token = this.tokens[this.pos];\n    this.pos++;\n    return token;\n  }\n\n  parseExpression(): number {\n    return this.parseAddSub();\n  }\n\n  private parseAddSub(): number {\n    let left = this.parseMulDiv();\n    while (this.peek() === \"+\" || this.peek() === \"-\") {\n      const op = this.consume();\n      const right = this.parseMulDiv();\n      if (op === \"+\") {\n        left = left + right;\n      } else {\n        left = left - right;\n      }\n    }\n    return left;\n  }\n\n  private parseMulDiv(): number {\n    let left = this.parseUnary();\n    while (this.peek() === \"*\" || this.peek() === \"/\") {\n      const op = this.consume();\n      const right = this.parseUnary();\n      if (op === \"*\") {\n        left = left * right;\n      } else {\n        // Division truncates toward zero\n        left = left / right;\n        if (left \u003e 0) {\n          left = Math.floor(left);\n        } else {\n          left = Math.ceil(left);\n        }\n      }\n    }\n    return left;\n  }\n\n  private parseUnary(): number {\n    if (this.peek() === \"-\") {\n      this.consume();\n      const val = this.parseUnary();\n      return -val;\n    }\n    if (this.peek() === \"+\") {\n      this.consume();\n      return this.parseUnary();\n    }\n    return this.parsePrimary();\n  }\n\n  private parsePrimary(): number {\n    const token = this.peek();\n    if (token === undefined) {\n      throw new Error(\"Unexpected end of input\");\n    }\n    if (token === \"(\") {\n      this.consume(); // consume (\n      const val = this.parseExpression();\n      if (this.peek() !== \")\") {\n        throw new Error(\"Expected \u0027)\u0027\");\n      }\n      this.consume(); // consume )\n      return val;\n    }\n    if (token === \"-\" || token === \"+\" || token === \"*\" || token === \"/\") {\n      // This case is handled by parseUnary, but if we get here, it\u0027s an error\n      throw new Error(`Unexpected operator: ${token}`);\n    }\n    // Must be a number\n    if (!/^-?\\d+$/.test(token)) {\n      throw new Error(`Invalid number: ${token}`);\n    }\n    this.consume();\n    return parseInt(token, 10);\n  }\n}\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nconst result = evaluateExpression(input);\nconsole.log(result);\n```"
+                                    }
+                    }
+                ],
+    "created":  1780933300,
+    "model":  "jcbtc-chadrock35-uncensored-rocmfp4-mtp",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1351,
+                  "prompt_tokens":  171,
+                  "total_tokens":  1522,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-1pPHxP9ijgLXzViX8ApV2MEZB4BxMSnM",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  171,
+                    "prompt_ms":  319.785,
+                    "prompt_per_token_ms":  1.8700877192982457,
+                    "prompt_per_second":  534.7342745907406,
+                    "predicted_n":  1351,
+                    "predicted_ms":  17126.501,
+                    "predicted_per_token_ms":  12.676906735751295,
+                    "predicted_per_second":  78.88359683043257,
+                    "draft_n":  1388,
+                    "draft_n_accepted":  1004
+                }
+}

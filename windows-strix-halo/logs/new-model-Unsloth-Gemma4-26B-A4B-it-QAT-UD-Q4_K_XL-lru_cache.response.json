@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nclass ListNode {\n    constructor(\n        public key: string,\n        public value: number,\n        public prev: ListNode | null = null,\n        public next: ListNode | null = null\n    ) {}\n}\n\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, ListNode\u003e;\n    private head: ListNode;\n    private tail: ListNode;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map();\n        this.head = new ListNode(\u0027\u0027, 0);\n        this.tail = new ListNode(\u0027\u0027, 0);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private detach(node: ListNode) {\n        const prev = node.prev!;\n        const next = node.next!;\n        prev.next = next;\n        next.prev = prev;\n    }\n\n    private attachToHead(node: ListNode) {\n        node.next = this.head.next;\n        node.prev = this.head;\n        this.head.next!.prev = node;\n        this.head.next = node;\n    }\n\n    get(key: string): number {\n        const node = this.map.get(key);\n        if (!node) return -1;\n        this.detach(node);\n        this.attachToHead(node);\n        return node.value;\n    }\n\n    put(key: string, value: number): void {\n        const existingNode = this.map.get(key);\n        if (existingNode) {\n            existingNode.value = value;\n            this.detach(existingNode);\n            this.attachToHead(existingNode);\n        } else {\n            if (this.map.size \u003e= this.capacity) {\n                const lru = this.tail.prev!;\n                if (lru !== this.head) {\n                    this.map.delete(lru.key);\n                    this.detach(lru);\n                }\n            }\n            const newNode = new ListNode(key, value);\n            this.map.set(key, newNode);\n            this.attachToHead(newNode);\n        }\n    }\n\n    delete(key: string): void {\n        const node = this.map.get(key);\n        if (node) {\n            this.detach(node);\n            this.map.delete(key);\n        }\n    }\n\n    getKeysOrdered(): string[] {\n        const keys: string[] = [];\n        let current = this.head.next;\n        while (current !== this.tail) {\n            if (current) {\n                keys.push(current.key);\n                current = current.next;\n            } else {\n                break;\n            }\n        }\n        return keys;\n    }\n\n    isEmpty(): boolean {\n        return this.map.size === 0;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\");\n    const lines = input.split(/\\r?\\n/);\n    if (lines.length === 0) return;\n\n    const firstLine = lines[0].trim().split(/\\s+/);\n    if (firstLine.length \u003c 2) return;\n    \n    const C = parseInt(firstLine[0]);\n    const N = parseInt(firstLine[1]);\n    \n    const cache = new LRUCache(C);\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= N; i++) {\n        const line = lines[i];\n        if (!line) continue;\n        const parts = line.trim().split(/\\s+/);\n        const cmd = parts[0];\n\n        if (cmd === \u0027PUT\u0027) {\n            const key = parts[1];\n            const val = parseInt(parts[2]);\n            cache.put(key, val);\n        } else if (cmd === \u0027GET\u0027) {\n            const key = parts[1];\n            getResults.push(cache.get(key));\n        } else if (cmd === \u0027DEL\u0027) {\n            const key = parts[1];\n            cache.delete(key);\n        }\n    }\n\n    process.stdout.write((getResults.length \u003e 0 ? getResults.join(\u0027 \u0027) : \"EMPTY\") + \"\\n\");\n    const remainingKeys = cache.getKeysOrdered();\n    process.stdout.write((remainingKeys.length \u003e 0 ? remainingKeys.join(\u0027 \u0027) : \"EMPTY\") + \"\\n\");\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780962605,
+    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1052,
+                  "prompt_tokens":  289,
+                  "total_tokens":  1341,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-fdRas366rkCeNxVdgTSSlUxbqMAMBvyP",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  289,
+                    "prompt_ms":  350.519,
+                    "prompt_per_token_ms":  1.2128685121107268,
+                    "prompt_per_second":  824.4916823339105,
+                    "predicted_n":  1052,
+                    "predicted_ms":  17266.285,
+                    "predicted_per_token_ms":  16.412818441064637,
+                    "predicted_per_second":  60.92798769393648
+                }
+}

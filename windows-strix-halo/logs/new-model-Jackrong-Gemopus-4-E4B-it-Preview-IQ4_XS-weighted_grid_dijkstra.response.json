@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\ntype Cell = { r: number; c: number; cost: number };\ntype State = { r: number; c: number; cost: number };\n\nconst directions: [number, number][] = [\n    [1, 0], [-1, 0], [0, 1], [0, -1]\n];\n\n/**\n * Implements Dijkstra\u0027s algorithm to find the minimum cost path.\n * @param height Grid height\n * @param width Grid width\n * @param grid The grid map\n * @returns Minimum cost, or -1 if unreachable\n */\nfunction dijkstra(H: number, W: number, grid: string[][]): number {\n    const dist = Array(H).fill(0).map(() =\u003e Array(W).fill(Infinity) as number[]);\n    const pq = new MinPriorityQueue\u003cState\u003e();\n    let start: Cell | undefined = undefined;\n    let target: Cell | undefined = undefined;\n\n    for (let r = 0; r \u003c H; r++) {\n        for (let c = 0; c \u003c W; c++) {\n            const char = grid[r][c];\n            if (char === \u0027S\u0027) start = { r: r, c: c, cost: 0 };\n            if (char === \u0027T\u0027) target = { r: r, c: c, cost: 0 };\n        }\n    }\n\n    if (!start || !target) {\n        return -1;\n    }\n\n    dist[start.r][start.c] = 0;\n    pq.enqueue({ ...start, cost: 0 } as State);\n\n    while (!pq.isEmpty()) {\n        const { r, c, cost } = pq.dequeue() as State;\n\n        if (cost \u003e dist[r][c]) continue;\n\n        if (r === target.r \u0026\u0026 c === target.c) return cost;\n\n        for (const [dr, dc] of directions) {\n            const nr = r + dr;\n            const nc = dc;\n            if (nr \u003c H || nc \u003c W || nr \u003e= H || nc \u003e= W) continue;\n\n            const cell = grid[nr][nc];\n            if (cell === \u0027#\u0027) continue;\n\n            let enterCost = 0;\n            if (cell \u003e= \u00270\u0027 \u0026\u0026 cell \u003c= \u00279\u0027) {\n                enterCost = parseInt(cell);\n            }\n            \n            // \u0027S\u0027 or \u0027T\u0027 cost is 0, already handled by cost logic if it\u0027s not a digit\n            if (cell === \u0027S\u0027 || cell === \u0027T\u0027) {\n                enterCost = 0;\n            }\n\n            const newCost = cost + enterCost;\n\n            if (newCost \u003c dist[nr][nc]) {\n                dist[nr][nc] = newCost;\n                pq.enqueue({ r: nr, c: nc, cost: newCost } as State);\n            }\n        }\n    }\n\n    return -1;\n}\n\nclass MinPriorityQueue\u003cT extends { cost: number }\u003e {\n    private heap: T[] = [];\n\n    private getParentIndex(i: number): number {\n        return Math.floor((i - 1) / 2);\n    }\n\n    private getLeftChildIndex(i: number): number {\n        return 2 * i + 1;\n    }\n\n    private getRightChildIndex(i: number): number {\n        return 2 * i + 2;\n    }\n\n    private swap(i: number, j: number): void {\n        [this.heap[i], this.heap[j]] = [this.heap[i], this.heap[j]];\n    }\n\n    private bubbleUp(i: number): void {\n        let k = i;\n        while (k \u003e 0 \u0026\u0026 this.heap[k].cost \u003e this.heap[k \u003e\u003e 1].cost) {\n            this.heap[k] = this.heap[k \u003e\u003e 1];\n            k = k \u003e\u003e 1;\n        }\n    }\n\n    private bubbleDown(i: number): void {\n        let k = i;\n        while (this.heap[k].cost \u003e this.heap[k \u003c\u003c 1].cost \u0026\u0026 k * 2 + 1 \u003c this.heap.length) {\n            let l = k \u003c\u003c 1;\n            let r = k \u003c\u003c 1 | 1;\n            let child = l;\n            if (this.heap[r].cost \u003c this.heap[l].cost) {\n                child = r;\n            }\n            this.heap[k] = this.heap[child];\n            k = child;\n        }\n    }\n\n    public enqueue(item: T): void {\n        this.heap.push(item);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    public dequeue(): T {\n        this.heap[0] = this.heap.pop();\n        this.heap.length = 0;\n        this.bubbleDown(0);\n        return this.heap[0];\n    }\n\n    public isEmpty(): boolean {\n        return this.heap.length === 0;\n    }\n}\n\nconst fs = require(\u0027fs\u0027).readFileSync(0, \"utf8\");\nconst [H, W] = fs.readFileSync(0, \"utf8\").trim().split(/\\s+/).map(Number);\nconst grid: string[][] = fs.readFileSync(0, \"utf8\").trim().split(\u0027\\n\u0027).map(line =\u003e line.split(\u0027\u0027));\n\nconsole.log(dijkstra(H, W, grid));"
+                                    }
+                    }
+                ],
+    "created":  1780826506,
+    "model":  "jackrong-gemopus-4-e4b-it-preview-iq4-xs",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1265,
+                  "prompt_tokens":  192,
+                  "total_tokens":  1457,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-AudmoXrCyydMyvw9CoT8g7gbsWw3eQ5D",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  191,
+                    "prompt_ms":  144.651,
+                    "prompt_per_token_ms":  0.7573350785340315,
+                    "prompt_per_second":  1320.4194924335122,
+                    "predicted_n":  1265,
+                    "predicted_ms":  25595.998,
+                    "predicted_per_token_ms":  20.23399051383399,
+                    "predicted_per_second":  49.42178851553278
+                }
+}

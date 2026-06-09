@@ -1,0 +1,34 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : Qwen3.6-27B.i1-IQ4_XS-attn_qkv-IQ4_XS.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Running large language models locally requires navigating a complex triad of hardware constraints and algorithmic optimizations to maximize tokens per second. Quantization serves as the primary lever for improving throughput by reducing the precision of model weights, typically from 16-bit floating point to 8-bit integers or even lower. This compression drastically shrinks the model’s memory footprint, allowing larger architectures to fit into consumer-grade VRAM or system RAM. Crucially, smaller data sizes mean less data needs to be moved across the memory bus, directly addressing the bottleneck of memory bandwidth. Since local inference is almost exclusively memory-bound rather than compute-bound, the speed at which weights can be transferred from storage to the processing cores dictates the generation rate. Therefore, higher memory bandwidth allows for faster weight retrieval, enabling the GPU or CPU to process tokens more rapidly without waiting for data.
+
+Speculative decoding introduces a sophisticated algorithmic layer that further accelerates generation by leveraging a smaller, faster "draft" model. This draft model predicts multiple subsequent tokens in parallel, which the larger, primary model then verifies in a single forward pass. If the predictions are correct, the system effectively generates several tokens for the computational cost of one verification step, significantly boosting effective throughput. However, this technique is most effective when the draft model’s
+
+[ Prompt: 42.0 t/s | Generation: 13.6 t/s ]
+
+Exiting...
+

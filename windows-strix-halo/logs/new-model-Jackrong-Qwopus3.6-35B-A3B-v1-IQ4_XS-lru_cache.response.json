@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \u0027fs\u0027;\n\nclass Node {\n    key: string;\n    value: number;\n    prev: Node | null;\n    next: Node | null;\n\n    constructor(key: string, value: number) {\n        this.key = key;\n        this.value = value;\n        this.prev = null;\n        this.next = null;\n    }\n}\n\nclass DoublyLinkedList {\n    head: Node;\n    tail: Node;\n\n    constructor() {\n        this.head = new Node(\u0027\u0027, 0);\n        this.tail = new Node(\u0027\u0027, 0);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    addHead(node: Node): void {\n        node.prev = this.head;\n        node.next = this.head.next;\n        this.head.next!.prev = node;\n        this.head.next = node;\n    }\n\n    remove(node: Node): void {\n        node.prev!.next = node.next;\n        node.next!.prev = node.prev;\n        node.prev = null;\n        node.next = null;\n    }\n\n    moveToHead(node: Node): void {\n        this.remove(node);\n        this.addHead(node);\n    }\n\n    removeTail(): Node | null {\n        if (this.tail.prev === this.head) {\n            return null;\n        }\n        const node = this.tail.prev!;\n        this.remove(node);\n        return node;\n    }\n}\n\nclass LRUCache {\n    capacity: number;\n    size: number;\n    map: Map\u003cstring, Node\u003e;\n    list: DoublyLinkedList;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.size = 0;\n        this.map = new Map();\n        this.list = new DoublyLinkedList();\n    }\n\n    get(key: string): number {\n        const node = this.map.get(key);\n        if (!node) {\n            return -1;\n        }\n        this.list.moveToHead(node);\n        return node.value;\n    }\n\n    put(key: string, value: number): void {\n        const node = this.map.get(key);\n        if (node) {\n            node.value = value;\n            this.list.moveToHead(node);\n            return;\n        }\n        const newNode = new Node(key, value);\n        this.list.addHead(newNode);\n        this.map.set(key, newNode);\n        this.size++;\n        if (this.size \u003e this.capacity) {\n            const tailNode = this.list.removeTail();\n            if (tailNode) {\n                this.map.delete(tailNode.key);\n                this.size--;\n            }\n        }\n    }\n\n    delete(key: string): void {\n        const node = this.map.get(key);\n        if (!node) {\n            return;\n        }\n        this.list.remove(node);\n        this.map.delete(key);\n        this.size--;\n    }\n\n    getKeysInOrder(): string[] {\n        const keys: string[] = [];\n        let current = this.list.head.next;\n        while (current \u0026\u0026 current !== this.list.tail) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n}\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nconst lines = input.split(\u0027\\n\u0027);\nconst firstLine = lines[0].split(\u0027 \u0027);\nconst capacity = parseInt(firstLine[0], 10);\nconst numOps = parseInt(firstLine[1], 10);\n\nconst cache = new LRUCache(capacity);\nconst getResults: number[] = [];\n\nfor (let i = 1; i \u003c= numOps; i++) {\n    const parts = lines[i].split(\u0027 \u0027);\n    const operation = parts[0];\n    const key = parts[1];\n    if (operation === \u0027GET\u0027) {\n        const value = cache.get(key);\n        getResults.push(value);\n    } else if (operation === \u0027PUT\u0027) {\n        const value = parseInt(parts[2], 10);\n        cache.put(key, value);\n    } else if (operation === \u0027DEL\u0027) {\n        cache.delete(key);\n    }\n}\n\nif (getResults.length === 0) {\n    console.log(\u0027EMPTY\u0027);\n} else {\n    console.log(getResults.join(\u0027 \u0027));\n}\n\nconst remainingKeys = cache.getKeysInOrder();\nif (remainingKeys.length === 0) {\n    console.log(\u0027EMPTY\u0027);\n} else {\n    console.log(remainingKeys.join(\u0027 \u0027));\n}\n```",
+                                        "reasoning_content":  "We are going to implement an LRU cache using a doubly linked list and a hash map (node map).\n The hash map will map keys to nodes in the doubly linked list.\n The doubly linked list will maintain the order of access: the head is the most recently used, and the tail is the least recently used.\n\n Steps:\n 1. Define a Node class for the doubly linked list.\n 2. Define a DoublyLinkedList class with methods to add to head, remove from tail, and move a node to head.\n 3. Define the LRUCache class with:\n    - capacity: number\n    - size: number (current number of entries in the cache)\n    - map: Map\u003cstring, Node\u003e (key -\u003e node)\n    - head: Node (dummy head)\n    - tail: Node (dummy tail)\n\n 4. Implement the operations:\n    - PUT(key, value): \n        If key exists, update the value and move the node to head.\n        If not exists, create a new node and add to head.\n        If size exceeds capacity, remove the least recently used (from tail) and then add the new node.\n    - GET(key):\n        If key exists, move the node to head and return the value.\n        Otherwise, return -1.\n    - DEL(key):\n        If key exists, remove the node and remove from map.\n\n 5. Read input and process operations.\n\n Note: We are using a dummy head and tail for easier operations.\n\n However, note: the problem says to output the remaining keys from most-recently-used to least-recently-used.\n We can traverse from head.next to tail.prev to get the keys in order.\n\n Important: We must use fs.readFileSync(0, \"utf8\") to read stdin.\n\n Let\u0027s code accordingly.\n"
+                                    }
+                    }
+                ],
+    "created":  1780962735,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-iq4-xs-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1418,
+                  "prompt_tokens":  282,
+                  "total_tokens":  1700,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-gjLFYg3nO37TK4uk9hBpT7ForvqaE3Ms",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  282,
+                    "prompt_ms":  442.254,
+                    "prompt_per_token_ms":  1.568276595744681,
+                    "prompt_per_second":  637.6426216608555,
+                    "predicted_n":  1418,
+                    "predicted_ms":  21951.012,
+                    "predicted_per_token_ms":  15.48026234132581,
+                    "predicted_per_second":  64.59838844787657
+                }
+}

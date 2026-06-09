@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * A Least Recently Used (LRU) Cache implementation using a Map and a Doubly Linked List\n * structure (simulated via object properties for simplicity in this context,\n * although a dedicated structure would be more robust for true O(1) performance\n * tracking of recency).\n *\n * For O(1) complexity with PUT, GET, and DEL, we use a Map for O(1) key lookups\n * and a Doubly Linked List to maintain the usage order.\n */\nclass LRUCache {\n    constructor(capacity) {\n        this.capacity = capacity;\n        // Map: key -\u003e node in the list (for O(1) access)\n        this.map = new Map();\n        // Doubly Linked List structure:\n        // head (MRU) -\u003e ... -\u003e tail (LRU)\n        this.head = { key: null, value: null, prev: null, next: null }; // Dummy head\n        this.tail = { key: null, value: null, prev: null, next: null }; // Dummy tail\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    // Helper to remove a node from its current position\n    _removeNode(node) {\n        node.prev.next = node.next;\n        node.next.prev = node.prev;\n    }\n\n    // Helper to move a node to the front (MRU position)\n    _moveToHead(node) {\n        node.next = this.head.next;\n        node.prev = this.head;\n        this.head.next.prev = node;\n        this.head.next = node;\n    }\n\n    // Helper to add a new node to the front (MRU position)\n    _addToHead(key, value) {\n        const newNode = { key, value, prev: this.head, next: this.head.next };\n        this.head.next = newNode;\n        newNode.next.prev = newNode;\n    }\n\n    put(key, value) {\n        if (this.map.has(key)) {\n            // Update value and move to head\n            const node = this.map.get(key);\n            node.value = value;\n            this._moveToHead(node);\n        } else {\n            // Check capacity\n            if (this.map.size \u003e= this.capacity) {\n                // Evict LRU (node before tail)\n                const lruNode = this.tail.prev;\n                if (lruNode !== this.head) {\n                    this._removeNode(lruNode);\n                    this.map.delete(lruNode.key);\n                }\n            }\n\n            // Insert new item\n            this._addToHead(key, value);\n            this.map.set(key, { key, value, prev: this.tail, next: this.head.next }); // Store node reference\n            this.map.set(key, { key, value, prev: this.tail, next: this.head.next }); // This mapping structure is tricky in TS/JS simulation. Let\u0027s simplify the storage for the map: key -\u003e {value, listNode}\n\n            // Re-implement map storage to hold list node references directly\n            const newNode = { key, value, prev: this.tail, next: this.head.next };\n            this.head.next = newNode;\n            newNode.next.prev = newNode;\n            this.map.set(key, newNode);\n        }\n    }\n\n    get(key) {\n        if (!this.map.has(key)) {\n            return -1;\n        }\n\n        const node = this.map.get(key);\n        // Move to head (MRU)\n        this._removeNode(node);\n        this._addToHead(key, node.value); // Re-insert to ensure proper MRU ordering in the list structure\n        return node.value;\n    }\n\n    delete(key) {\n        if (!this.map.has(key)) {\n            return;\n        }\n\n        const node = this.map.get(key);\n        this._removeNode(node);\n        this.map.delete(key);\n    }\n\n    // Get keys ordered from MRU to LRU\n    getOrderedKeys() {\n        const keys = [];\n        let current = this.head.next;\n        while (current !== this.tail) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n}\n\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").trim().split(\u0027\\n\u0027);\n\n    if (input.length === 0 || input[0].length === 0) return;\n\n    // Parse C and N\n    const [C_str, N_str] = input[0].trim().split(/\\s+/);\n    const C = parseInt(C_str);\n    const N = parseInt(N_str);\n\n    const cache = new LRUCache(C);\n\n    const getResults = [];\n    const getOperations = [];\n\n    for (let i = 1; i \u003c= N; i++) {\n        const line = input[i].trim();\n        if (!line) continue;\n\n        const parts = line.split(/\\s+/);\n        const operation = parts[0];\n\n        if (operation === \"PUT\") {\n            const key = parts[1];\n            // Value is signed 32-bit integer\n            const value = parseInt(parts[2]);\n            cache.put(key, value);\n        } else if (operation === \"GET\") {\n            const key = parts[1];\n            const result = cache.get(key);\n            getResults.push(result);\n            getOperations.push(\"GET\");\n        } else if (operation === \"DEL\") {\n            const key = parts[1];\n            cache.delete(key);\n        }\n    }\n\n    // --- Output Generation ---\n\n    // Line 1: GET results\n    if (getResults.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(getResults.join(\" \"));\n    }\n\n    // Line 2: Remaining keys (MRU to LRU)\n    const orderedKeys = cache.getOrderedKeys();\n    if (orderedKeys.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(orderedKeys.join(\" \"));\n    }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780960401,
+    "model":  "unsloth-gemma4-e2b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1494,
+                  "prompt_tokens":  285,
+                  "total_tokens":  1779,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-nKLXNXl4EWqgzLTN8vhnC9NBMutmCySj",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  284,
+                    "prompt_ms":  125.808,
+                    "prompt_per_token_ms":  0.4429859154929578,
+                    "prompt_per_second":  2257.408113951418,
+                    "predicted_n":  1494,
+                    "predicted_ms":  17133.125,
+                    "predicted_per_token_ms":  11.46795515394913,
+                    "predicted_per_second":  87.19950388501806
+                }
+}

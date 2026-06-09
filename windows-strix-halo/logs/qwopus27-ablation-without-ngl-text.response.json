@@ -1,0 +1,39 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "length",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "",
+                                        "reasoning_content":  "1.  **Analyze the Request:**\n    *   **Topic:** How multi-token prediction (MTP) affects local LLM decoding throughput.\n    *   **Format:** Concise technical explanation.\n    *   **Constraint:** Under 180 words.\n\n2.  **Deconstruct the Topic (MTP \u0026 Throughput):**\n    *   *What is MTP?* Predicting multiple future tokens in a single forward pass instead of one.\n    *   *How does it work?* The model outputs $k$ tokens. They are verified (usually autoregressively or via a secondary verification step). If a token is correct, it\u0027s accepted; if not, decoding reverts to standard autoregression.\n    *   *Effect on Throughput:* Increases tokens per second (TPS) because the compute cost of one forward pass is amortized over multiple generated tokens. The overhead of the larger forward pass is offset by skipping $k-1$ forward passes on average.\n    *   *Constraints/Limitations:* Memory bandwidth (VRAM) is the bottleneck for autoregressive decoding. MTP helps here by reducing the number of forward passes, but increases compute per step. Acceptance rate dictates the actual speedup"
+                                    }
+                    }
+                ],
+    "created":  1779295702,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  256,
+                  "prompt_tokens":  36,
+                  "total_tokens":  292,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-6snzqGzUzI7w0NjVyMsHRhYJ1XdydQpo",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  36,
+                    "prompt_ms":  319.944,
+                    "prompt_per_token_ms":  8.887333333333334,
+                    "prompt_per_second":  112.51969094591553,
+                    "predicted_n":  256,
+                    "predicted_ms":  14621.651,
+                    "predicted_per_token_ms":  57.11582421875,
+                    "predicted_per_second":  17.50828275138013,
+                    "draft_n":  225,
+                    "draft_n_accepted":  142
+                }
+}

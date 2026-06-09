@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import fs from \"fs\";\n\nclass LRUCache {\n  private capacity: number;\n  private map: Map\u003cstring, string\u003e;\n  private keys: string[];\n  private keyIndex: Map\u003cstring, number\u003e;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.map = new Map();\n    this.keys = [];\n    this.keyIndex = new Map();\n  }\n\n  put(key: string, value: string): void {\n    if (this.keyIndex.has(key)) {\n      this.map.set(key, value);\n      this.moveToFront(key);\n    } else {\n      if (this.keys.length \u003e= this.capacity) {\n        const evicted = this.keys.pop()!;\n        this.keyIndex.delete(evicted);\n        this.map.delete(evicted);\n      }\n      this.keys.unshift(key);\n      this.keyIndex.set(key, 0);\n      this.map.set(key, value);\n      this.rebuildIndices();\n    }\n  }\n\n  get(key: string): string | undefined {\n    if (!this.keyIndex.has(key)) {\n      return undefined;\n    }\n    this.moveToFront(key);\n    return this.map.get(key);\n  }\n\n  del(key: string): void {\n    if (!this.keyIndex.has(key)) {\n      return;\n    }\n    const index = this.keyIndex.get(key)!;\n    this.keys.splice(index, 1);\n    this.keyIndex.delete(key);\n    this.map.delete(key);\n    this.rebuildIndices();\n  }\n\n  getKeysMRUtoLRU(): string[] {\n    return [...this.keys];\n  }\n\n  private moveToFront(key: string): void {\n    const index = this.keyIndex.get(key)!;\n    if (index === 0) {\n      return;\n    }\n    this.keys.splice(index, 1);\n    this.keys.unshift(key);\n    this.rebuildIndices();\n  }\n\n  private rebuildIndices(): void {\n    this.keyIndex.clear();\n    for (let i = 0; i \u003c this.keys.length; i++) {\n      this.keyIndex.set(this.keys[i], i);\n    }\n  }\n}\n\nfunction main(): void {\n  const input = fs.readFileSync(0, \"utf8\").trim();\n  const lines = input.split(\"\\n\");\n  const firstLine = lines[0].split(\" \");\n  const C = parseInt(firstLine[0], 10);\n  const N = parseInt(firstLine[1], 10);\n\n  const cache = new LRUCache(C);\n  const getResults: string[] = [];\n\n  for (let i = 1; i \u003c= N; i++) {\n    const line = lines[i];\n    if (!line) continue;\n    const parts = line.split(\" \");\n    const op = parts[0];\n    const key = parts[1];\n\n    if (op === \"PUT\") {\n      const value = parts[2];\n      cache.put(key, value);\n    } else if (op === \"GET\") {\n      const result = cache.get(key);\n      if (result !== undefined) {\n        getResults.push(result);\n      } else {\n        getResults.push(\"-1\");\n      }\n    } else if (op === \"DEL\") {\n      cache.del(key);\n    }\n  }\n\n  const getOutput = getResults.length \u003e 0 ? getResults.join(\" \") : \"EMPTY\";\n  const keys = cache.getKeysMRUtoLRU();\n  const keysOutput = keys.length \u003e 0 ? keys.join(\" \") : \"EMPTY\";\n\n  console.log(getOutput);\n  console.log(keysOutput);\n}\n\nmain();"
+                                    }
+                    }
+                ],
+    "created":  1779629914,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  821,
+                  "prompt_tokens":  284,
+                  "total_tokens":  1105,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-NEbaV5NLVsF7YPvq4Q7PXE3bFelmKv0w",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  284,
+                    "prompt_ms":  1369.746,
+                    "prompt_per_token_ms":  4.8230492957746485,
+                    "prompt_per_second":  207.33771078725542,
+                    "predicted_n":  821,
+                    "predicted_ms":  34753.739,
+                    "predicted_per_token_ms":  42.330985383678446,
+                    "predicted_per_second":  23.62335747529208,
+                    "draft_n":  596,
+                    "draft_n_accepted":  522
+                }
+}

@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \u0027fs\u0027;\n\nclass MinBinaryHeap {\n    private data: string[] = [];\n\n    private getLeftIndex(i: number): number {\n        return 2 * i + 1;\n    }\n\n    private getRightIndex(i: number): number {\n        return 2 * i + 2;\n    }\n\n    private getParentIndex(i: number): number {\n        return Math.floor((i - 1) / 2);\n    }\n\n    private swap(i: number, j: number): void {\n        const temp = this.data[i];\n        this.data[i] = this.data[j];\n        this.data[j] = temp;\n    }\n\n    private siftUp(): void {\n        let currentIndex = 0;\n        while (currentIndex \u003e 0) {\n            const parentIndex = this.getParentIndex(currentIndex);\n            if (this.data[parentIndex] \u003c= this.data[currentIndex]) {\n                break;\n            }\n            this.swap(currentIndex, parentIndex);\n            currentIndex = parentIndex;\n        }\n    }\n\n    private siftDown(): void {\n        let currentIndex = 0;\n        const length = this.data.length;\n        while (this.getLeftIndex(currentIndex) \u003c length) {\n            let leftIndex = this.getLeftIndex(currentIndex);\n            let rightIndex = this.getRightIndex(currentIndex);\n            let smallerIndex = leftIndex;\n\n            if (rightIndex \u003c length \u0026\u0026 this.data[rightIndex] \u003c this.data[leftIndex]) {\n                smallerIndex = rightIndex;\n            }\n\n            if (this.data[currentIndex] \u003c= this.data[smallerIndex]) {\n                break;\n            }\n\n            this.swap(currentIndex, smallerIndex);\n            currentIndex = smallerIndex;\n        }\n    }\n\n    public push(item: string): void {\n        this.data.push(item);\n        this.siftUp();\n    }\n\n    public pop(): string | undefined {\n        if (this.data.length === 0) {\n            return undefined;\n        }\n        const top = this.data[0];\n        const last = this.data.pop()!;\n        if (this.data.length \u003e 0) {\n            this.data[0] = last;\n            this.siftDown();\n        }\n        return top;\n    }\n\n    public isEmpty(): boolean {\n        return this.data.length === 0;\n    }\n\n    public size(): number {\n        return this.data.length;\n    }\n}\n\nfunction solve(): void {\n    const input = fs.readFileSync(0, \u0027utf8\u0027).trim();\n    const lines = input.split(\u0027\\n\u0027);\n    let lineIndex = 0;\n\n    const firstLine = lines[lineIndex++].trim().split(/\\s+/);\n    const N = parseInt(firstLine[0], 10);\n    const M = parseInt(firstLine[1], 10);\n\n    const taskNames = lines[lineIndex++].trim().split(/\\s+/);\n    \n    // Map task name to index\n    const nameToIndex = new Map\u003cstring, number\u003e();\n    for (let i = 0; i \u003c N; i++) {\n        nameToIndex.set(taskNames[i], i);\n    }\n\n    // Adjacency list and in-degree array\n    const adj: number[][] = new Array(N).fill(null).map(() =\u003e []);\n    const inDegree: number[] = new Array(N).fill(0);\n\n    for (let i = 0; i \u003c M; i++) {\n        const edge = lines[lineIndex++].trim().split(/\\s+/);\n        const fromName = edge[0];\n        const toName = edge[1];\n        \n        const fromIdx = nameToIndex.get(fromName)!;\n        const toIdx = nameToIndex.get(toName)!;\n        \n        adj[fromIdx].push(toIdx);\n        inDegree[toIdx]++;\n    }\n\n    const pq = new MinBinaryHeap();\n    \n    // Initialize heap with tasks that have no dependencies\n    for (let i = 0; i \u003c N; i++) {\n        if (inDegree[i] === 0) {\n            pq.push(taskNames[i]);\n        }\n    }\n\n    const buildOrder: string[] = [];\n    \n    while (!pq.isEmpty()) {\n        const currentName = pq.pop()!;\n        const currentIdx = nameToIndex.get(currentName)!;\n        \n        buildOrder.push(currentName);\n        \n        for (const neighborIdx of adj[currentIdx]) {\n            inDegree[neighborIdx]--;\n            if (inDegree[neighborIdx] === 0) {\n                pq.push(taskNames[neighborIdx]);\n            }\n        }\n    }\n\n    if (buildOrder.length !== N) {\n        console.log(\u0027IMPOSSIBLE\u0027);\n    } else {\n        console.log(buildOrder.join(\u0027 \u0027));\n    }\n}\n\nsolve();\n```"
+                                    }
+                    }
+                ],
+    "created":  1780967617,
+    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1081,
+                  "prompt_tokens":  193,
+                  "total_tokens":  1274,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-IsUUdHqvYJezghylXS1WJEd617ihqdHq",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  193,
+                    "prompt_ms":  297.508,
+                    "prompt_per_token_ms":  1.5414922279792744,
+                    "prompt_per_second":  648.7220511717333,
+                    "predicted_n":  1081,
+                    "predicted_ms":  13816.266,
+                    "predicted_per_token_ms":  12.7810046253469,
+                    "predicted_per_second":  78.2411108761224,
+                    "draft_n":  695,
+                    "draft_n_accepted":  683
+                }
+}

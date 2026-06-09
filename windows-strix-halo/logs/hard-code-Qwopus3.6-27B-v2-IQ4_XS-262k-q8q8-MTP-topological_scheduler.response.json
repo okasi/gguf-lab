@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import fs from \"fs\";\n\nclass MinHeap {\n  private data: string[] = [];\n\n  private swap(i: number, j: number): void {\n    const temp = this.data[i];\n    this.data[i] = this.data[j];\n    this.data[j] = temp;\n  }\n\n  private siftUp(index: number): void {\n    while (index \u003e 0) {\n      const parent = (index - 1) \u003e\u003e 1;\n      if (this.data[parent] \u003e this.data[index]) {\n        this.swap(parent, index);\n        index = parent;\n      } else {\n        break;\n      }\n    }\n  }\n\n  private siftDown(index: number): void {\n    const length = this.data.length;\n    while (true) {\n      let smallest = index;\n      const left = 2 * index + 1;\n      const right = 2 * index + 2;\n\n      if (left \u003c length \u0026\u0026 this.data[left] \u003c this.data[smallest]) {\n        smallest = left;\n      }\n\n      if (right \u003c length \u0026\u0026 this.data[right] \u003c this.data[smallest]) {\n        smallest = right;\n      }\n\n      if (smallest !== index) {\n        this.swap(index, smallest);\n        index = smallest;\n      } else {\n        break;\n      }\n    }\n  }\n\n  push(item: string): void {\n    this.data.push(item);\n    this.siftUp(this.data.length - 1);\n  }\n\n  pop(): string | undefined {\n    if (this.data.length === 0) {\n      return undefined;\n    }\n    const top = this.data[0];\n    const last = this.data.pop();\n    if (this.data.length \u003e 0 \u0026\u0026 last !== undefined) {\n      this.data[0] = last;\n      this.siftDown(0);\n    }\n    return top;\n  }\n\n  peek(): string | undefined {\n    return this.data.length \u003e 0 ? this.data[0] : undefined;\n  }\n\n  isEmpty(): boolean {\n    return this.data.length === 0;\n  }\n\n  size(): number {\n    return this.data.length;\n  }\n}\n\nfunction solve(): void {\n  const input = fs.readFileSync(0, \"utf8\").trim();\n  if (!input) {\n    return;\n  }\n\n  const lines = input.split(/\\r?\\n/);\n  const [nStr, mStr] = lines[0].split(\" \").map(Number);\n  const n = nStr;\n  const m = mStr;\n\n  const tasks = lines[1].split(\" \");\n  const adj: Map\u003cstring, string[]\u003e = new Map();\n  const inDegree: Map\u003cstring, number\u003e = new Map();\n\n  for (const task of tasks) {\n    adj.set(task, []);\n    inDegree.set(task, 0);\n  }\n\n  for (let i = 0; i \u003c m; i++) {\n    const [u, v] = lines[2 + i].split(\" \");\n    adj.get(u)!.push(v);\n    inDegree.set(v, (inDegree.get(v) || 0) + 1);\n  }\n\n  const heap = new MinHeap();\n  for (const task of tasks) {\n    if (inDegree.get(task) === 0) {\n      heap.push(task);\n    }\n  }\n\n  const result: string[] = [];\n\n  while (!heap.isEmpty()) {\n    const current = heap.pop();\n    if (current === undefined) {\n      break;\n    }\n    result.push(current);\n\n    const neighbors = adj.get(current);\n    if (neighbors) {\n      for (const neighbor of neighbors) {\n        const newDegree = (inDegree.get(neighbor) || 0) - 1;\n        inDegree.set(neighbor, newDegree);\n        if (newDegree === 0) {\n          heap.push(neighbor);\n        }\n      }\n    }\n  }\n\n  if (result.length !== n) {\n    console.log(\"IMPOSSIBLE\");\n  } else {\n    console.log(result.join(\" \"));\n  }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1779630087,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  949,
+                  "prompt_tokens":  220,
+                  "total_tokens":  1169,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-wV6ZAMhs9d0SyD3MUbe0r6WAcXvbPjPH",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  220,
+                    "prompt_ms":  1125.568,
+                    "prompt_per_token_ms":  5.116218181818182,
+                    "prompt_per_second":  195.45687155285154,
+                    "predicted_n":  949,
+                    "predicted_ms":  40640.673,
+                    "predicted_per_token_ms":  42.8247344573235,
+                    "predicted_per_second":  23.350991259421317,
+                    "draft_n":  696,
+                    "draft_n_accepted":  600
+                }
+}

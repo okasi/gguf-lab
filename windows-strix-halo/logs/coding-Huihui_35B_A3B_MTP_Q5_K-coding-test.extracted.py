@@ -1,0 +1,35 @@
+﻿import sys
+
+def main():
+    tokens = sys.stdin.read().split()
+    idx = 0
+    N = int(tokens[idx]); idx += 1
+    Q = int(tokens[idx]); idx += 1
+
+    events = []
+    for _ in range(N):
+        l = int(tokens[idx]); idx += 1
+        r = int(tokens[idx]); idx += 1
+        events.append((l, 0))
+        events.append((r, 2))
+
+    queries = []
+    for i in range(Q):
+        queries.append((int(tokens[idx]), i)); idx += 1
+        events.append((queries[-1][0], 1))
+
+    events.sort()
+
+    cnt = [0] * Q
+    c = 0
+    for coord, typ in events:
+        if typ == 0:
+            c += 1
+        elif typ == 2:
+            c -= 1
+        else:
+            cnt[queries.pop(0)[1]] = c
+
+    sys.stdout.write(' '.join(map(str, cnt)) + '\n')
+
+main()

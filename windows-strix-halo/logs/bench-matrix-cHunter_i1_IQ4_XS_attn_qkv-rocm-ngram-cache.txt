@@ -1,0 +1,36 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : Qwen3.6-27B.i1-IQ4_XS-attn_qkv-IQ4_XS.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Local Large Language Model performance, measured in tokens per second, is fundamentally constrained by three critical technical factors: quantization, memory bandwidth, and speculative decoding. Quantization reduces the numerical precision of model weights, typically from 16-bit floating-point to 4-bit or 8-bit integers. This compression significantly decreases the model’s memory footprint, allowing larger architectures to fit within limited hardware resources while simultaneously reducing the data volume that must be transferred during inference. Consequently, lower precision directly alleviates pressure on the memory subsystem, which is often the primary bottleneck in local deployment scenarios.
+
+Memory bandwidth dictates the speed at which data moves between the storage and the processing units. Since large language models are memory-bound rather than compute-bound during generation, the rate at which weights can be fetched from VRAM or RAM directly caps the maximum throughput. Even with powerful GPUs, insufficient bandwidth will stall the decoding process, resulting in lower token generation speeds. Therefore, optimizing data access patterns and utilizing high-speed memory interfaces are essential for maximizing performance.
+
+Speculative decoding further enhances throughput by employing a smaller, faster draft model to propose multiple candidate tokens simultaneously. The larger target model then verifies these candidates in parallel rather than generating them sequentially. If the draft model’s predictions align with the target model’s probable outputs
+
+[ Prompt: 180.2 t/s | Generation: 13.2 t/s ]
+
+Exiting...
+

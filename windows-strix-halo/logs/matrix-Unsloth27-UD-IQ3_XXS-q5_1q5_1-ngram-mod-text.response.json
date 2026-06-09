@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "length",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "",
+                                        "reasoning_content":  "Here\u0027s a thinking process:\n\n1.  **Analyze User Input:**\n   - **Topic:** Multi-token prediction and its effect on local LLM decoding throughput\n   - **Requirement:** Concise technical explanation\n   - **Constraint:** Under 200 words\n\n2.  **Identify Key Concepts:**\n   - Multi-token prediction (speculative decoding, multi-token attention, etc.)\n   - Local LLM decoding (running on consumer hardware, typically GPU/CPU)\n   - Throughput (tokens per second)\n   - How it works: Predict multiple tokens at once instead of one-by-one\n   - Technical mechanism: Parallel computation, reduced KV cache updates, fewer forward passes\n   - Impact on throughput: Increases tokens/sec by amortizing computation, but with trade-offs (memory, accuracy, draft model overhead)\n\n3.  **Draft - Mental Refinement (aiming for technical precision \u0026 conciseness):**\n   Multi-token prediction increases local LLM decoding throughput by generating multiple tokens per forward pass instead of autoregressively. Traditional decoding computes one token at a time, creating a sequential bottleneck where each step requires a full model pass and KV-cache update. Multi-token methods (e.g., speculative decoding or multi-token attention) predict a token sequence in parallel, often using a draft model or extended attention windows. The system verifies predictions in a single backward pass, amortizing computation across multiple tokens. This reduces the number of sequential forward passes, cutting latency and increasing tokens-per-second. On local hardware, where memory bandwidth and compute capacity are constrained, the technique minimizes idle cycles and improves utilization. Throughput gains typically scale with the number of verified tokens per step, though they are bounded by draft model accuracy, verification overhead, and increased memory pressure from parallel attention. When implemented efficiently, multi-token prediction can double or triple local decoding throughput without architectural changes to"
+                                    }
+                    }
+                ],
+    "created":  1779301780,
+    "model":  "qwen3.6-27b-bench",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  384,
+                  "prompt_tokens":  36,
+                  "total_tokens":  420,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-C4RLzX9LCOXREuPHome1P5doIM3EIkHB",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  36,
+                    "prompt_ms":  286.8,
+                    "prompt_per_token_ms":  7.966666666666667,
+                    "prompt_per_second":  125.52301255230125,
+                    "predicted_n":  384,
+                    "predicted_ms":  25093.56,
+                    "predicted_per_token_ms":  65.3478125,
+                    "predicted_per_second":  15.302731059283735
+                }
+}

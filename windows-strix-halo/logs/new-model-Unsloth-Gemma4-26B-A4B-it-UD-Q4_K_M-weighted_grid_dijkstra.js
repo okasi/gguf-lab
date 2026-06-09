@@ -1,0 +1,185 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs = __importStar(require("fs"));
+class MinHeap {
+    constructor() {
+        this.heap = [];
+    }
+    push(val) {
+        this.heap.push(val);
+        this.bubbleUp();
+    }
+    pop() {
+        if (this.heap.length === 0)
+            return null;
+        const top = this.heap[0];
+        const last = this.heap.pop();
+        if (this.heap.length > 0) {
+            this.heap[0] = last;
+            this.bubbleDown();
+        }
+        return top;
+    }
+    size() {
+        return this.heap.length;
+    }
+    bubbleUp() {
+        let idx = this.heap.length - 1;
+        while (idx > 0) {
+            let parentIdx = (idx - 1) >> 1;
+            if (this.heap[idx].cost < this.heap[parentIdx].cost) {
+                const temp = this.heap[idx];
+                this.heap[idx] = this.heap[parentIdx];
+                this.heap[parentIdx] = temp;
+                idx = parentIdx;
+            }
+            else {
+                break;
+            }
+        }
+    }
+    bubbleDown() {
+        let idx = 0;
+        const n = this.heap.length;
+        while (true) {
+            let left = (idx << 1) + 1;
+            let right = (idx << 1) + 2;
+            let smallest = idx;
+            if (left < n && this.heap[left].cost < this.heap[smallest].cost) {
+                smallest = left;
+            }
+            if (right < n && this.heap[right].cost < this.heap[smallest].cost) {
+                smallest = right;
+            }
+            if (smallest !== idx) {
+                const temp = this.heap[idx];
+                this.heap[idx] = this.heap[smallest];
+                this.heap[smallest] = temp;
+                idx = smallest;
+            }
+            else {
+                break;
+            }
+        }
+    }
+}
+function solve() {
+    let input = "";
+    try {
+        input = fs.readFileSync(0, "utf8");
+    }
+    catch (e) {
+        return;
+    }
+    const tokens = input.split(/\s+/);
+    if (tokens.length < 2)
+        return;
+    let tokenIdx = 0;
+    while (tokenIdx < tokens.length && tokens[tokenIdx] === "")
+        tokenIdx++;
+    if (tokenIdx >= tokens.length)
+        return;
+    const H = parseInt(tokens[tokenIdx++]);
+    const W = parseInt(tokens[tokenIdx++]);
+    if (isNaN(H) || isNaN(W))
+        return;
+    const gridChars = [];
+    while (tokenIdx < tokens.length && gridChars.length < H * W) {
+        const token = tokens[tokenIdx++];
+        if (token.length > 0) {
+            for (let j = 0; j < token.length && gridChars.length < H * W; j++) {
+                gridChars.push(token[j]);
+            }
+        }
+    }
+    let startR = -1, startC = -1;
+    let targetR = -1, targetC = -1;
+    for (let i = 0; i < gridChars.length; i++) {
+        if (gridChars[i] === 'S') {
+            startR = Math.floor(i / W);
+            startC = i % W;
+        }
+        else if (gridChars[i] === 'T') {
+            targetR = Math.floor(i / W);
+            targetC = i % W;
+        }
+    }
+    if (startR === -1 || targetR === -1) {
+        console.log("-1");
+        return;
+    }
+    const dist = new Float64Array(H * W).fill(Infinity);
+    const pq = new MinHeap();
+    dist[startR * W + startC] = 0;
+    pq.push({ r: startR, c: startC, cost: 0 });
+    const dr = [-1, 1, 0, 0];
+    const dc = [0, 0, -1, 1];
+    while (pq.size() > 0) {
+        const curr = pq.pop();
+        if (!curr)
+            break;
+        const { r, c, cost } = curr;
+        if (cost > dist[r * W + c])
+            continue;
+        if (r === targetR && c === targetC) {
+            console.log(cost);
+            return;
+        }
+        for (let i = 0; i < 4; i++) {
+            const nr = r + dr[i];
+            const nc = c + dc[i];
+            if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
+                const idx = nr * W + nc;
+                const char = gridChars[idx];
+                if (char === '#')
+                    continue;
+                let cellCost = 0;
+                if (char >= '0' && char <= '9') {
+                    cellCost = char.charCodeAt(0) - 48;
+                }
+                else if (char === 'S' || char === 'T') {
+                    cellCost = 0;
+                }
+                if (dist[r * W + c] + cellCost < dist[idx]) {
+                    dist[idx] = dist[r * W + c] + cellCost;
+                    pq.push({ r: nr, c: nc, cost: dist[idx] });
+                }
+            }
+        }
+    }
+    console.log("-1");
+}
+solve();

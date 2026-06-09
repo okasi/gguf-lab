@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9222-9a532ae4b
+model      : Qwen3.6-27B-uncensored-heretic-v2-Native-MTP-Preserved-Q4_K_M.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a concise but technical explanation of how native multi-token prediction changes local LLM decoding throughput. Focus on what affects tokens per second and latency. Do not use bullet points.
+
+Native multi-token prediction fundamentally alters local LLM decoding throughput by shifting the computational bottleneck from sequential autoregressive generation to parallel speculative verification. In standard decoding, the model generates one token at a time, incurring a fixed latency per step equal to the forward pass time plus memory bandwidth overhead. Multi-token prediction, often implemented via speculative decoding or draft models, proposes multiple future tokens simultaneously. The main model then verifies these candidates in a single forward pass, accepting a chunk of tokens if they align with the target distribution. This increases tokens per second by amortizing the high computational cost of the large language model over multiple generated tokens rather than just one, effectively multiplying throughput by the average acceptance rate. However, latency per individual token decreases only if the verification step is significantly faster than the sequential generation of each accepted token, which depends heavily on the draft model's accuracy and the hardware's ability to handle increased memory bandwidth demands during the verification phase. Consequently, while raw throughput rises
+
+[ Prompt: 107.8 t/s | Generation: 12.1 t/s ]
+
+Exiting...
+

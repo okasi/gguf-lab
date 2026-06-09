@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \"fs\";\n\ninterface LRUCacheEntry {\n    key: string;\n    value: number;\n    prev: LRUCacheEntry | null;\n    next: LRUCacheEntry | null;\n}\n\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, LRUCacheEntry\u003e;\n    private head: LRUCacheEntry | null;\n    private tail: LRUCacheEntry | null;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map\u003cstring, LRUCacheEntry\u003e();\n        // Dummy head and tail\n        this.head = { key: \"\", value: 0, prev: null, next: null };\n        this.tail = { key: \"\", value: 0, prev: null, next: null };\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private addToFront(entry: LRUCacheEntry): void {\n        const next = this.head.next;\n        entry.next = next;\n        entry.prev = this.head;\n        this.head.next = entry;\n        next.prev = entry;\n    }\n\n    private removeEntry(entry: LRUCacheEntry): void {\n        const prev = entry.prev;\n        const next = entry.next;\n        if (prev \u0026\u0026 next) {\n            prev.next = next;\n            next.prev = prev;\n        }\n        entry.prev = null;\n        entry.next = null;\n    }\n\n    private moveToHead(entry: LRUCacheEntry): void {\n        this.removeEntry(entry);\n        this.addToFront(entry);\n    }\n\n    private evictLeastRecentlyUsed(): void {\n        if (!this.tail || !this.tail.prev || this.tail.prev === this.head) {\n            return;\n        }\n        const lru = this.tail.prev;\n        if (lru) {\n            this.removeEntry(lru);\n            this.map.delete(lru.key);\n        }\n    }\n\n    get(key: string): number | null {\n        const entry = this.map.get(key);\n        if (!entry) {\n            return null;\n        }\n        this.moveToHead(entry);\n        return entry.value;\n    }\n\n    put(key: string, value: number): void {\n        const existing = this.map.get(key);\n        if (existing) {\n            existing.value = value;\n            this.moveToHead(existing);\n        } else {\n            if (this.map.size \u003e= this.capacity) {\n                this.evictLeastRecentlyUsed();\n            }\n            const newEntry: LRUCacheEntry = {\n                key,\n                value,\n                prev: null,\n                next: null\n            };\n            this.map.set(key, newEntry);\n            this.addToFront(newEntry);\n        }\n    }\n\n    del(key: string): boolean {\n        const entry = this.map.get(key);\n        if (!entry) {\n            return false;\n        }\n        this.removeEntry(entry);\n        this.map.delete(key);\n        return true;\n    }\n\n    getKeysMostRecentToLeast(): string[] {\n        const keys: string[] = [];\n        let current = this.head.next;\n        while (current \u0026\u0026 current !== this.tail) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n}\n\nfunction main(): void {\n    const input = fs.readFileSync(0, \"utf8\").trim();\n    if (!input) {\n        return;\n    }\n\n    const lines = input.split(\"\\n\");\n    const firstLine = lines[0].trim().split(/\\s+/);\n    const capacity = parseInt(firstLine[0], 10);\n    const numOps = parseInt(firstLine[1], 10);\n\n    const cache = new LRUCache(capacity);\n    const getResults: string[] = [];\n\n    for (let i = 1; i \u003c= numOps \u0026\u0026 i \u003c lines.length; i++) {\n        const line = lines[i].trim();\n        if (!line) continue;\n\n        const parts = line.split(/\\s+/);\n        const command = parts[0].toUpperCase();\n\n        if (command === \"PUT\") {\n            const key = parts[1];\n            const value = parseInt(parts[2], 10);\n            cache.put(key, value);\n        } else if (command === \"GET\") {\n            const key = parts[1];\n            const result = cache.get(key);\n            if (result === null) {\n                getResults.push(\"-1\");\n            } else {\n                getResults.push(result.toString());\n            }\n        } else if (command === \"DEL\") {\n            const key = parts[1];\n            cache.del(key);\n        }\n    }\n\n    if (getResults.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(getResults.join(\" \"));\n    }\n\n    const remainingKeys = cache.getKeysMostRecentToLeast();\n    if (remainingKeys.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(remainingKeys.join(\" \"));\n    }\n}\n\nmain();\n```"
+                                    }
+                    }
+                ],
+    "created":  1780941890,
+    "model":  "jcbtc-chadrock35-uncensored-rocmfp4-mtp-temp091",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1166,
+                  "prompt_tokens":  284,
+                  "total_tokens":  1450,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-wwgJiFaiP2ODkk5MAmOEjdHPRxf50ShJ",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  284,
+                    "prompt_ms":  439.548,
+                    "prompt_per_token_ms":  1.5477042253521127,
+                    "prompt_per_second":  646.1182851474697,
+                    "predicted_n":  1166,
+                    "predicted_ms":  12527.632,
+                    "predicted_per_token_ms":  10.744109777015437,
+                    "predicted_per_second":  93.07425377756947,
+                    "draft_n":  1036,
+                    "draft_n_accepted":  906
+                }
+}

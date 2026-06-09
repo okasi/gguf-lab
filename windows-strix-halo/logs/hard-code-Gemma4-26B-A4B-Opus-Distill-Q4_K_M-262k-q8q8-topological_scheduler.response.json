@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\n/**\n * Min-Heap implementation for Priority Queue to achieve O(log N) insertion/extraction.\n * This ensures we always pick the lexicographically smallest task next.\n */\nclass MinHeap\u003cT\u003e {\n    private heap: T[] = [];\n    private compare: (a: T, b: T) =\u003e number;\n\n    constructor(compare: (a: T, b: T) =\u003e number) {\n        this.compare = compare;\n    }\n\n    push(val: T) {\n        this.heap.push(val);\n        this.siftUp(this.heap.length - 1);\n    }\n\n    pop(): T | undefined {\n        if (this.heap.length === 0) return undefined;\n        const top = this.heap[0];\n        const bottom = this.heap.pop();\n        if (this.heap.length \u003e 0 \u0026\u0026 bottom !== undefined) {\n            this.heap[0] = bottom;\n            this.siftDown(0);\n        }\n        return top;\n    }\n\n    size(): number {\n        return this.heap.length;\n    }\n\n    private siftUp(index: number) {\n        while (index \u003e 0) {\n            const parent = (index - 1) \u003e\u003e 1;\n            if (this.compare(this.heap[index], this.heap[parent]) \u003c 0) {\n                this.swap(index, parent);\n                index = parent;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private siftDown(index: number) {\n        while (true) {\n            let smallest = index;\n            const left = 2 * index + 1;\n            const right = 2 * index + 2;\n\n            if (left \u003c this.heap.length \u0026\u0026 this.compare(this.heap[left], this.heap[smallest]) \u003c 0) {\n                smallest = left;\n            }\n            if (right \u003c this.heap.length \u0026\u0026 this.compare(this.heap[right], this.heap[smallest]) \u003c 0) {\n                smallest = right;\n            }\n\n            if (smallest !== index) {\n                this.swap(index, smallest);\n                index = smallest;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private swap(i: number, j: number) {\n        const tmp = this.heap[i];\n        this.heap[i] = this.heap[j];\n        this.heap[j] = tmp;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \u0027utf8\u0027);\n    const tokens = input.split(/\\s+/);\n    let cursor = 0;\n\n    if (tokens[cursor] === \"\") cursor++;\n    if (cursor \u003e= tokens.length) return;\n\n    const N = parseInt(tokens[cursor++]);\n    const M = parseInt(tokens[cursor++]);\n\n    if (isNaN(N)) return;\n\n    const tasks: string[] = [];\n    const inDegree = new Map\u003cstring, number\u003e();\n    const adj = new Map\u003cstring, string[]\u003e();\n\n    for (let i = 0; i \u003c N; i++) {\n        const name = tokens[cursor++];\n        tasks.push(name);\n        inDegree.set(name, 0);\n        adj.set(name, []);\n    }\n\n    for (let i = 0; i \u003c M; i++) {\n        const u = tokens[cursor++];\n        const v = tokens[cursor++];\n        \n        // u must be completed before v (u -\u003e v)\n        const neighbors = adj.get(u);\n        if (neighbors) {\n            neighbors.push(v);\n            inDegree.set(v, (inDegree.get(v) || 0) + 1);\n        }\n    }\n\n    // Priority Queue stores tasks with in-degree 0, sorted lexicographically\n    const pq = new MinHeap\u003cstring\u003e((a, b) =\u003e a \u003c b ? -1 : (a \u003e b ? 1 : 0));\n\n    for (const task of tasks) {\n        if (inDegree.get(task) === 0) {\n            pq.push(task);\n        }\n    }\n\n    const result: string[] = [];\n    while (pq.size() \u003e 0) {\n        const u = pq.pop()!;\n        result.push(u);\n\n        const neighbors = adj.get(u);\n        if (neighbors) {\n            for (const v of neighbors) {\n                const newDegree = (inDegree.get(v) || 0) - 1;\n                inDegree.set(v, newDegree);\n                if (newDegree === 0) {\n                    pq.push(v);\n                }\n            }\n        }\n    }\n\n    if (result.length === N) {\n        process.stdout.write(result.join(\u0027 \u0027) + \u0027\\n\u0027);\n    } else {\n        process.stdout.write(\u0027IMPOSSIBLE\\n\u0027);\n    }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1779630198,
+    "model":  "gemma-4-26b-a4b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1171,
+                  "prompt_tokens":  221,
+                  "total_tokens":  1392,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  18
+                                            }
+              },
+    "id":  "chatcmpl-YeJotvDzJxFul3aBB32Ey9zFMGEVUUgU",
+    "timings":  {
+                    "cache_n":  18,
+                    "prompt_n":  203,
+                    "prompt_ms":  264.759,
+                    "prompt_per_token_ms":  1.304231527093596,
+                    "prompt_per_second":  766.7350307260565,
+                    "predicted_n":  1171,
+                    "predicted_ms":  22022.216,
+                    "predicted_per_token_ms":  18.806333048676347,
+                    "predicted_per_second":  53.17357708234267
+                }
+}

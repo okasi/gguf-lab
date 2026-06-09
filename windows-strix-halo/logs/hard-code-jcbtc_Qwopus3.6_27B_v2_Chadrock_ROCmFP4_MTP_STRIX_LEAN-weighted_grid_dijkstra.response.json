@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import { readFileSync } from \u0027fs\u0027;\n\nconst input = readFileSync(0, \u0027utf8\u0027);\nconst lines = input.trim().split(\u0027\\n\u0027);\nconst [H, W] = lines[0].split(\u0027 \u0027).map(Number);\n\nconst grid: string[][] = [];\nfor (let i = 0; i \u003c H; i++) {\n    grid.push(lines[i + 1].split(\u0027\u0027));\n}\n\nlet startX = -1;\nlet startY = -1;\nlet targetX = -1;\nlet targetY = -1;\n\nfor (let i = 0; i \u003c H; i++) {\n    for (let j = 0; j \u003c W; j++) {\n        if (grid[i][j] === \u0027S\u0027) {\n            startX = i;\n            startY = j;\n        } else if (grid[i][j] === \u0027T\u0027) {\n            targetX = i;\n            targetY = j;\n        }\n    }\n}\n\nconst dist: number[][] = new Array(H);\nfor (let i = 0; i \u003c H; i++) {\n    dist[i] = new Array(W).fill(Infinity);\n}\n\ndist[startX][startY] = 0;\n\n// Priority queue using binary heap\nclass MinHeap {\n    private heap: [number, number, number][]; // [cost, x, y]\n\n    constructor() {\n        this.heap = [];\n    }\n\n    private parent(i: number): number {\n        return Math.floor((i - 1) / 2);\n    }\n\n    private leftChild(i: number): number {\n        return 2 * i + 1;\n    }\n\n    private rightChild(i: number): number {\n        return 2 * i + 2;\n    }\n\n    private swap(i: number, j: number): void {\n        const temp = this.heap[i];\n        this.heap[i] = this.heap[j];\n        this.heap[j] = temp;\n    }\n\n    private heapifyUp(i: number): void {\n        while (i \u003e 0) {\n            const p = this.parent(i);\n            if (this.heap[i][0] \u003c this.heap[p][0]) {\n                this.swap(i, p);\n                i = p;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private heapifyDown(i: number): void {\n        let min = i;\n        const left = this.leftChild(i);\n        const right = this.rightChild(i);\n\n        if (left \u003c this.heap.length \u0026\u0026 this.heap[left][0] \u003c this.heap[min][0]) {\n            min = left;\n        }\n        if (right \u003c this.heap.length \u0026\u0026 this.heap[right][0] \u003c this.heap[min][0]) {\n            min = right;\n        }\n\n        if (min !== i) {\n            this.swap(i, min);\n            this.heapifyDown(min);\n        }\n    }\n\n    push(cost: number, x: number, y: number): void {\n        this.heap.push([cost, x, y]);\n        this.heapifyUp(this.heap.length - 1);\n    }\n\n    pop(): [number, number, number] | undefined {\n        if (this.heap.length === 0) {\n            return undefined;\n        }\n        const top = this.heap[0];\n        const last = this.heap.pop();\n        if (this.heap.length \u003e 0) {\n            this.heap[0] = last!;\n            this.heapifyDown(0);\n        }\n        return top;\n    }\n\n    isEmpty(): boolean {\n        return this.heap.length === 0;\n    }\n}\n\nconst pq = new MinHeap();\npq.push(0, startX, startY);\n\nconst dx = [1, -1, 0, 0];\nconst dy = [0, 0, 1, -1];\n\nwhile (!pq.isEmpty()) {\n    const [cost, x, y] = pq.pop()!;\n\n    if (cost \u003e dist[x][y]) {\n        continue;\n    }\n\n    if (x === targetX \u0026\u0026 y === targetY) {\n        console.log(cost);\n        process.exit(0);\n    }\n\n    for (let d = 0; d \u003c 4; d++) {\n        const nx = x + dx[d];\n        const ny = y + dy[d];\n\n        if (nx \u003c 0 || nx \u003e= H || ny \u003c 0 || ny \u003e= W) {\n            continue;\n        }\n\n        const cell = grid[nx][ny];\n        if (cell === \u0027#\u0027) {\n            continue;\n        }\n\n        let newCost = cost;\n        if (cell === \u0027S\u0027 || cell === \u0027T\u0027) {\n            // Cost 0 to enter S or T\n        } else {\n            // Digit cell, cost is the digit value\n            newCost += parseInt(cell, 10);\n        }\n\n        if (newCost \u003c dist[nx][ny]) {\n            dist[nx][ny] = newCost;\n            pq.push(newCost, nx, ny);\n        }\n    }\n}\n\nconsole.log(-1);"
+                                    }
+                    }
+                ],
+    "created":  1780933207,
+    "model":  "jcbtc-qwopus27-chadrock-rocmfp4-mtp",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1158,
+                  "prompt_tokens":  220,
+                  "total_tokens":  1378,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-4MpbkPqhf6pyJyWftK92Ub8Cq0YDrl3B",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  220,
+                    "prompt_ms":  1191.005,
+                    "prompt_per_token_ms":  5.413659090909092,
+                    "prompt_per_second":  184.71794828737075,
+                    "predicted_n":  1158,
+                    "predicted_ms":  37799.365,
+                    "predicted_per_token_ms":  32.641938687392056,
+                    "predicted_per_second":  30.635435277814853,
+                    "draft_n":  1052,
+                    "draft_n_accepted":  894
+                }
+}

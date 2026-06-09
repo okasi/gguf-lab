@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : Qwen3.6-27B-abliterated-Gaston-MTP-Q8_0.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Running large language models locally demands a precise understanding of hardware bottlenecks, specifically regarding quantization, memory bandwidth, and speculative execution strategies. Quantization reduces the numerical precision of model weights, typically from 32-bit floats to 8-bit or 4-bit integers. This compression significantly shrinks the model’s memory foot print, allowing larger architectures to fit entirely within the GPU’s high-speed VRAM rather than spilling over to slower system RAM. Crucially, quantization directly impacts token generation speed by reducing the volume of data that must be transferred across the memory bus during each forward pass. In local deployments, the limiting factor is rarely compute power but rather memory bandwidth. The speed at which tokens are generated is strictly capped by how quickly the GPU can read the entire model into its cache. Therefore, maximizing memory bandwidth utilization is essential for high throughput. When a model fits within VRAM, the GPU can stream weights efficiently, resulting in higher tokens per second. If the model exceeds VRAM capacity, the system must fetch data from the CPU via the PCIe bus, causing severe latency spikes that drastically reduce generation speed. Speculative drafting offers a clever software workaround to these hardware limits. By employing a smaller, faster auxiliary model to predict the next several tokens, the main large
+
+[ Prompt: 125.1 t/s | Generation: 7.6 t/s ]
+
+Exiting...
+

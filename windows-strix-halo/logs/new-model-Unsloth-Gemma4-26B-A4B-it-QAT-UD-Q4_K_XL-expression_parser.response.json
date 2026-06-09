@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\n/**\n * Arithmetic Expression Evaluator\n * Implements a Recursive Descent Parser to handle precedence and parentheses.\n */\n\nclass Evaluator {\n    private tokens: string[];\n    private pos: number;\n\n    constructor(input: string) {\n        this.tokens = this.tokenize(input);\n        this.pos = 0;\n    }\n\n    private tokenize(input: string): string[] {\n        const regex = /\\d+|[+\\-*/()]/g;\n        return input.match(regex) || [];\n    }\n\n    private peek(): string | undefined {\n        return this.tokens[this.pos];\n    }\n\n    private consume(): string | undefined {\n        return this.tokens[this.pos++];\n    }\n\n    public evaluate(): number {\n        if (this.tokens.length === 0) return 0;\n        const result = this.parseExpression();\n        return result;\n    }\n\n    // Lowest precedence: Addition and Subtraction\n    private parseExpression(): number {\n        let node = this.parseTerm();\n        while (this.peek() === \u0027+\u0027 || this.peek() === \u0027-\u0027) {\n            const op = this.consume();!;\n            const right = this.parseTerm();\n            if (op === \u0027+\u0027) node += right;\n            else node -= right;\n        }\n        return node;\n    }\n\n    // Middle precedence: Multiplication and Division\n    private parseTerm(): number {\n        let node = this.parseUnary();\n        while (this.peek() === \u0027*\u0027 || this.peek() === \u0027/\u0027) {\n            const op = this.consume()!;\n            const right = this.parseUnary();\n            if (op === \u0027*\u0027) {\n                node *= right;\n            } else {\n                // Truncate toward zero division\n                const res = node / right;\n                node = res \u003c 0 ? Math.ceil(res) : Math.floor(res);\n            }\n        }\n        return node;\n    }\n\n    // Highest precedence: Unary +/-\n    private parseUnary(): number {\n        if (this.peek() === \u0027+\u0027) {\n            this.consume();\n            return this.parseUnary();\n        }\n        if (this.peek() === \u0027-\u0027) {\n            this.consume();\n            return -this.parseUnary();\n        }\n        return this.parsePrimary();\n    }\n\n    // Base case: Parentheses or Numbers\n    private parsePrimary(): number {\n        const token = this.consume();\n        if (token === \u0027(\u0027) {\n            const result = this.parseExpression();\n            this.consume(); // consume \u0027)\u0027\n            return result;\n        } else {\n            return parseInt(token!, 10);\n        }\n    }\n}\n\nfunction main() {\n    try {\n        const input = fs.readFileSync(0, \"utf8\");\n        if (!input) return;\n        const evaluator = new Evaluator(input);\n        console.log(evaluator.evaluate());\n    } catch (e) {\n        // Silently handle or exit\n        process.exit(0);\n    }\n}\n\nmain();"
+                                    }
+                    }
+                ],
+    "created":  1780962619,
+    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  705,
+                  "prompt_tokens":  172,
+                  "total_tokens":  877,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-4EN9o1NHadv9KibKKjPWbXPlPSqWeWDh",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  172,
+                    "prompt_ms":  202.644,
+                    "prompt_per_token_ms":  1.1781627906976744,
+                    "prompt_per_second":  848.7791397722114,
+                    "predicted_n":  705,
+                    "predicted_ms":  11298.003,
+                    "predicted_per_token_ms":  16.025536170212767,
+                    "predicted_per_second":  62.40040828454373
+                }
+}

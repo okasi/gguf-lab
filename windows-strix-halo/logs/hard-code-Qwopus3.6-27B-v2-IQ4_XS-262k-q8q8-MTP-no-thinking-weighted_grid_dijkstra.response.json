@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "\u003cthink\u003e\n\n\u003c/think\u003e\n\nimport { readFileSync } from \"fs\";\n\nconst input = readFileSync(0, \"utf8\").trimEnd();\nconst lines = input.split(\"\\n\");\nconst [H, W] = lines[0].split(\" \").map(Number);\n\nconst dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(Infinity));\nconst visited: boolean[][] = Array.from({ length: H }, () =\u003e Array(W).fill(false));\n\nlet startX = -1, startY = -1;\nlet targetX = -1, targetY = -1;\n\nconst parseCost = (c: string): number | null =\u003e {\n  if (c === \u0027S\u0027) return 0;\n  if (c === \u0027T\u0027) return 0;\n  if (c === \u0027#\u0027) return -1;\n  const n = parseInt(c, 10);\n  if (!isNaN(n) \u0026\u0026 n \u003e= 0 \u0026\u0026 n \u003c= 9) return n;\n  return -1;\n};\n\nconst dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];\n\nfor (let i = 0; i \u003c H; i++) {\n  for (let j = 0; j \u003c W; j++) {\n    const c = lines[i][j];\n    if (c === \u0027S\u0027) {\n      startX = i;\n      startY = j;\n      dist[i][j] = 0;\n    } else if (c === \u0027T\u0027) {\n      targetX = i;\n      targetY = j;\n    }\n  }\n}\n\nconst heap: [number, number, number][] = []; // [cost, x, y]\nconst pushHeap = (cost: number, x: number, y: number) =\u003e {\n  heap.push([cost, x, y]);\n  let idx = heap.length - 1;\n  while (idx \u003e 0) {\n    const parent = (idx - 1) \u003e\u003e 1;\n    if (heap[parent][0] \u003e heap[idx][0]) {\n      [heap[parent], heap[idx]] = [heap[idx], heap[parent]];\n      idx = parent;\n    } else {\n      break;\n    }\n  }\n};\n\nconst popHeap = (): [number, number, number] | null =\u003e {\n  if (heap.length === 0) return null;\n  const top = heap[0];\n  const last = heap.pop()!;\n  if (heap.length \u003e 0) {\n    heap[0] = last;\n    let idx = 0;\n    while (true) {\n      let smallest = idx;\n      const left = 2 * idx + 1;\n      const right = 2 * idx + 2;\n      if (left \u003c heap.length \u0026\u0026 heap[left][0] \u003c heap[smallest][0]) {\n        smallest = left;\n      }\n      if (right \u003c heap.length \u0026\u0026 heap[right][0] \u003c heap[smallest][0]) {\n        smallest = right;\n      }\n      if (smallest !== idx) {\n        [heap[idx], heap[smallest]] = [heap[smallest], heap[idx]];\n        idx = smallest;\n      } else {\n        break;\n      }\n    }\n  }\n  return top;\n};\n\npushHeap(0, startX, startY);\n\nwhile (heap.length \u003e 0) {\n  const [d, x, y] = popHeap()!;\n  if (visited[x][y]) continue;\n  visited[x][y] = true;\n\n  if (x === targetX \u0026\u0026 y === targetY) {\n    console.log(d);\n    process.exit(0);\n  }\n\n  for (const [dx, dy] of dirs) {\n    const nx = x + dx;\n    const ny = y + dy;\n    if (nx \u003e= 0 \u0026\u0026 nx \u003c H \u0026\u0026 ny \u003e= 0 \u0026\u0026 ny \u003c W \u0026\u0026 !visited[nx][ny]) {\n      const c = lines[nx][ny];\n      if (c !== \u0027#\u0027) {\n        const cost = parseCost(c);\n        if (cost !== null \u0026\u0026 cost \u003e= 0) {\n          const newDist = d + cost;\n          if (newDist \u003c dist[nx][ny]) {\n            dist[nx][ny] = newDist;\n            pushHeap(newDist, nx, ny);\n          }\n        }\n      }\n    }\n  }\n}\n\nconsole.log(-1);"
+                                    }
+                    }
+                ],
+    "created":  1779628453,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1007,
+                  "prompt_tokens":  256,
+                  "total_tokens":  1263,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-hJAGgIW74x25NZWDZTXa7mYzc598UlvJ",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  256,
+                    "prompt_ms":  1441.951,
+                    "prompt_per_token_ms":  5.63262109375,
+                    "prompt_per_second":  177.5372394762374,
+                    "predicted_n":  1007,
+                    "predicted_ms":  44326.767,
+                    "predicted_per_token_ms":  44.01863654419066,
+                    "predicted_per_second":  22.717650488699075,
+                    "draft_n":  740,
+                    "draft_n_accepted":  637
+                }
+}

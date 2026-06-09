@@ -1,0 +1,44 @@
+﻿let topOperator = stack[stack.length - 1];
+                    if (topOperator === '(') break;
+                    let topPrecedence = precedence(topOperator);
+                    let currentIsLeftAssociative = (currentOperator === '+' || currentOperator === '-' || currentOperator === '*' || currentOperator === '/');
+                    if (topPrecedence > currentPrecedence || 
+                        (topPrecedence === currentPrecedence && currentIsLeftAssociative)) {
+                        output.push(stack.pop());
+                    } else {
+                        break;
+                    }
+                }
+
+            - Then push the current operator to the stack.
+
+        - But note: what about unary operators? They have precedence 3, which is higher than binary operators. So when we see a binary operator, we will pop the unary operators? Actually, no: because the unary operators are already on the stack and they have higher precedence, so we won't pop them for a binary operator with lower precedence. But wait, the unary operators are unary, so they are applied to the next number. So they should be evaluated before the binary operator. So we don't pop them until we see the number? Actually, the unary operator is pushed to the stack and then when we see the number, we add the number to the output. Then when we see the next operator (binary), we pop the unary operator? But the unary operator is not yet evaluated. So we need to pop the unary operator when we see the next operator? Actually, no: the unary operator is applied to the number that follows it. So the number is after the unary operator. So the unary operator is pushed to the stack, and then we see the number and add it to the output. Then when we see the next operator (binary), we pop the unary operator? But the unary operator is not on top of the stack? Actually, the stack has: [ 'u-', 'u-' ] for the expression "- - 3". Then we see the number '3', we add it to the output. Then we see the next operator? There is no next operator. So we pop the stack.
+
+        - Actually, the shunting-yard algorithm for unary operators: we push them to the stack, and then when we see a number, we add the number to the output. Then when we see an operator that has lower precedence, we pop the unary operators? But the unary operators have higher precedence, so we don't pop them for a binary operator with lower precedence. But we don't need to pop them until the end? Actually, the unary operators are applied to the next number. So the number is added to the output, and then the unary operator is applied to that number. So the unary operator should be evaluated after the number is available. So the unary operator should be pushed to the stack and then when we see the next operator (which might be an operator with lower precedence) we don't pop it until we see the number? Actually, no: the unary operator is applied to the number that is immediately after it. So the number is after the unary operator. So the unary operator is pushed to the stack, and then we see the number and add it to the output. Then when we see the next operator (which is an operator that we are processing), we check: the unary operator has higher precedence, so we don't pop it. Then we push the next operator. Then when we are done, we pop the stack. But the unary operator is still on the stack. Then when we pop, we pop the unary operator and then the number? But the number is already in the output. So we need to have the number in the output before the unary operator? Actually, the unary operator is applied to the number that is after it. So the number should be in the output before the unary operator? But in RPN, the unary operator would be after the number. So the output would be: [3, u-]. Then when we evaluate the RPN, we see the number 3, then we see the unary operator u- and apply it to 3.
+
+        - So the shunting-yard algorithm for unary operators: we push the unary operator to the stack, and then we push the number to the output. Then when we are done, we pop the stack and the unary operator will be after the number in the output.
+
+        - But what about: - 3 + 4? 
+            Tokens: ['u-', '3', '+', '4']
+            - 'u-': push to stack -> stack: ['u-']
+            - '3': output -> output: ['3']
+            - '+': precedence 1. Compare with stack top: 'u-' has precedence 3. Since 3 > 1, we don't pop. Then push '+' -> stack: ['u-', '+']
+            - '4': output -> output: ['3', '4']
+            - Then pop the stack: first pop '+' -> output: ['3', '4', '+']
+            - Then pop 'u-' -> output: ['3', '4', '+', 'u-'] -> which is wrong because we want: (u- 3) + 4 -> so the unary operator should be applied to 3 first.
+
+        - So the output should be: ['3', 'u-', '4', '+'] -> which is correct.
+
+        - How to get that? When we see the '+' operator, we check the stack: the top is 'u-', which has higher precedence. So we don't pop it. Then we push '+'. Then we see '4', we output it. Then we pop the stack: first pop '+' -> output: ['3', '4', '+'] -> then pop 'u-' -> output: ['3', '4', '+', 'u-'] -> which is wrong.
+
+        - The problem is that the unary operator should be applied to the number that is immediately after it. So the unary operator should be evaluated before the binary operator. So the unary operator should be in the output before the binary operator? Actually, no: in RPN, the unary operator is after the number. So the output should be: ['3', 'u-', '4', '+'].
+
+        - How to achieve that? When we see the binary operator '+', we don't pop the unary operator because it has higher precedence. But then we push the binary operator. Then when we see the number '4', we output it. Then when we are done, we pop the stack: first we pop the binary operator '+' and then we pop the unary operator 'u-'. But the unary operator is after the binary operator in the output, which is wrong.
+
+        - The issue is that the unary operator is not applied to the number that is after the binary operator. It is applied to the number that is after the unary operator. So the unary operator should be evaluated before the binary operator. So the unary operator should be in the output before the binary operator? Actually, no: the unary operator is applied to the number that is after it, so the number is in the output before the unary operator. Then the binary operator is after the unary operator? So the output should be: ['3', 'u-', '4', '+'].
+
+        - How to get the '4' after the 'u-'? We need to push the '4' to the output after we push the 'u-' to the stack? But the '4' is after the '+' in the token list. So we haven't seen the '4' yet when we are processing the '+'.
+
+        - The shunting-yard algorithm processes tokens in order. So when we see the '+', we haven't seen the '4' yet. So we can't output the '4' until we see it.
+
+        - The problem is that the unary operator is applied to the number that is immediately after it, which is '3'. So the unary operator should be applied to '3' before we process the binary operator. So the unary operator should be evaluated before the binary operator. So the unary operator should be in the output before the binary operator? But the unary operator is applied to '3', so the output for the unary operator part is: ['3', 'u-']. Then the binary operator '+' is after, and then the '4

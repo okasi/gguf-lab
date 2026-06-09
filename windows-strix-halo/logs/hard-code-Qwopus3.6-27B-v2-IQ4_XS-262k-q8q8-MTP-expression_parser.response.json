@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import fs from \u0027fs\u0027;\n\nfunction main() {\n    const input = fs.readFileSync(0, \"utf8\").trim();\n    if (!input) {\n        console.log(0);\n        return;\n    }\n    const result = evaluate(input);\n    console.log(result);\n}\n\nfunction evaluate(expr: string): number {\n    let pos = 0;\n\n    function peek(): string | undefined {\n        return pos \u003c expr.length ? expr[pos] : undefined;\n    }\n\n    function consume(): string {\n        return expr[pos++];\n    }\n\n    function skipSpaces(): void {\n        while (pos \u003c expr.length \u0026\u0026 expr[pos] === \u0027 \u0027) {\n            pos++;\n        }\n    }\n\n    // Grammar:\n    // expr   -\u003e term ((\u0027+\u0027 | \u0027-\u0027) term)*\n    // term   -\u003e unary ((\u0027*\u0027 | \u0027/\u0027) unary)*\n    // unary  -\u003e (\u0027+\u0027 | \u0027-\u0027) unary | primary\n    // primary-\u003e NUMBER | \u0027(\u0027 expr \u0027)\u0027\n\n    function parseExpr(): number {\n        let result = parseTerm();\n        while (true) {\n            skipSpaces();\n            const ch = peek();\n            if (ch === \u0027+\u0027) {\n                consume();\n                const right = parseTerm();\n                result = result + right;\n            } else if (ch === \u0027-\u0027) {\n                consume();\n                const right = parseTerm();\n                result = result - right;\n            } else {\n                break;\n            }\n        }\n        return result;\n    }\n\n    function parseTerm(): number {\n        let result = parseUnary();\n        while (true) {\n            skipSpaces();\n            const ch = peek();\n            if (ch === \u0027*\u0027) {\n                consume();\n                const right = parseUnary();\n                result = result * right;\n            } else if (ch === \u0027/\u0027) {\n                consume();\n                const right = parseUnary();\n                if (right === 0) {\n                    throw new Error(\"Division by zero\");\n                }\n                // Truncate toward zero\n                result = Math.trunc(result / right);\n            } else {\n                break;\n            }\n        }\n        return result;\n    }\n\n    function parseUnary(): number {\n        skipSpaces();\n        const ch = peek();\n        if (ch === \u0027+\u0027) {\n            consume();\n            return parseUnary();\n        } else if (ch === \u0027-\u0027) {\n            consume();\n            return -parseUnary();\n        } else {\n            return parsePrimary();\n        }\n    }\n\n    function parsePrimary(): number {\n        skipSpaces();\n        const ch = peek();\n        if (ch === \u0027(\u0027) {\n            consume(); // consume \u0027(\u0027\n            const result = parseExpr();\n            skipSpaces();\n            if (peek() !== \u0027)\u0027) {\n                throw new Error(\"Mismatched parentheses\");\n            }\n            consume(); // consume \u0027)\u0027\n            return result;\n        } else {\n            return parseNumber();\n        }\n    }\n\n    function parseNumber(): number {\n        skipSpaces();\n        const start = pos;\n        let hasDigit = false;\n        while (pos \u003c expr.length) {\n            const ch = expr[pos];\n            if (ch \u003e= \u00270\u0027 \u0026\u0026 ch \u003c= \u00279\u0027) {\n                hasDigit = true;\n                pos++;\n            } else {\n                break;\n            }\n        }\n        if (!hasDigit) {\n            throw new Error(\"Expected number\");\n        }\n        return parseInt(expr.substring(start, pos), 10);\n    }\n\n    const result = parseExpr();\n    skipSpaces();\n    if (pos !== expr.length) {\n        throw new Error(\"Unexpected characters at end of expression\");\n    }\n    return result;\n}\n\nmain();"
+                                    }
+                    }
+                ],
+    "created":  1779629952,
+    "model":  "qwen3.6-27b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  833,
+                  "prompt_tokens":  171,
+                  "total_tokens":  1004,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-bMC6tQifhDKiAORD5Kuown11p75yxXbs",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  171,
+                    "prompt_ms":  887.787,
+                    "prompt_per_token_ms":  5.191736842105263,
+                    "prompt_per_second":  192.61376884320225,
+                    "predicted_n":  833,
+                    "predicted_ms":  35852.627,
+                    "predicted_per_token_ms":  43.04036854741897,
+                    "predicted_per_second":  23.234001792950906,
+                    "draft_n":  616,
+                    "draft_n_accepted":  526
+                }
+}

@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).trim().split(\u0027\\n\u0027);\nconst [H, W] = input[0].trim().split(\u0027 \u0027).map(Number);\nconst grid = input.slice(1).map((line) =\u003e line.trim().split(\u0027\u0027));\n\nlet start: [number, number] | null = null;\nlet target: [number, number] | null = null;\n\nfor (let i = 0; i \u003c H; i++) {\n    for (let j = 0; j \u003c W; j++) {\n        if (grid[i][j] === \u0027S\u0027) {\n            start = [i, j];\n        } else if (grid[i][j] === \u0027T\u0027) {\n            target = [i, j];\n        }\n    }\n}\n\nif (!start || !target) {\n    console.log(-1);\n    process.exit(0);\n}\n\nconst [si, sj] = start;\nconst [ti, tj] = target;\n\nconst directions = [\n    [-1, 0], // up\n    [1, 0],  // down\n    [0, -1], // left\n    [0, 1],  // right\n];\n\nconst dist: number[][] = Array.from({ length: H }, () =\u003e Array.from({ length: W }, () =\u003e Infinity));\ndist[si][sj] = 0;\n\nclass MinHeap {\n    private heap: Array\u003c[number, [number, number]]\u003e = [];\n\n    push(item: [number, [number, number]]) {\n        this.heap.push(item);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    pop(): [number, [number, number]] | undefined {\n        if (this.heap.length === 0) return undefined;\n        const min = this.heap[0];\n        const end = this.heap.pop()!;\n        if (this.heap.length \u003e 0) {\n            this.heap[0] = end;\n            this.sinkDown(0);\n        }\n        return min;\n    }\n\n    bubbleUp(n: number) {\n        const element = this.heap[n];\n        while (n \u003e 0) {\n            const parentN = Math.floor((n + 1) / 2) - 1;\n            const parent = this.heap[parentN];\n            if (element[0] \u003e= parent[0]) break;\n            this.heap[parentN] = element;\n            this.heap[n] = parent;\n            n = parentN;\n        }\n    }\n\n    sinkDown(n: number) {\n        const length = this.heap.length;\n        const element = this.heap[n];\n        while (true) {\n            const child2N = n * 2 + 2;\n            const child1N = child2N - 1;\n            let swap = null;\n            let child1 = null;\n            let child2 = null;\n            if (child1N \u003c length) {\n                child1 = this.heap[child1N];\n                if (child1[0] \u003c element[0]) {\n                    swap = child1N;\n                }\n            }\n            if (child2N \u003c length) {\n                child2 = this.heap[child2N];\n                if ((swap === null \u0026\u0026 child2[0] \u003c element[0]) ||\n                    (swap !== null \u0026\u0026 child2[0] \u003c child1![0])) {\n                    swap = child2N;\n                }\n            }\n            if (swap === null) break;\n            this.heap[n] = this.heap[swap];\n            this.heap[swap] = element;\n            n = swap;\n        }\n    }\n}\n\nconst heap = new MinHeap();\nheap.push([0, [si, sj]]);\n\nwhile (heap.heap.length \u003e 0) {\n    const [d, [i, j]] = heap.pop()!;\n    if (d \u003e dist[i][j]) continue;\n    for (const [di, dj] of directions) {\n        const ni = i + di;\n        const nj = j + dj;\n        if (ni \u003c 0 || ni \u003e= H || nj \u003c 0 || nj \u003e= W) continue;\n        const cell = grid[ni][nj];\n        if (cell === \u0027#\u0027) continue;\n        const cost = cell === \u0027.\u0027 || cell === \u0027S\u0027 || cell === \u0027T\u0027 ? 0 : parseInt(cell, 10);\n        const nd = d + cost;\n        if (nd \u003c dist[ni][nj]) {\n            dist[ni][nj] = nd;\n            heap.push([nd, [ni, nj]]);\n        }\n    }\n}\n\nconst result = dist[ti][tj];\nconsole.log(result === Infinity ? -1 : result);"
+                                    }
+                    }
+                ],
+    "created":  1779660947,
+    "model":  "gpt-oss-20b-hermes-q4",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  980,
+                  "prompt_tokens":  287,
+                  "total_tokens":  1267,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  122
+                                            }
+              },
+    "id":  "chatcmpl-52teTlwKWkW8sLy6OwlJz4a47QImfXDB",
+    "timings":  {
+                    "cache_n":  122,
+                    "prompt_n":  165,
+                    "prompt_ms":  206.193,
+                    "prompt_per_token_ms":  1.2496545454545456,
+                    "prompt_per_second":  800.2211520274693,
+                    "predicted_n":  980,
+                    "predicted_ms":  16149.187,
+                    "predicted_per_token_ms":  16.478762244897958,
+                    "predicted_per_second":  60.6841694259903
+                }
+}

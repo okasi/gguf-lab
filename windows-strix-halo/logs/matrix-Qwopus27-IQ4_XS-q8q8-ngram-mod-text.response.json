@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "length",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "",
+                                        "reasoning_content":  "1.  **Analyze the Request:**\n    *   **Topic:** How multi-token prediction (MTP) affects local LLM decoding throughput.\n    *   **Format:** Concise technical explanation.\n    *   **Length Constraint:** Under 200 words.\n\n2.  **Define Key Concepts:**\n    *   *Local LLM decoding:* The autoregressive process where a model generates tokens one by one. Throughput is limited by the sequential nature of the decoding step (latency per token).\n    *   *Multi-token prediction (MTP):* A technique where the model predicts $K$ tokens at once instead of just one.\n    *   *Effect on throughput:* It reduces the number of forward passes required per generated token, thus increasing tokens per second (throughput), provided the computational cost of the $K$ predictions doesn\u0027t exceed the time saved by skipping autoregressive steps.\n\n3.  **Drafting - Attempt 1 (Focusing on technical accuracy and flow):**\n    Multi-token prediction (MTP) enhances local LLM decoding throughput by breaking the strict one-token-per-step autoregressive loop. In standard decoding, each generated token requires a full forward pass through the model, creating a latency bottleneck. MTP modifies the architecture to predict a sequence of $K$ tokens simultaneously in a single forward pass.\n\n    The first token is sampled and appended to the context, while the remaining $K-1$ tokens are buffered. If the next autoregressive step agrees with the buffered token, it is accepted without a new forward pass; if not, the buffer is discarded, and decoding continues from the correct token.\n\n    This speculative execution reduces the average number of forward passes per generated token from one to $1/K$ (assuming high acceptance rates). Consequently, MTP significantly increases tokens-per-second throughput on local hardware, as"
+                                    }
+                    }
+                ],
+    "created":  1779301358,
+    "model":  "qwen3.6-27b-bench",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  384,
+                  "prompt_tokens":  36,
+                  "total_tokens":  420,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-GHrpiCnXu1wRNSn5VsZS2W04XbF7qCx1",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  36,
+                    "prompt_ms":  274.26,
+                    "prompt_per_token_ms":  7.618333333333333,
+                    "prompt_per_second":  131.2623058411726,
+                    "predicted_n":  384,
+                    "predicted_ms":  30579.223,
+                    "predicted_per_token_ms":  79.63339322916667,
+                    "predicted_per_second":  12.55754601743805
+                }
+}

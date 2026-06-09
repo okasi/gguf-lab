@@ -1,0 +1,64 @@
+0.00.043.315 I log_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.043.324 I device_info:
+0.00.205.526 I   - ROCm0   : AMD Radeon(TM) 8060S Graphics (110456 MiB, 110301 MiB free)
+0.00.205.541 I   - CPU     : AMD RYZEN AI MAX+ 395 w/ Radeon 8060S           (32406 MiB, 20133 MiB free)
+0.00.205.984 I system_info: n_threads = 16 (n_threads_batch = 16) / 32 | ROCm : NO_VMM = 1 | PEER_MAX_BATCH_SIZE = 128 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | AVX512_BF16 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.206.049 I srv          init: running without SSL
+0.00.206.092 I srv          init: using 31 threads for HTTP server
+0.00.206.261 I srv         start: binding port with default address family
+0.00.208.623 I srv          main: loading model
+0.00.208.635 I srv    load_model: loading model 'C:\Users\Admin\Documents\Codex\2026-05-18\i-want-to-run-qwen-3\models\Qwen3.6-27B-abliterated-Gaston-MTP-Q4_K_M.gguf'
+0.00.208.705 I common_init_result: fitting params to device memory ...
+0.00.208.705 I common_init_result: (for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)
+0.08.699.738 W llama_context: n_ctx_seq (8192) < n_ctx_train (262144) -- the full capacity of the model will not be utilized
+0.08.785.760 W common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+0.09.661.928 I srv    load_model: loaded multimodal model, 'C:\Users\Admin\Documents\Codex\2026-05-18\i-want-to-run-qwen-3\models\Qwen3.6-27B-mmproj-BF16.gguf'
+0.09.661.952 I srv    load_model: initializing slots, n_slots = 1
+0.09.779.752 W srv    load_model: speculative decoding will use checkpoints
+0.09.779.821 W common_speculative_init: no implementations specified for speculative decoding
+0.09.779.824 I slot   load_model: id  0 | task -1 | new slot, n_ctx = 8192
+0.09.779.927 I srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+0.09.779.928 I srv    load_model: use `--cache-ram 0` to disable the prompt cache
+0.09.779.931 I srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+0.09.779.976 W srv          init: --cache-idle-slots requires --kv-unified, disabling
+0.09.799.556 I init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+'
+0.09.810.833 I srv          init: init: chat template, thinking = 0
+0.09.810.903 I srv          main: model loaded
+0.09.810.907 I srv          main: server is listening on http://127.0.0.1:19082
+0.09.810.918 I srv  update_slots: all slots are idle
+0.10.022.039 I srv  params_from_: Chat format: peg-native
+0.10.022.292 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.10.022.295 I srv  get_availabl: updating prompt cache
+0.10.022.306 I srv          load:  - looking for better prompt, base f_keep = -1.000, sim = 0.000
+0.10.022.310 I srv        update:  - cache state: 0 prompts, 0.000 MiB (limits: 8192.000 MiB, 8192 tokens, 8589934592 est)
+0.10.022.312 I srv  get_availabl: prompt cache update took 0.01 ms
+0.10.022.376 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.10.072.814 I srv  process_chun: processing image...
+0.11.030.643 W find_slot: non-consecutive token position 21 after 20 for sequence 0 with 1024 new tokens
+0.11.030.664 W find_slot: non-consecutive token position 21 after 21 for sequence 0 with 56 new tokens
+0.11.032.000 W find_slot: non-consecutive token position 21 after 20 for sequence 0 with 1024 new tokens
+0.11.105.593 W find_slot: non-consecutive token position 21 after 21 for sequence 0 with 56 new tokens
+0.14.670.806 I srv  process_chun: image processed in 4598 ms
+0.14.675.406 W find_slot: non-consecutive token position 66 after 21 for sequence 0 with 6 new tokens
+0.14.675.619 W find_slot: non-consecutive token position 66 after 21 for sequence 0 with 6 new tokens
+0.14.960.912 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   1107, progress = 1.00, t =   4.94 s / 224.16 tokens per second
+0.15.167.752 I slot create_check: id  0 | task 0 | created context checkpoint 1 of 32 (pos_min = 66, pos_max = 66, n_tokens = 1107, size = 149.626 MiB)
+0.18.744.649 I slot print_timing: id  0 | task 0 | 
+prompt eval time =    5309.36 ms /  1111 tokens (    4.78 ms per token,   209.25 tokens per second)
+       eval time =    3412.85 ms /    38 tokens (   89.81 ms per token,    11.13 tokens per second)
+      total time =    8722.21 ms /  1149 tokens
+0.18.744.756 I slot      release: id  0 | task 0 | stop processing: n_tokens = 1148, truncated = 0
+0.18.744.777 I srv  update_slots: all slots are idle

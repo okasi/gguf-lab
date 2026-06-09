@@ -1,0 +1,36 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : Qwen3.6-27B.i1-IQ4_XS-attn_qkv-IQ4_XS.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Running Large Language Models locally relies heavily on optimizing the interplay between hardware constraints and algorithmic efficiency to maximize tokens per second. Quantization serves as the primary lever for improving this metric by reducing the precision of model weights, typically from 16-bit floating point to 4-bit or 8-bit integer formats. This reduction significantly decreases the model’s memory footprint, allowing larger models to fit within consumer-grade GPU VRAM or even system RAM. More critically, quantization reduces the volume of data that must be transferred between memory and the processing unit, directly alleviating the memory bandwidth bottleneck that dominates inference speed for most autoregressive models.
+
+Memory bandwidth acts as the critical throttle for token generation because LLM inference is inherently memory-bound rather than compute-bound during the decoding phase. The speed at which the system can fetch weights from memory determines how quickly the next token can be calculated. Therefore, higher bandwidth directly correlates with higher throughput, making quantization essential for maximizing the utilization of available bandwidth. When bandwidth is saturated, the model cannot process tokens any faster, regardless of CPU or GPU clock speeds.
+
+Speculative decoding introduces an algorithmic acceleration technique to bypass this bottleneck. It utilizes a smaller, faster "draft" model to propose multiple potential next tokens simultaneously. The larger target model
+
+[ Prompt: 139.5 t/s | Generation: 13.2 t/s ]
+
+Exiting...
+

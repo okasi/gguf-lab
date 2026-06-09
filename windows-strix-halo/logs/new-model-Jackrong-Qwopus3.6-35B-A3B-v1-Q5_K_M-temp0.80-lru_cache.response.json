@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \"fs\";\n\nclass Node {\n  key: string;\n  value: number;\n  prev: Node | null;\n  next: Node | null;\n\n  constructor(key: string, value: number) {\n    this.key = key;\n    this.value = value;\n    this.prev = null;\n    this.next = null;\n  }\n}\n\nclass LRUCache {\n  private map: Map\u003cstring, Node\u003e;\n  private head: Node;\n  private tail: Node;\n  private capacity: number;\n  private size: number;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.size = 0;\n    this.map = new Map();\n    // Dummy nodes for easier manipulation\n    this.head = new Node(\"\", 0);\n    this.tail = new Node(\"\", 0);\n    this.head.next = this.tail;\n    this.tail.prev = this.head;\n  }\n\n  private addToHead(node: Node): void {\n    node.next = this.head.next;\n    node.prev = this.head;\n    this.head.next!.prev = node;\n    this.head.next = node;\n  }\n\n  private removeNode(node: Node): void {\n    const prev = node.prev;\n    const next = node.next;\n    if (prev \u0026\u0026 next) {\n      prev.next = next;\n      next!.prev = prev;\n    }\n  }\n\n  private moveToHead(node: Node): void {\n    this.removeNode(node);\n    this.addToHead(node);\n  }\n\n  private removeTail(): void {\n    const toRemove = this.tail.prev;\n    if (toRemove) {\n      this.removeNode(toRemove);\n      this.map.delete(toRemove.key);\n      this.size--;\n    }\n  }\n\n  put(key: string, value: number): void {\n    if (this.map.has(key)) {\n      const existing = this.map.get(key);\n      if (existing) {\n        existing.value = value;\n        this.moveToHead(existing);\n      }\n    } else {\n      const newNode = new Node(key, value);\n      this.map.set(key, newNode);\n      this.addToHead(newNode);\n      this.size++;\n      if (this.size \u003e this.capacity) {\n        this.removeTail();\n      }\n    }\n  }\n\n  get(key: string): number {\n    if (this.map.has(key)) {\n      const node = this.map.get(key);\n      if (node) {\n        this.moveToHead(node);\n        return node.value;\n      }\n    }\n    return -1;\n  }\n\n  delete(key: string): void {\n    if (this.map.has(key)) {\n      const node = this.map.get(key);\n      if (node) {\n        this.removeNode(node);\n        this.map.delete(key);\n        this.size--;\n      }\n    }\n  }\n\n  getKeys(): string[] {\n    const keys: string[] = [];\n    let current = this.head.next;\n    while (current \u0026\u0026 current !== this.tail) {\n      keys.push(current.key);\n      current = current.next;\n    }\n    return keys;\n  }\n}\n\nfunction main(): void {\n  const input = fs.readFileSync(0, \"utf8\").trim();\n  const lines = input.split(\"\\n\");\n  const [C, N] = lines[0].split(\" \").map(Number);\n  const cache = new LRUCache(C);\n  const getResults: number[] = [];\n\n  for (let i = 1; i \u003c= N; i++) {\n    const line = lines[i].trim();\n    if (line.startsWith(\"PUT\")) {\n      const parts = line.split(\" \");\n      const key = parts[1];\n      const value = parseInt(parts[2], 10);\n      cache.put(key, value);\n    } else if (line.startsWith(\"GET\")) {\n      const parts = line.split(\" \");\n      const key = parts[1];\n      const result = cache.get(key);\n      getResults.push(result);\n    } else if (line.startsWith(\"DEL\")) {\n      const parts = line.split(\" \");\n      const key = parts[1];\n      cache.delete(key);\n    }\n  }\n\n  if (getResults.length === 0) {\n    console.log(\"EMPTY\");\n  } else {\n    console.log(getResults.join(\" \"));\n  }\n\n  const keys = cache.getKeys();\n  if (keys.length === 0) {\n    console.log(\"EMPTY\");\n  } else {\n    console.log(keys.join(\" \"));\n  }\n}\n\nmain();\n```",
+                                        "reasoning_content":  "We are going to implement a LRU cache using a doubly linked list and a hash map.\n The doubly linked list will maintain the order of usage (most recent at head, least recent at tail).\n The hash map will map keys to nodes in the linked list.\n\n We\u0027ll define a Node class for the doubly linked list:\n   - key: string\n   - value: number\n   - prev: Node | null\n   - next: Node | null\n\n We\u0027ll also define a Cache class that holds:\n   - capacity: number\n   - map: Map\u003cstring, Node\u003e\n   - head: Node (dummy head)\n   - tail: Node (dummy tail)\n\n Operations:\n   - PUT key value:\n        If key exists, update the value and move the node to the head (most recent).\n        If not exists, create a new node, add to the map, and add to the head.\n        If cache is over capacity, remove the tail node (least recent) and also remove from map.\n\n   - GET key:\n        If key exists, move the node to the head and return the value.\n        Otherwise, return -1.\n\n   - DEL key:\n        If key exists, remove the node from the map and the linked list.\n\n We\u0027ll also keep track of the current size of the cache.\n\n Steps for each operation:\n   For PUT:\n        If key is in the map:\n            update the node\u0027s value\n            move the node to the head\n        Else:\n            create a new node\n            if cache is full (size == capacity):\n                remove the tail node (least recent)\n                remove it from the map\n                decrement size\n            add the new node to the head\n            add the node to the map\n            increment size\n\n   For GET:\n        If key is in the map:\n            move the node to the head\n            return the value\n        Else:\n            return -1\n\n   For DEL:\n        If key is in the map:\n            remove the node from the linked list\n            remove the node from the map\n            decrement size\n\n We\u0027ll use dummy head and tail to avoid edge cases.\n\n Implementation details:\n   - We\u0027ll read the input using fs.readFileSync(0, \"utf8\")\n   - Parse the first line to get C and N\n   - Then process N lines, each starting with the operation type.\n\n Note: We must output the GET results on the first line (if any) and the remaining keys on the second line.\n\n Let\u0027s code accordingly.\n"
+                                    }
+                    }
+                ],
+    "created":  1780728510,
+    "model":  "jackrong-qwopus35-q5-t080",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1594,
+                  "prompt_tokens":  282,
+                  "total_tokens":  1876,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-pRv9EyvyJ1l12ZNqAvfESBsT83oynvyj",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  282,
+                    "prompt_ms":  572.124,
+                    "prompt_per_token_ms":  2.028808510638298,
+                    "prompt_per_second":  492.90014052897624,
+                    "predicted_n":  1594,
+                    "predicted_ms":  29292.727,
+                    "predicted_per_token_ms":  18.376867628607275,
+                    "predicted_per_second":  54.416237859998496
+                }
+}

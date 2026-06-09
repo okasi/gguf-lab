@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9222-9a532ae4b
+model      : Huihui-Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated-MTP-Q4_K.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a concise but technical explanation of how native multi-token prediction changes local LLM decoding throughput. Focus on what affects tokens per second and latency. Do not use bullet points.
+
+Native multi-token prediction transforms the decoding bottleneck by shifting the computational workload from sequential autoregressive generation to parallel KV-cache reuse. In standard autoregressive decoding, each forward pass processes only one token, requiring full KV-cache updates and subsequent token generation, which limits throughput to the rate of individual forward passes. Multi-token predictors—such as speculative decoding with a drafter model or parallel token generation—generate multiple candidate tokens simultaneously, leveraging the fact that early tokens in a sequence share most of their attention patterns with later tokens. This parallelism reduces the effective number of forward passes needed per output token, directly increasing tokens per second. However, the benefit depends critically on the drafter’s accuracy rate: if the drafter produces tokens that match the target model’s output, they are accepted without additional computation, effectively amortizing the drafter’s cost across multiple tokens. If mismatches occur, the target model must recompute from the point of divergence, introducing latency overhead proportional to
+
+[ Prompt: 29.7 t/s | Generation: 42.9 t/s ]
+
+Exiting...
+

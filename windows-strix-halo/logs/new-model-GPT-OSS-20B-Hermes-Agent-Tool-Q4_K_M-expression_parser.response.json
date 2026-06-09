@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \"fs\";\n\nfunction evaluateExpression(expr: string): number {\n  let index = 0;\n  const tokens = tokenize(expr);\n\n  function parseExpression(): number {\n    let value = parseTerm();\n    while (true) {\n      const token = tokens[index];\n      if (token === \"+\" || token === \"-\") {\n        index++;\n        const nextTerm = parseTerm();\n        if (token === \"+\") value += nextTerm;\n        else value -= nextTerm;\n      } else {\n        break;\n      }\n    }\n    return value;\n  }\n\n  function parseTerm(): number {\n    let value = parseFactor();\n    while (true) {\n      const token = tokens[index];\n      if (token === \"*\" || token === \"/\") {\n        index++;\n        const nextFactor = parseFactor();\n        if (token === \"*\") value *= nextFactor;\n        else value = Math.trunc(value / nextFactor);\n      } else {\n        break;\n      }\n    }\n    return value;\n  }\n\n  function parseFactor(): number {\n    const token = tokens[index];\n    if (token === \"+\" || token === \"-\") {\n      index++;\n      const factor = parseFactor();\n      return token === \"+\" ? factor : -factor;\n    } else if (token === \"(\") {\n      index++;\n      const expr = parseExpression();\n      if (tokens[index] !== \")\") {\n        throw new Error(\"Expected \u0027)\u0027\");\n      }\n      index++;\n      return expr;\n    } else if (isNumber(token)) {\n      index++;\n      return Number(token);\n    } else {\n      throw new Error(`Unexpected token: ${token}`);\n    }\n  }\n\n  function isNumber(token: string): boolean {\n    return /^[0-9]+$/.test(token);\n  }\n\n  function tokenize(str: string): string[] {\n    const result: string[] = [];\n    let i = 0;\n    while (i \u003c str.length) {\n      const char = str[i];\n      if (char === \" \" || char === \"\\t\" || char === \"\\n\") {\n        i++;\n      } else if (char === \"+\" || char === \"-\" || char === \"*\" || char === \"/\" || char === \"(\" || char === \")\") {\n        result.push(char);\n        i++;\n      } else if (/[0-9]/.test(char)) {\n        let num = \"\";\n        while (i \u003c str.length \u0026\u0026 /[0-9]/.test(str[i])) {\n          num += str[i];\n          i++;\n        }\n        result.push(num);\n      } else {\n        throw new Error(`Invalid character: ${char}`);\n      }\n    }\n    return result;\n  }\n\n  const result = parseExpression();\n  if (index \u003c tokens.length) {\n    throw new Error(\"Unexpected tokens at the end\");\n  }\n  return result;\n}\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nconst output = evaluateExpression(input);\nconsole.log(output);"
+                                    }
+                    }
+                ],
+    "created":  1779660929,
+    "model":  "gpt-oss-20b-hermes-q4",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  611,
+                  "prompt_tokens":  267,
+                  "total_tokens":  878,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  122
+                                            }
+              },
+    "id":  "chatcmpl-ukta19Rj1zYaOwKCNpn6b4Grlqv1xNkJ",
+    "timings":  {
+                    "cache_n":  122,
+                    "prompt_n":  145,
+                    "prompt_ms":  200.901,
+                    "prompt_per_token_ms":  1.3855241379310346,
+                    "prompt_per_second":  721.748522904316,
+                    "predicted_n":  611,
+                    "predicted_ms":  10074.476,
+                    "predicted_per_token_ms":  16.488504091653027,
+                    "predicted_per_second":  60.64831560470241
+                }
+}

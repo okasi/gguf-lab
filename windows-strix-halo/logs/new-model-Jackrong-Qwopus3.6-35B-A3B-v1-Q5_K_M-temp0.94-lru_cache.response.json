@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \"fs\";\n\nconst input = fs.readFileSync(0, \"utf8\");\nconst lines = input.trim().split(\"\\n\");\nconst [C, N] = lines[0].split(\" \").map(Number);\n\nclass Node {\n  key: string;\n  value: number;\n  prev: Node | null;\n  next: Node | null;\n\n  constructor(key: string, value: number) {\n    this.key = key;\n    this.value = value;\n    this.prev = null;\n    this.next = null;\n  }\n}\n\nclass DoublyLinkedList {\n  head: Node;\n  tail: Node;\n\n  constructor() {\n    this.head = new Node(\"\", -1);\n    this.tail = new Node(\"\", -1);\n    this.head.next = this.tail;\n    this.tail.prev = this.head;\n  }\n\n  addToFront(node: Node): void {\n    node.next = this.head.next;\n    node.prev = this.head;\n    this.head.next!.prev = node;\n    this.head.next = node;\n  }\n\n  remove(node: Node): void {\n    const prev = node.prev;\n    const next = node.next;\n    if (prev \u0026\u0026 next) {\n      prev.next = next;\n      next!.prev = prev;\n    }\n    node.prev = null;\n    node.next = null;\n  }\n\n  removeLast(): Node | null {\n    if (this.tail.prev === this.head) {\n      return null;\n    }\n    const last = this.tail.prev;\n    this.remove(last);\n    return last;\n  }\n\n  moveToFront(node: Node): void {\n    this.remove(node);\n    this.addToFront(node);\n  }\n\n  getKeys(): string[] {\n    const keys: string[] = [];\n    let current = this.head.next;\n    while (current !== this.tail) {\n      keys.push(current.key);\n      current = current.next;\n    }\n    return keys;\n  }\n}\n\nconst cache = new Map\u003cstring, Node\u003e();\nconst list = new DoublyLinkedList();\nlet capacity = C;\nlet size = 0;\nconst getResults: number[] = [];\n\nfor (let i = 1; i \u003c= N; i++) {\n  const parts = lines[i].split(\" \");\n  const operation = parts[0];\n  const key = parts[1];\n  const value = parts.length \u003e 2 ? Number(parts[2]) : 0;\n\n  if (operation === \"GET\") {\n    if (cache.has(key)) {\n      const node = cache.get(key)!;\n      node.value = value;\n      list.moveToFront(node);\n      getResults.push(value);\n    } else {\n      getResults.push(-1);\n    }\n  } else if (operation === \"PUT\") {\n    if (cache.has(key)) {\n      const node = cache.get(key)!;\n      node.value = value;\n      list.moveToFront(node);\n    } else {\n      if (size === capacity) {\n        const lru = list.removeLast();\n        if (lru) {\n          cache.delete(lru.key);\n          size--;\n        }\n      }\n      const newNode = new Node(key, value);\n      list.addToFront(newNode);\n      cache.set(key, newNode);\n      size++;\n    }\n  } else if (operation === \"DEL\") {\n    if (cache.has(key)) {\n      const node = cache.get(key)!;\n      list.remove(node);\n      cache.delete(key);\n      size--;\n    }\n  }\n}\n\nconst output1 = getResults.length \u003e 0 ? getResults.join(\" \") : \"EMPTY\";\nconst output2 = list.getKeys().length \u003e 0 ? list.getKeys().join(\" \") : \"EMPTY\";\n\nconsole.log(output1);\nconsole.log(output2);\n```",
+                                        "reasoning_content":  "We are going to implement a LRU cache using a doubly linked list (or a combination of map and doubly linked list) to achieve O(1) operations.\n Since we are in TypeScript, we can use a Map for O(1) lookups and a custom doubly linked list for maintaining the order of usage.\n\n However, note that the problem requires:\n   - PUT: update if exists, else insert if capacity allows, else evict LRU.\n   - GET: return value and mark as recently used (if exists).\n   - DEL: remove if exists.\n\n We\u0027ll implement a doubly linked list with a head and tail. We\u0027ll also maintain a map from key to node in the list.\n\n Steps:\n 1. Define a Node class for the doubly linked list: key, value, prev, next.\n 2. We\u0027ll have a Map called cache that maps key to Node.\n 3. We\u0027ll have a head and tail for the doubly linked list (dummy nodes for convenience).\n 4. We\u0027ll maintain the current size of the cache.\n\n For operations:\n   - GET: \n        If key exists, move the node to the front (most recently used) and return the value.\n        Otherwise, return -1.\n   - PUT:\n        If key exists, update the value and move the node to the front.\n        Else, if cache is at capacity, remove the least recently used (which is the tail\u0027s previous node).\n        Then, insert the new node at the front and update the map and size.\n   - DEL:\n        If key exists, remove the node from the list and the map, and decrease the size.\n\n We\u0027ll also need to handle the output:\n   - First line: GET results (if any) as space separated string, or \"EMPTY\" if no GET operations.\n   - Second line: the keys in the cache from most recently used to least recently used (which is the order from head to tail, excluding the dummy head and tail). If empty, output \"EMPTY\".\n\n Implementation of the doubly linked list operations (with dummy head and tail):\n   - We\u0027ll have a dummy head and tail. The head.next points to the most recently used, and tail.prev points to the least recently used.\n   - When we remove a node, we set its prev.next = node.next and node.next.prev = node.prev.\n   - When we add a node to the front, we set node.next = head.next, node.prev = head, and then head.next.prev = node, head.next = node.\n\n However, note: we are going to have a lot of operations (up to 300000) and we want O(1) per operation.\n\n Let\u0027s code accordingly.\n\n Important: We must read from stdin without /dev/stdin. We\u0027ll use fs.readFileSync(0, \"utf8\").\n\n Steps in main:\n   - Read all input from stdin.\n   - Parse the first line for C and N.\n   - Process each operation line.\n   - Collect GET results and then at the end, get the remaining keys.\n\n Let\u0027s code accordingly.\n"
+                                    }
+                    }
+                ],
+    "created":  1780833822,
+    "model":  "jackrong-qwopus35-q5-t094",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1542,
+                  "prompt_tokens":  282,
+                  "total_tokens":  1824,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-t0fYsJdOZWaV4n6iQscWtxshbdN8bD7D",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  282,
+                    "prompt_ms":  486.566,
+                    "prompt_per_token_ms":  1.7254113475177304,
+                    "prompt_per_second":  579.5719388531052,
+                    "predicted_n":  1542,
+                    "predicted_ms":  25379.015,
+                    "predicted_per_token_ms":  16.458505188067445,
+                    "predicted_per_second":  60.75885923862687
+                }
+}

@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9222-9a532ae4b
+model      : Qwen3.6-27B-abliterated-Gaston-MTP-Q4_K_M.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a concise but technical explanation of how native multi-token prediction changes local LLM decoding throughput. Focus on what affects tokens per second and latency. Do not use bullet points.
+
+Native multi-token prediction, often implemented via speculative generation or parallel token sampling, significantly alters the computational dynamics of local LLM serving by decoupling the autoregressivity constraint that traditionally limits throughput to one token per forward pass. In standard autoreressive generation, the model must complete the entire forward pass for token $t$ before initiating the computation for token $t+1$, creating a sequential bottleneck where the latency per token is dominated by the model's depth and the GPU's memory bandwidth. Multi-token prediction mitigates this by having the base model predict $k$ tokens simultaneously during a single forward pass, effectively amortizing the fixed overhead of memory access and kernel launch costs across multiple output tokens. This approach increases effective tokens per second (TPS) because the GPU spends less time waiting for memory transfers between individual token steps and more time performing dense matrix multiplications, thereby improving hardware utilization efficiency. However, this gain is contingent on the accuracy of the speculative tokens
+
+[ Prompt: 49.2 t/s | Generation: 18.1 t/s ]
+
+Exiting...
+

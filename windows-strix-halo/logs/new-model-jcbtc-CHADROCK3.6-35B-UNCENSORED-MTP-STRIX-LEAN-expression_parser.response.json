@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \u0027fs\u0027;\n\nfunction evaluateExpression(expr: string): number {\n    const tokens: Token[] = tokenize(expr);\n    const parser = new Parser(tokens);\n    return parser.parse();\n}\n\ntype TokenType = \u0027NUMBER\u0027 | \u0027PLUS\u0027 | \u0027MINUS\u0027 | \u0027MULTIPLY\u0027 | \u0027DIVIDE\u0027 | \u0027LPAREN\u0027 | \u0027RPAREN\u0027;\n\ninterface Token {\n    type: TokenType;\n    value: number;\n}\n\nfunction tokenize(input: string): Token[] {\n    const tokens: Token[] = [];\n    let i = 0;\n    while (i \u003c input.length) {\n        const char = input[i];\n        if (char === \u0027 \u0027) {\n            i++;\n            continue;\n        }\n        if (char \u003e= \u00270\u0027 \u0026\u0026 char \u003c= \u00279\u0027) {\n            let numStr = \u0027\u0027;\n            while (i \u003c input.length \u0026\u0026 input[i] \u003e= \u00270\u0027 \u0026\u0026 input[i] \u003c= \u00279\u0027) {\n                numStr += input[i];\n                i++;\n            }\n            tokens.push({ type: \u0027NUMBER\u0027, value: parseInt(numStr, 10) });\n        } else if (char === \u0027+\u0027) {\n            tokens.push({ type: \u0027PLUS\u0027, value: 0 });\n            i++;\n        } else if (char === \u0027-\u0027) {\n            tokens.push({ type: \u0027MINUS\u0027, value: 0 });\n            i++;\n        } else if (char === \u0027*\u0027) {\n            tokens.push({ type: \u0027MULTIPLY\u0027, value: 0 });\n            i++;\n        } else if (char === \u0027/\u0027) {\n            tokens.push({ type: \u0027DIVIDE\u0027, value: 0 });\n            i++;\n        } else if (char === \u0027(\u0027) {\n            tokens.push({ type: \u0027LPAREN\u0027, value: 0 });\n            i++;\n        } else if (char === \u0027)\u0027) {\n            tokens.push({ type: \u0027RPAREN\u0027, value: 0 });\n            i++;\n        } else {\n            throw new Error(`Unexpected character: ${char}`);\n        }\n    }\n    return tokens;\n}\n\nclass Parser {\n    private pos: number = 0;\n    private tokens: Token[];\n\n    constructor(tokens: Token[]) {\n        this.tokens = tokens;\n    }\n\n    private peek(): Token | undefined {\n        return this.tokens[this.pos];\n    }\n\n    private consume(): Token {\n        const token = this.tokens[this.pos];\n        if (!token) {\n            throw new Error(\u0027Unexpected end of input\u0027);\n        }\n        this.pos++;\n        return token;\n    }\n\n    public parse(): number {\n        const result = this.parseExpression();\n        if (this.pos \u003c this.tokens.length) {\n            throw new Error(\u0027Unexpected token after expression\u0027);\n        }\n        return result;\n    }\n\n    // Lowest precedence: + and -\n    private parseExpression(): number {\n        let left = this.parseTerm();\n        while (this.peek()?.type === \u0027PLUS\u0027 || this.peek()?.type === \u0027MINUS\u0027) {\n            const op = this.consume();\n            const right = this.parseTerm();\n            if (op.type === \u0027PLUS\u0027) {\n                left = left + right;\n            } else {\n                left = left - right;\n            }\n        }\n        return left;\n    }\n\n    // Medium precedence: * and /\n    private parseTerm(): number {\n        let left = this.parseUnary();\n        while (this.peek()?.type === \u0027MULTIPLY\u0027 || this.peek()?.type === \u0027DIVIDE\u0027) {\n            const op = this.consume();\n            const right = this.parseUnary();\n            if (op.type === \u0027MULTIPLY\u0027) {\n                left = left * right;\n            } else {\n                // Division truncates toward zero\n                if (right === 0) {\n                    throw new Error(\u0027Division by zero\u0027);\n                }\n                left = Math.trunc(left / right);\n            }\n        }\n        return left;\n    }\n\n    // Highest precedence: unary +/- and primary expressions\n    private parseUnary(): number {\n        if (this.peek()?.type === \u0027PLUS\u0027 || this.peek()?.type === \u0027MINUS\u0027) {\n            const op = this.consume();\n            const value = this.parseUnary();\n            if (op.type === \u0027MINUS\u0027) {\n                return -value;\n            } else {\n                return value;\n            }\n        }\n        return this.parsePrimary();\n    }\n\n    // Primary: numbers and parenthesized expressions\n    private parsePrimary(): number {\n        const token = this.peek();\n        if (!token) {\n            throw new Error(\u0027Unexpected end of input\u0027);\n        }\n        if (token.type === \u0027NUMBER\u0027) {\n            this.consume();\n            return token.value;\n        } else if (token.type === \u0027LPAREN\u0027) {\n            this.consume(); // consume \u0027(\u0027\n            const result = this.parseExpression();\n            const close = this.consume();\n            if (close.type !== \u0027RPAREN\u0027) {\n                throw new Error(\u0027Expected closing parenthesis\u0027);\n            }\n            return result;\n        } else {\n            throw new Error(`Unexpected token: ${token.type}`);\n        }\n    }\n}\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).trim();\nconst result = evaluateExpression(input);\nconsole.log(result);\n```"
+                                    }
+                    }
+                ],
+    "created":  1780967590,
+    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1190,
+                  "prompt_tokens":  169,
+                  "total_tokens":  1359,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-brisY9At8fiqgowMT1YJY6OUPnLPq9JV",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  169,
+                    "prompt_ms":  278.694,
+                    "prompt_per_token_ms":  1.649076923076923,
+                    "prompt_per_second":  606.3998507323445,
+                    "predicted_n":  1190,
+                    "predicted_ms":  15216.157,
+                    "predicted_per_token_ms":  12.786686554621848,
+                    "predicted_per_second":  78.20634342823881,
+                    "draft_n":  768,
+                    "draft_n_accepted":  753
+                }
+}

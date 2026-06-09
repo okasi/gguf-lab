@@ -1,0 +1,32 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9222-9a532ae4b
+model      : Qwen3.6-27B-abliterated-Gaston-MTP-Q8_0.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a concise but technical explanation of how native multi-token prediction changes local LLM decoding throughput. Focus on what affects tokens per second and latency. Do not use bullet points.
+
+Native multi-token prediction, often implemented via speculative sampling or parallel candidate generation, alters the computational profile of local LLM deployment by shifting the bottleneck from sequential autoregression to batched verification. In standard autoreressive generation, throughput is strictly limited by the sequential dependency of each token on the previous one, creating a latency floor determined by the time required for a single forward pass. Multi-token prediction attempts to amortize this cost by generating a sequence of candidate tokens in parallel, which are then verified against the main model’s distribution. The impact on tokens per second (TPS) and latency depends heavily on the acceptance rate of these candidates; if the draft model accurately predicts the main model’s choices, the main model performs fewer forward passes per generated token, significantly increasing effective throughput and reducing end-to-end latency. However, this efficiency gain is contingent upon the computational overhead of the draft model and the memory bandwidth required to fetch and verify multiple tokens simultaneously. If the acceptance rate
+
+[ Prompt: 57.1 t/s | Generation: 11.9 t/s ]
+
+Exiting...
+

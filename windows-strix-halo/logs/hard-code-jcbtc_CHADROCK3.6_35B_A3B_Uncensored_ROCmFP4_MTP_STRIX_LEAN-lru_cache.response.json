@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "\u003cthink\u003e\n\n\u003c/think\u003e\n\n```typescript\nimport * as fs from \"fs\";\n\ninterface Node {\n    key: string;\n    value: number;\n    prev: Node | null;\n    next: Node | null;\n}\n\nclass DoublyLinkedList {\n    private head: Node | null = null;\n    private tail: Node | null = null;\n\n    public addToFront(node: Node): void {\n        node.next = this.head;\n        node.prev = null;\n        if (this.head) {\n            this.head.prev = node;\n        }\n        this.head = node;\n        if (!this.tail) {\n            this.tail = node;\n        }\n    }\n\n    public removeNode(node: Node): void {\n        if (node.prev) {\n            node.prev.next = node.next;\n        } else {\n            this.head = node.next;\n        }\n        if (node.next) {\n            node.next.prev = node.prev;\n        } else {\n            this.tail = node.prev;\n        }\n        node.prev = null;\n        node.next = null;\n    }\n\n    public moveToFront(node: Node): void {\n        this.removeNode(node);\n        this.addToFront(node);\n    }\n\n    public removeLast(): Node | null {\n        if (!this.tail) {\n            return null;\n        }\n        const node = this.tail;\n        this.removeNode(node);\n        return node;\n    }\n\n    public isEmpty(): boolean {\n        return this.head === null;\n    }\n\n    public getKeys(): string[] {\n        const keys: string[] = [];\n        let current = this.head;\n        while (current) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n}\n\nfunction main(): void {\n    const input = fs.readFileSync(0, \"utf8\").trim();\n    if (!input) return;\n\n    const lines = input.split(\"\\n\");\n    const firstLine = lines[0].trim().split(/\\s+/);\n    const C = parseInt(firstLine[0], 10);\n    const N = parseInt(firstLine[1], 10);\n\n    const cache = new Map\u003cstring, Node\u003e();\n    const list = new DoublyLinkedList();\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= N \u0026\u0026 i \u003c lines.length; i++) {\n        const line = lines[i].trim();\n        if (!line) continue;\n\n        const parts = line.split(/\\s+/);\n        const op = parts[0];\n\n        if (op === \"PUT\") {\n            const key = parts[1];\n            const value = parseInt(parts[2], 10);\n\n            if (cache.has(key)) {\n                const existingNode = cache.get(key)!;\n                list.moveToFront(existingNode);\n                existingNode.value = value;\n            } else {\n                if (cache.size \u003e= C) {\n                    const lastNode = list.removeLast();\n                    if (lastNode) {\n                        cache.delete(lastNode.key);\n                    }\n                }\n                const newNode: Node = {\n                    key,\n                    value,\n                    prev: null,\n                    next: null,\n                };\n                list.addToFront(newNode);\n                cache.set(key, newNode);\n            }\n        } else if (op === \"GET\") {\n            const key = parts[1];\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                list.moveToFront(node);\n                getResults.push(node.value);\n            } else {\n                getResults.push(-1);\n            }\n        } else if (op === \"DEL\") {\n            const key = parts[1];\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                list.removeNode(node);\n                cache.delete(key);\n            }\n        }\n    }\n\n    if (getResults.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(getResults.join(\" \"));\n    }\n\n    const remainingKeys = list.getKeys();\n    if (remainingKeys.length === 0) {\n        console.log(\"EMPTY\");\n    } else {\n        console.log(remainingKeys.join(\" \"));\n    }\n}\n\nmain();\n```"
+                                    }
+                    }
+                ],
+    "created":  1780933281,
+    "model":  "jcbtc-chadrock35-uncensored-rocmfp4-mtp",
+    "system_fingerprint":  "b1-1faa48e",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  965,
+                  "prompt_tokens":  284,
+                  "total_tokens":  1249,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-L8PurkuIfhiPRyedIo9KEp8IO3a5P42i",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  284,
+                    "prompt_ms":  1745.101,
+                    "prompt_per_token_ms":  6.144721830985916,
+                    "prompt_per_second":  162.74129692206924,
+                    "predicted_n":  965,
+                    "predicted_ms":  11176.489,
+                    "predicted_per_token_ms":  11.581853886010363,
+                    "predicted_per_second":  86.3419630261346,
+                    "draft_n":  872,
+                    "draft_n_accepted":  748
+                }
+}

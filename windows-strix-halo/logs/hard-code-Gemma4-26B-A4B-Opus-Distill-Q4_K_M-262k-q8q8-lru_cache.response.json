@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\ninterface Node {\n    key: string;\n    value: number;\n    prev: Node | null;\n    next: Node | null;\n}\n\nclass LRUCache {\n    private capacity: number;\n    private size: number = 0;\n    private cache: Map\u003cstring, Node\u003e;\n    private head: Node | null = null;\n    private tail: Node | null = null;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.cache = new Map();\n    }\n\n    private removeNode(node: Node) {\n        if (node.prev) node.prev.next = node.next;\n        else this.head = node.next;\n\n        if (node.next) node.next.prev = node.prev;\n        else this.tail = node.prev;\n    }\n\n    private moveToHead(node: Node) {\n        this.removeNode(node);\n        this.addToHead(node);\n    }\n\n    private addToHead(node: Node) {\n        node.next = this.head;\n        node.prev = null;\n        if (this.head) this.head.prev = node;\n        this    .head = node;\n        if (!this.tail) this.tail = node;\n    }\n\n    get(key: string): number {\n        const node = this.cache.get(key);\n        if (!node) return -1;\n        this.moveToHead(node);\n        return node.value;\n    }\n\n    put(key: string, value: number) {\n        const existing = this.cache.get(key);\n        if (existing) {\n            existing.value = value;\n            this.moveToHead(existing);\n            return;\n        }\n\n        if (this.size === this.capacity) {\n            if (this.tail) {\n                this.cache.delete(this.tail.key);\n                this.removeNode(this.tail);\n                this.size--;\n            }\n        }\n\n        const newNode: Node = { key, value, prev: null, next: this.head };\n        if (this.head) this.head.prev = newNode;\n        this.head = newNode;\n        if (!this.tail) this.tail = newNode;\n        this.cache.set(key, newNode);\n        this.size++;\n    }\n\n    delete(key: string) {\n        const node = this.cache.get(key);\n        if (node) {\n            this.removeNode(node);\n            this.cache.delete(key);\n            this.size--;\n        }\n    }\n\n    getOrderedKeys(): string[] {\n        const result: string[] = [];\n        let current = this.head;\n        while (current) {\n            result.push(current.key);\n            current = current.next;\n        }\n        return result;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\");\n    const lines = input.split(/\\r?\\n/);\n    if (lines.length === 0 || lines[0].trim() === \"\") return;\n\n    const firstLine = lines[0].trim().split(/\\s+/);\n    const C = parseInt(firstLine[0]);\n    const N = parseInt(firstLine[1]);\n\n    const cache = new LRUCache(C);\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= N; i++) {\n        if (!lines[i]) continue;\n        const parts = lines[i].trim().split(/\\s+/);\n        const op = parts[0];\n\n        if (op === \"PUT\") {\n            const key = parts[1];\n            const value = parseInt(parts[2]);\n            cache.put(key, value);\n        } else if (op === \"GET\") {\n            const key = parts[1];\n            const val = cache.get(key);\n            getResults.push(val);\n        } else if (op === \"DEL\") {\n            const key = parts[1];\n            cache.delete(key);\n        }\n    }\n\n    process.stdout.write((getResults.length \u003e 0 ? getResults.join(\" \") : \"EMPTY\") + \"\\n\");\n    const remainingKeys = cache.getOrderedKeys();\n    process.stdout.write((remainingKeys.length \u003e 0 ? remainingKeys.join(\" \") : \"EMPTY\") + \"\\n\");\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1779630127,
+    "model":  "gemma-4-26b-a4b",
+    "system_fingerprint":  "b9222-9a532ae4b",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1040,
+                  "prompt_tokens":  289,
+                  "total_tokens":  1329,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-6AUnuEgha320P7n4X1RbKmSu8GATAo9u",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  289,
+                    "prompt_ms":  321.631,
+                    "prompt_per_token_ms":  1.112910034602076,
+                    "prompt_per_second":  898.5452272946328,
+                    "predicted_n":  1040,
+                    "predicted_ms":  19349.872,
+                    "predicted_per_token_ms":  18.605646153846152,
+                    "predicted_per_second":  53.74712556238099
+                }
+}

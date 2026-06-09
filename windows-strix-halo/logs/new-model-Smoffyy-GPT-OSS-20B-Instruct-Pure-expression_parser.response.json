@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).trim();\nlet idx = 0;\nconst len = input.length;\n\nfunction skipSpaces() {\n  while (idx \u003c len \u0026\u0026 input[idx] === \u0027 \u0027) idx++;\n}\n\nfunction parseNumber(): number {\n  skipSpaces();\n  let start = idx;\n  while (idx \u003c len \u0026\u0026 /[0-9]/.test(input[idx])) idx++;\n  const numStr = input.slice(start, idx);\n  return Number(numStr);\n}\n\nfunction parsePrimary(): number {\n  skipSpaces();\n  if (input[idx] === \u0027(\u0027) {\n    idx++; // consume \u0027(\u0027\n    const val = parseExpression();\n    skipSpaces();\n    if (input[idx] === \u0027)\u0027) idx++; // consume \u0027)\u0027\n    return val;\n  } else {\n    return parseNumber();\n  }\n}\n\nfunction parseUnary(): number {\n  skipSpaces();\n  let sign = 1;\n  while (input[idx] === \u0027+\u0027 || input[idx] === \u0027-\u0027) {\n    if (input[idx] === \u0027-\u0027) sign *= -1;\n    idx++;\n    skipSpaces();\n  }\n  const val = parsePrimary();\n  return sign * val;\n}\n\nfunction parseFactor(): number {\n  return parseUnary();\n}\n\nfunction parseTerm(): number {\n  let val = parseFactor();\n  while (true) {\n    skipSpaces();\n    if (input[idx] === \u0027*\u0027) {\n      idx++;\n      const right = parseFactor();\n      val = val * right;\n    } else if (input[idx] === \u0027/\u0027) {\n      idx++;\n      const right = parseFactor();\n      val = Math.trunc(val / right);\n    } else {\n      break;\n    }\n  }\n  return val;\n}\n\nfunction parseExpression(): number {\n  let val = parseTerm();\n  while (true) {\n    skipSpaces();\n    if (input[idx] === \u0027+\u0027) {\n      idx++;\n      const right = parseTerm();\n      val = val + right;\n    } else if (input[idx] === \u0027-\u0027) {\n      idx++;\n      const right = parseTerm();\n      val = val - right;\n    } else {\n      break;\n    }\n  }\n  return val;\n}\n\nconst result = parseExpression();\nconsole.log(result.toString());",
+                                        "reasoning_content":  "We need to write TypeScript program that reads line, parses and evaluates. Must support unary + and -. Precedence: unary \u003e * / \u003e + -. We need to handle integer arithmetic, division truncates toward zero. All intermediate values fit in safe integers.\n\nImplement a recursive descent parser or shunting-yard. We\u0027ll implement recursive descent for simplicity.\n\nGrammar:\n\nExpr -\u003e Term ((+|-) Term)*\nTerm -\u003e Factor ((*|/) Factor)*\nFactor -\u003e Unary\nUnary -\u003e (+|-) Unary | Primary\nPrimary -\u003e number | \u0027(\u0027 Expr \u0027)\u0027\n\nNumbers: integers possibly negative? Input may have unary signs. But number token is digits. We\u0027ll parse number token.\n\nWe need to skip spaces.\n\nImplementation steps:\n\n- Read input string trimmed? Keep spaces but skip during parsing.\n\n- Use index pointer.\n\n- Functions: parseExpression, parseTerm, parseFactor, parseUnary, parsePrimary.\n\n- parseNumber: read digits, convert to number.\n\n- Division truncates toward zero: use Math.trunc(a / b).\n\n- For negative numbers: division by negative numbers truncates toward zero: e.g., -3/2 =\u003e -1 (trunc toward zero). Math.trunc(-1.5) =\u003e -1.\n\n- For safety, use BigInt? But problem says safe integers. We\u0027ll use number.\n\nEdge cases: unary minus before parentheses: e.g., - (3+4). In grammar, unary will apply to factor. parseUnary will consume optional +/-, then parseUnary recursively.\n\nImplementation details:\n\n- We\u0027ll skip spaces before each token.\n\n- After parsing entire expression, skip spaces; if index \u003c length, error? But assume valid input.\n\n- Output result as integer.\n\nLet\u0027s write code.\n\nAlso ensure Node.js TypeScript compile.\n\nLet\u0027s produce final code."
+                                    }
+                    }
+                ],
+    "created":  1780968486,
+    "model":  "smoffyy-gpt-oss-20b-pure-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  832,
+                  "prompt_tokens":  221,
+                  "total_tokens":  1053,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-vWuEkJf3lU7vMtR2uHCEQpsrJ3mo44WJ",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  221,
+                    "prompt_ms":  414.25,
+                    "prompt_per_token_ms":  1.8744343891402715,
+                    "prompt_per_second":  533.4942667471335,
+                    "predicted_n":  832,
+                    "predicted_ms":  17938.952,
+                    "predicted_per_token_ms":  21.561240384615385,
+                    "predicted_per_second":  46.37952094414434
+                }
+}

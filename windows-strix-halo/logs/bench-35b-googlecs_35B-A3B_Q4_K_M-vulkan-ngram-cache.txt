@@ -1,0 +1,34 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : huihui-qwen3.6-35b-a3b-claude-4.7-opus-abliterated-q4_k_m.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Quantization dramatically reduces the memory footprint of large language models by compressing weights from 32-bit floating-point to formats like 8-bit integers or even 4-bit values. This compression matters most during the prefill phase, where the model processes all input tokens simultaneously and requires reading weights repeatedly. With quantized weights, the GPU can load more data per memory access, effectively increasing throughput. However, the benefits diminish during the decode phase, where the model generates one token at a time and must read the entire weight matrix for each new token. Here, quantization alone cannot overcome the fundamental bottleneck of memory bandwidth, which measures how fast data moves between GPU memory and compute units.
+
+Memory bandwidth becomes the critical constraint during generation because each token requires fetching all model weights, regardless of quantization level. A GPU with higher bandwidth can deliver more weights per second, directly translating to higher tokens per second. For example, the NVIDIA H100's 
+
+[ Prompt: 258.7 t/s | Generation: 55.6 t/s ]
+
+Exiting...
+

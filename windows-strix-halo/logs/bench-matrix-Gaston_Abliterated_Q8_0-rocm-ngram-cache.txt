@@ -1,0 +1,36 @@
+﻿
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b9219-45b455e66
+model      : Qwen3.6-27B-abliterated-Gaston-MTP-Q8_0.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+> Write a detailed but direct 220 word explanation of how quantization, memory bandwidth, and speculative decoding affect local LLM tokens per second. Do not use bullet points.
+
+Running large language models locally hinges on overcoming severe hardware bottlenecks, primarily through quantization, memory bandwidth optimization, and speculative techniques. Quantization reduces the precision of model weights, typically from 32-bit floating point to 8-bit or even 4-bit integers. This drastic reduction shrinks the model’s memory footpring, allowing larger architectures to fit within the limited VRAM of consumer GPUs. More critically, it lowers the amount of data that must be transferred from memory to the processing cores. Since local LLM performance is overwhelmingly memory-bound rather than compute-bound, minimizing data transfer volume directly increases throughput.
+
+Memory bandwidth serves as the primary ceiling for token generation speed. During the autoreressive generation phase, the model predicts one token at a time, requiring it to fetch the entire model’s weights from memory for each single token output. Consequently, the maximum tokens per second are mathematically determined by the available memory bandwidth divided by the model size. High-bandwidth interfaces like GDDR6 or HBM are essential because they allow data to flow fast enough to keep the GPU cores saturated. If the bandwidth is insufficient, the GPU sits idle, waiting for data, which severely throttles performance regardless of computational power.
+
+Speculative drafting accelerates this process by decou
+
+[ Prompt: 124.7 t/s | Generation: 7.5 t/s ]
+
+Exiting...
+

@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "\u003c|channel\u003ethought\n\u003cchannel|\u003econst fs = require(\u0027fs\u0027);\n\nfunction solve() {\n    const input = fs.readFileSync(0, \u0027utf8\u0027).split(/\\r?\\n/);\n    if (input.length === 0) return;\n\n    const firstLine = input[0].trim().split(/\\s+/);\n    if (firstLine.length \u003c 2) return;\n    const capacity = parseInt(firstLine[0]);\n    const n = parseInt(firstLine[1]);\n\n    // Use a Map to store key -\u003e Node\n    // Use a Doubly Linked List to maintain LRU order\n    class Node {\n        constructor(key: string, value: number) {\n            this.key = key;\n            this.value = value;\n            this.prev: Node | null = null;\n            this.next: Node | null = null;\n        }\n    }\n\n    const cache = new Map\u003cstring, Node\u003e();\n    let head: Node | null = null; // Most recently used\n    let tail: Node | null = null; // Least recently used\n\n    const moveToHead = (node: Node) =\u003e {\n        if (node === head) return;\n        \n        // Remove from current position\n        if (node.prev) node.prev.next = node.next;\n        if (node.next) node.next.prev = node.prev;\n        if (node === tail) tail = node.prev;\n\n        // Insert at head\n        node.next = head;\n        node.prev = null;\n        if (head) head.prev = node;\n        head = node;\n        if (!tail) tail = node;\n    };\n\n    const removeNode = (node: Node) =\u003e {\n        if (node.prev) node.prev.next = node.next;\n        if (node.next) node.next.prev = node.prev;\n        if (node === head) head = node.next;\n        if (node === tail) tail = node.prev;\n        node.prev = null;\n        node.next = null;\n    };\n\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= n; i++) {\n        const line = input[i]?.trim();\n        if (!line) continue;\n        const parts = line.split(/\\s+/);\n        const command = parts[0];\n\n        if (command === \u0027PUT\u0027) {\n            const key = parts[1];\n            const value = parseInt(parts[2]);\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                node.value = value;\n                moveToHead(node);\n            } else {\n                const newNode = new Node(key, value);\n                if (cache.size \u003e= capacity) {\n                    if (tail) {\n                        cache.delete(tail.key);\n                        removeNode(tail);\n                    }\n                }\n                cache.set(key, newNode);\n                if (!head) {\n                    head = newNode;\n                    tail = newNode;\n                } else {\n                    newNode.next = head;\n                    head.prev = newNode;\n                    head = newNode;\n                }\n            }\n        } else if (command === \u0027GET\u0027) {\n            const key = parts[1];\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                getResults.push(node.value);\n                moveToHead(node);\n            } else {\n                getResults.push(-1);\n            }\n        } else if (command === \u0027DEL\u0027) {\n            const key = parts[1];\n            if (cache.has(key)) {\n                const node = cache.get(key)!;\n                removeNode(node);\n                cache.delete(key);\n            }\n        }\n    }\n\n    // Output results\n    process.stdout.write(getResults.length \u003e 0 ? getResults.join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\n\n    const finalKeys: string[] = [];\n    let curr = head;\n    while (curr) {\n        finalKeys.push(curr.key);\n        curr = curr.next;\n    }\n    process.stdout.write(finalKeys.length \u003e 0 ? finalKeys.join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1780624621,
+    "model":  "aeon-gemma4-12b-abliterated-k4-bf16-recommended",
+    "system_fingerprint":  "b9518-7c158fbb4",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  991,
+                  "prompt_tokens":  299,
+                  "total_tokens":  1290,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-X2PyXRIIU9nyTCZ2t3mAETUIgWoi6HDR",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  298,
+                    "prompt_ms":  1847.368,
+                    "prompt_per_token_ms":  6.199221476510067,
+                    "prompt_per_second":  161.31057807648503,
+                    "predicted_n":  991,
+                    "predicted_ms":  122636.265,
+                    "predicted_per_token_ms":  123.75001513622604,
+                    "predicted_per_second":  8.080807092420827
+                }
+}

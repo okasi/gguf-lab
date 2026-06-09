@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * Finds the minimum cost path in a rectangular grid using Dijkstra\u0027s algorithm.\n * @param H Height of the grid.\n * @param W Width of the grid.\n * @param grid The 2D character array representing the grid.\n * @returns The minimum cost, or -1 if unreachable.\n */\nfunction solve(H, W, grid) {\n    // 1. Parse the grid and identify S and T locations\n    let start = null;\n    let target = null;\n\n    for (let r = 0; r \u003c H; r++) {\n        for (let c = 0; c \u003c W; c++) {\n            if (grid[r][c] === \u0027S\u0027) {\n                start = { r, c };\n            } else if (grid[r][c] === \u0027T\u0027) {\n                target = { r, c };\n            }\n        }\n    }\n\n    if (!start || !target) return -1; // Should not happen based on problem description\n\n    // 2. Initialization for Dijkstra\u0027s\n    // Distance map: stores the minimum cost to reach (r, c)\n    const dist = Array(H).fill(0).map(() =\u003e Array(W).fill(Infinity));\n    \n    // Priority Queue: stores [cost, r, c]. Min-heap based on cost.\n    // Using an array and sorting/manual heap management is simpler for competitive programming\n    // environments if performance constraints allow, but a proper MinPriorityQueue is ideal.\n    // We\u0027ll simulate the priority queue behavior using an array and sorting for simplicity.\n    const pq = [];\n\n    // Start cell cost is 0\n    dist[start.r][start.c] = 0;\n    pq.push([0, start.r, start.c]);\n\n    // Directions: up, down, left, right\n    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];\n\n    // 3. Dijkstra\u0027s Algorithm\n    while (pq.length \u003e 0) {\n        // Extract minimum cost element (Simulating Extract-Min from Priority Queue)\n        pq.sort((a, b) =\u003e a[0] - b[0]);\n        const [currentCost, r, c] = pq.shift();\n\n        if (currentCost \u003e dist[r][c]) {\n            continue;\n        }\n\n        // Check if we reached the target\n        if (r === target.r \u0026\u0026 c === target.c) {\n            return currentCost;\n        }\n\n        // Explore neighbors\n        for (const [dr, dc] of directions) {\n            const nr = r + dr;\n            const nc = c + dc;\n\n            // Check bounds\n            if (nr \u003e= 0 \u0026\u0026 nr \u003c H \u0026\u0026 nc \u003e= 0 \u0026\u0026 nc \u003c W) {\n                const cell = grid[nr][nc];\n\n                // Check if it\u0027s a wall\n                if (cell === \u0027#\u0027) {\n                    continue;\n                }\n\n                // Calculate cost to enter the new cell\n                let moveCost = 0;\n                if (cell \u003e= \u00270\u0027 \u0026\u0026 cell \u003c= \u00279\u0027) {\n                    moveCost = parseInt(cell);\n                } \n                // S and T have cost 0 to enter (as per problem statement)\n\n                const newDist = currentCost + moveCost;\n\n                if (newDist \u003c dist[nr][nc]) {\n                    dist[nr][nc] = newDist;\n                    pq.push([newDist, nr, nc]);\n                }\n            }\n        }\n    }\n\n    // 4. If target is unreachable\n    return -1;\n}\n\n// Main execution block\nfunction main() {\n    try {\n        // Read all input from stdin\n        const input = fs.readFileSync(0, \"utf8\").trim().split(\u0027\\n\u0027);\n\n        if (input.length === 0 || input[0].trim() === \"\") {\n            return;\n        }\n\n        // First line: H W\n        const [H, W] = input[0].trim().split(/\\s+/).map(Number);\n        \n        // Next H lines: grid characters\n        const grid = [];\n        for (let i = 1; i \u003c= H; i++) {\n            if (input[i]) {\n                grid.push(input[i].trim().split(\u0027\u0027));\n            }\n        }\n\n        if (grid.length !== H) {\n            // Handle case where input might be malformed (e.g., missing lines)\n            // For strict adherence, we assume valid input format is provided.\n            return;\n        }\n\n        const result = solve(H, W, grid);\n        console.log(result);\n\n    } catch (e) {\n        // console.error(\"Error:\", e); // Suppress error output for clean execution if strictly required\n    }\n}\n\nmain();"
+                                    }
+                    }
+                ],
+    "created":  1780960437,
+    "model":  "unsloth-gemma4-e2b-it-qat-ud-q4-k-xl-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1106,
+                  "prompt_tokens":  192,
+                  "total_tokens":  1298,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  1
+                                            }
+              },
+    "id":  "chatcmpl-gq0pEHtpVV7L1UMl2YJvHukCvqJ07mfQ",
+    "timings":  {
+                    "cache_n":  1,
+                    "prompt_n":  191,
+                    "prompt_ms":  73.764,
+                    "prompt_per_token_ms":  0.3861989528795811,
+                    "prompt_per_second":  2589.33897294073,
+                    "predicted_n":  1106,
+                    "predicted_ms":  12452.002,
+                    "predicted_per_token_ms":  11.258591320072334,
+                    "predicted_per_second":  88.82105865386144
+                }
+}

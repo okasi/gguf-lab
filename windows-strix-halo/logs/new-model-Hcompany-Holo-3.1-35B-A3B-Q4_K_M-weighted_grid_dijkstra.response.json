@@ -1,0 +1,37 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "function parseGrid(input: string): { grid: string[], start: [number, number], H: number, W: number } {\n  const lines = input.trim().split(\u0027\\n\u0027);\n  const H = parseInt(lines[0]);\n  const W = parseInt(lines[1]);\n  const grid = lines.slice(2).map(line =\u003e line.trim());\n  let start: [number, number] = [0, 0];\n\n  for (let i = 0; i \u003c H; i++) {\n    for (let j = 0; j \u003c W; j++) {\n      if (grid[i][j] === \u0027S\u0027) {\n        start = [i, j];\n      }\n    }\n  }\n\n  return { grid, start, H, W };\n}\n\nfunction dijkstra(grid: string[], start: [number, number], H: number, W: number): number {\n  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];\n  const dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(Infinity));\n  const visited: boolean[][] = Array.from({ length: H }, () =\u003e Array(W).fill(false));\n\n  dist[start[0]][start[1]] = 0;\n  const pq: [number, number, number][] = [[0, start[0], start[1]]];\n\n  while (pq.length \u003e 0) {\n    pq.sort((a, b) =\u003e a[0] - b[0]);\n    const [cost, x, y] = pq.shift()!;\n\n    if (visited[x][y]) continue;\n    visited[x][y] = true;\n\n    if (grid[x][y] === \u0027T\u0027) return cost;\n\n    for (const [dx, dy] of directions) {\n      const nx = x + dx;\n      const ny = y + dy;\n\n      if (nx \u003e= 0 \u0026\u0026 nx \u003c H \u0026\u0026 ny \u003e= 0 \u0026\u0026 ny \u003c W \u0026\u0026 !visited[nx][ny] \u0026\u0026 grid[nx][ny] !== \u0027#\u0027) {\n        const newCost = cost + (grid[nx][ny] === \u0027.\u0027 || grid[nx][ny] === \u0027S\u0027 || grid[nx][ny] === \u0027T\u0027 ? 0 : parseInt(grid[nx][ny]));\n        if (newCost \u003c dist[nx][ny]) {\n          dist[nx][ny] = newCost;\n          pq.push([newCost, nx, ny]);\n        }\n      }\n    }\n  }\n\n  return -1;\n}\n\nfunction solve(input: string): number {\n  const { grid, start, H, W } = parseGrid(input);\n  return dijkstra(grid, start, H, W);\n}\n\nconst input = require(\u0027fs\u0027).readFileSync(0, \u0027utf8\u0027);\nconsole.log(solve(input));",
+                                        "reasoning_content":  "I need to implement a TypeScript program that finds the minimum cost path in a rectangular grid. The problem requires using Dijkstra\u0027s algorithm since it\u0027s a shortest path problem with weighted edges. The input format specifies H and W on the first line, followed by H lines of grid characters. I must handle the special characters S (start), T (target), # (walls), and digits 0-9 (with associated costs). The cost calculation is important - entering S or T costs 0, and the start cell itself contributes 0. I need to read input using fs.readFileSync(0, \u0027utf8\u0027) rather than /dev/stdin. The implementation should include parsing the grid, finding the start position, implementing Dijkstra\u0027s algorithm with a priority queue, and handling the special cases of walls and passable cells. I\u0027ll need to track visited cells to avoid revisiting them and ensure the algorithm terminates correctly. The solution must return only the minimum cost or -1 if the target is unreachable. I should carefully handle the edge cases where the start and target might be the same cell or where there are no valid paths.\n"
+                                    }
+                    }
+                ],
+    "created":  1780963090,
+    "model":  "hcompany-holo-3.1-35b-a3b-q4-refresh",
+    "system_fingerprint":  "b9535-da87e9b61",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  876,
+                  "prompt_tokens":  191,
+                  "total_tokens":  1067,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-TDIBZfXwnlrlnn2ZtAXtlGHGPrb3iLo7",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  191,
+                    "prompt_ms":  315.091,
+                    "prompt_per_token_ms":  1.6496910994764398,
+                    "prompt_per_second":  606.1740893900493,
+                    "predicted_n":  876,
+                    "predicted_ms":  13454.042,
+                    "predicted_per_token_ms":  15.358495433789953,
+                    "predicted_per_second":  65.11054447429257
+                }
+}
