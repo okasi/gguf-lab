@@ -11,10 +11,9 @@ Runs were done on a Strix Halo mini PC:
 - System: `GMKtec NucBox_EVO-X2`
 - APU: `AMD Ryzen AI Max+ 395 w/ Radeon 8060S (Strix Halo)`
 - CPU: `16` cores / `32` threads
-- GPU backend: llama.cpp Vulkan on `AMD Radeon(TM) 8060S Graphics`
+- GPU backend: llama.cpp Vulkan
 - System RAM reported by Windows: `32 GiB`
 - Vulkan-visible GPU memory in llama.cpp logs: `114507 MiB` total, about `111.82 GiB`, on the Radeon 8060S UMA pool
-- llama.cpp device log for these runs reported `Vulkan0 : AMD Radeon(TM) 8060S Graphics` and AVX512-capable CPU paths.
 
 Unless noted otherwise, runs used:
 
