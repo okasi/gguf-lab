@@ -1,59 +1,90 @@
-﻿function parseGrid(input: string): { grid: string[], start: [number, number], H: number, W: number } {
-  const lines = input.trim().split('\n');
-  const H = parseInt(lines[0]);
-  const W = parseInt(lines[1]);
-  const grid = lines.slice(2).map(line => line.trim());
-  let start: [number, number] = [0, 0];
+﻿const path = require('path');
+const fs = require('fs');
 
-  for (let i = 0; i < H; i++) {
-    for (let j = 0; j < W; j++) {
-      if (grid[i][j] === 'S') {
-        start = [i, j];
-      }
-    }
-  }
+// Read input from the first argument
+const input = fs.readFileSync(0, 'utf8').toString().trim().split('\n');
 
-  return { grid, start, H, W };
-}
+// Constants for cell types
+const WALL = '#';
+const START = 'S';
+const TARGET = 'T';
 
-function dijkstra(grid: string[], start: [number, number], H: number, W: number): number {
-  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
-  const visited: boolean[][] = Array.from({ length: H }, () => Array(W).fill(false));
+// Dijkstra's algorithm
+class Dijkstra {
+  static solve(grid: string[], start: [number, number], target: [number, number]): number {
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const height = grid.length;
+    const width = grid[0].length;
+    const costs = Array.from({ length: height }, () => Array.from({ length: width }, () => Infinity));
+    const visited = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
 
-  dist[start[0]][start[1]] = 0;
-  const pq: [number, number, number][] = [[0, start[0], start[1]]];
+    const queue = new PriorityQueue();
+    queue.enqueue(start, 0);
 
-  while (pq.length > 0) {
-    pq.sort((a, b) => a[0] - b[0]);
-    const [cost, x, y] = pq.shift()!;
+    while (!queue.isEmpty()) {
+      const [x, y] = queue.dequeue();
 
-    if (visited[x][y]) continue;
-    visited[x][y] = true;
+      if (visited[y][x]) continue;
+      visited[y][x] = true;
 
-    if (grid[x][y] === 'T') return cost;
+      if (grid[y][x] === TARGET) return costs[y][x];
 
-    for (const [dx, dy] of directions) {
-      const nx = x + dx;
-      const ny = y + dy;
+      for (const [dx, dy] of directions) {
+        const nx = x + dx;
+        const ny = y + dy;
 
-      if (nx >= 0 && nx < H && ny >= 0 && ny < W && !visited[nx][ny] && grid[nx][ny] !== '#') {
-        const newCost = cost + (grid[nx][ny] === '.' || grid[nx][ny] === 'S' || grid[nx][ny] === 'T' ? 0 : parseInt(grid[nx][ny]));
-        if (newCost < dist[nx][ny]) {
-          dist[nx][ny] = newCost;
-          pq.push([newCost, nx, ny]);
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+        if (visited[ny][nx] || grid[ny][nx] === WALL) continue;
+
+        const cost = costs[y][x] + (grid[ny][nx] === START || grid[ny][nx] === TARGET ? 0 : parseInt(grid[ny][nx]));
+        if (cost < costs[ny][nx]) {
+          costs[ny][nx] = cost;
+          queue.enqueue([nx, ny], cost);
         }
       }
     }
+
+    return -1;
+  }
+}
+
+// Priority queue
+class PriorityQueue {
+  private data: { element: [number, number], priority: number }[] = [];
+
+  enqueue(element: [number, number], priority: number): void {
+    this.data.push({ element, priority });
+    this.data.sort((a, b) => a.priority - b.priority);
   }
 
-  return -1;
+  dequeue(): [number, number] {
+    return this.data.shift().element;
+  }
+
+  isEmpty(): boolean {
+    return this.data.length === 0;
+  }
 }
 
-function solve(input: string): number {
-  const { grid, start, H, W } = parseGrid(input);
-  return dijkstra(grid, start, H, W);
+// Parse input
+const height = parseInt(input[0].split(' ')[0]);
+const width = parseInt(input[0].split(' ')[1]);
+const grid = input.slice(1, height + 1);
+
+// Find start and target
+const start: [number, number] = [0, 0];
+const target: [number, number] = [0, 0];
+for (let y = 0; y < height; y++) {
+  for (let x = 0; x < width; x++) {
+    if (grid[y][x] === START) {
+      start[0] = x;
+      start[1] = y;
+    } else if (grid[y][x] === TARGET) {
+      target[0] = x;
+      target[1] = y;
+    }
+  }
 }
 
-const input = require('fs').readFileSync(0, 'utf8');
-console.log(solve(input));
+// Solve
+console.log(Dijkstra.solve(grid, start, target));

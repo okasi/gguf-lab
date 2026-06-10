@@ -34,112 +34,65 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-class Node {
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        this.prev = null;
-        this.next = null;
-    }
-}
 class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
-        this.map = new Map();
-        this.head = new Node("", 0);
-        this.tail = new Node("", 0);
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
-    }
-    removeNode(node) {
-        const prev = node.prev;
-        const next = node.next;
-        if (prev && next) {
-            prev.next = next;
-            next.prev = prev;
-        }
-    }
-    addToHead(node) {
-        node.prev = this.head;
-        node.next = this.head.next;
-        this.head.next.prev = node;
-        this.head.next = node;
-    }
-    removeTail() {
-        const node = this.tail.prev;
-        if (node) {
-            this.removeNode(node);
-        }
-        return node;
+        this.cache = new Map();
     }
     get(key) {
-        const node = this.map.get(key);
-        if (!node) {
+        if (!this.cache.has(key)) {
             return -1;
         }
-        this.removeNode(node);
-        this.addToHead(node);
-        return node.value;
+        const value = this.cache.get(key);
+        this.cache.delete(key);
+        this.cache.set(key, value);
+        return value;
     }
     put(key, value) {
-        const node = this.map.get(key);
-        if (node) {
-            node.value = value;
-            this.removeNode(node);
-            this.addToHead(node);
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
         }
-        else {
-            const newNode = new Node(key, value);
-            this.map.set(key, newNode);
-            this.addToHead(newNode);
-            if (this.map.size > this.capacity) {
-                const tail = this.removeTail();
-                if (tail) {
-                    this.map.delete(tail.key);
-                }
-            }
+        else if (this.cache.size >= this.capacity) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
         }
+        this.cache.set(key, value);
     }
     del(key) {
-        const node = this.map.get(key);
-        if (node) {
-            this.removeNode(node);
-            this.map.delete(key);
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
         }
     }
-    getKeys() {
-        const keys = [];
-        let current = this.head.next;
-        while (current && current !== this.tail) {
-            keys.push(current.key);
-            current = current.next;
-        }
-        return keys;
+    keys() {
+        return Array.from(this.cache.keys());
     }
 }
-const input = fs.readFileSync(0, "utf8").trim();
-const lines = input.split("\n");
-const [C, N] = lines[0].split(" ").map(Number);
-const cache = new LRUCache(C);
+const input = fs.readFileSync(0, 'utf8').trim().split('\n');
+const [capacity, operations] = input.shift().split(' ').map(Number);
+const cache = new LRUCache(capacity);
 const getResults = [];
-for (let i = 1; i <= N; i++) {
-    const parts = lines[i].split(" ");
-    const operation = parts[0];
-    const key = parts[1];
-    if (operation === "GET") {
-        const value = cache.get(key);
-        getResults.push(value);
+for (const line of input) {
+    const [operation, key, value] = line.split(' ');
+    if (operation === 'GET') {
+        getResults.push(cache.get(Number(key)));
     }
-    else if (operation === "PUT") {
-        const value = parseInt(parts[2], 10);
-        cache.put(key, value);
+    else if (operation === 'PUT') {
+        cache.put(Number(key), Number(value));
     }
-    else if (operation === "DEL") {
-        cache.del(key);
+    else if (operation === 'DEL') {
+        cache.del(Number(key));
     }
 }
-const getOutput = getResults.length > 0 ? getResults.join(" ") : "EMPTY";
-const keys = cache.getKeys();
-const keysOutput = keys.length > 0 ? keys.join(" ") : "EMPTY";
-console.log(getOutput);
-console.log(keysOutput);
+if (getResults.length > 0) {
+    console.log(getResults.join(' '));
+}
+else {
+    console.log('EMPTY');
+}
+const keys = cache.keys();
+if (keys.length > 0) {
+    console.log(keys.join(' '));
+}
+else {
+    console.log('EMPTY');
+}

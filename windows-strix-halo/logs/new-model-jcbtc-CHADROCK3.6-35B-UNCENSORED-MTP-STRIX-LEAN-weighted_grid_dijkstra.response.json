@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "```typescript\nimport fs from \"fs\";\n\nfunction solve(): void {\n  const input = fs.readFileSync(0, \"utf8\").trim().split(\"\\n\");\n  const [H, W] = input[0].split(\" \").map(Number);\n  const grid: string[][] = [];\n  let start: [number, number] | null = null;\n  let target: [number, number] | null = null;\n\n  for (let i = 1; i \u003c= H; i++) {\n    grid.push(input[i].split(\"\"));\n  }\n\n  // Find start and target\n  for (let r = 0; r \u003c H; r++) {\n    for (let c = 0; c \u003c W; c++) {\n      if (grid[r][c] === \"S\") {\n        start = [r, c];\n      } else if (grid[r][c] === \"T\") {\n        target = [r, c];\n      }\n    }\n  }\n\n  if (!start || !target) {\n    console.log(\"-1\");\n    return;\n  }\n\n  const [sr, sc] = start;\n  const [tr, tc] = target;\n\n  // Dijkstra\u0027s algorithm\n  const dist: number[][] = Array.from({ length: H }, () =\u003e\n    Array(W).fill(Infinity)\n  );\n  dist[sr][sc] = 0;\n\n  const pq: [number, number, number][] = [[0, sr, sc]];\n\n  const dirs = [\n    [0, 1],\n    [0, -1],\n    [1, 0],\n    [-1, 0],\n  ];\n\n  while (pq.length \u003e 0) {\n    // Extract min\n    pq.sort((a, b) =\u003e a[0] - b[0]);\n    const [d, r, c] = pq.shift()!;\n\n    if (d \u003e dist[r][c]) continue;\n\n    if (r === tr \u0026\u0026 c === tc) {\n      console.log(d);\n      return;\n    }\n\n    for (const [dr, dc] of dirs) {\n      const nr = r + dr;\n      const nc = c + dc;\n\n      if (nr \u003e= 0 \u0026\u0026 nr \u003c H \u0026\u0026 nc \u003e= 0 \u0026\u0026 nc \u003c W \u0026\u0026 grid[nr][nc] !== \"#\") {\n        let cost = 0;\n        const cell = grid[nr][nc];\n        if (cell !== \"S\" \u0026\u0026 cell !== \"T\") {\n          cost = parseInt(cell, 10);\n        }\n\n        const newDist = d + cost;\n        if (newDist \u003c dist[nr][nc]) {\n          dist[nr][nc] = newDist;\n          pq.push([newDist, nr, nc]);\n        }\n      }\n    }\n  }\n\n  console.log(\"-1\");\n}\n\nsolve();\n```"
+                                        "content":  "import fs from \"fs\";\n\nfunction solve(): void {\n    const input = fs.readFileSync(0, \"utf8\").trim().split(\"\\n\");\n    if (input.length \u003c 2) {\n        console.log(-1);\n        return;\n    }\n\n    const [hStr, wStr] = input[0].split(\" \").map(Number);\n    const H = hStr;\n    const W = wStr;\n    const grid: string[] = input.slice(1, H + 1);\n\n    let start: [number, number] | null = null;\n    let target: [number, number] | null = null;\n\n    for (let r = 0; r \u003c H; r++) {\n        for (let c = 0; c \u003c W; c++) {\n            const cell = grid[r][c];\n            if (cell === \"S\") {\n                start = [r, c];\n            } else if (cell === \"T\") {\n                target = [r, c];\n            }\n        }\n    }\n\n    if (!start || !target) {\n        console.log(-1);\n        return;\n    }\n\n    const [sr, sc] = start;\n    const [tr, tc] = target;\n\n    // Directions: up, down, left, right\n    const dirs: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];\n\n    // Distance array initialized to infinity\n    const dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(Infinity));\n    dist[sr][sc] = 0;\n\n    // Min-heap using a priority queue\n    // Each element: [cost, row, col]\n    const pq: { cost: number; row: number; col: number }[] = [];\n    // We\u0027ll use a simple array and sort, or implement a proper heap.\n    // For correctness and efficiency, let\u0027s use a simple array-based min-heap.\n\n    function pushHeap(item: { cost: number; row: number; col: number }): void {\n        pq.push(item);\n        // Bubble up\n        let idx = pq.length - 1;\n        while (idx \u003e 0) {\n            const parentIdx = Math.floor((idx - 1) / 2);\n            if (pq[parentIdx].cost \u003c= pq[idx].cost) break;\n            [pq[parentIdx], pq[idx]] = [pq[idx], pq[parentIdx]];\n            idx = parentIdx;\n        }\n    }\n\n    function popHeap(): { cost: number; row: number; col: number } | null {\n        if (pq.length === 0) return null;\n        if (pq.length === 1) return pq.pop()!;\n\n        const top = pq[0];\n        pq[0] = pq.pop()!;\n        // Bubble down\n        let idx = 0;\n        const n = pq.length;\n        while (true) {\n            let smallest = idx;\n            const left = 2 * idx + 1;\n            const right = 2 * idx + 2;\n\n            if (left \u003c n \u0026\u0026 pq[left].cost \u003c pq[smallest].cost) {\n                smallest = left;\n            }\n            if (right \u003c n \u0026\u0026 pq[right].cost \u003c pq[smallest].cost) {\n                smallest = right;\n            }\n\n            if (smallest === idx) break;\n            [pq[idx], pq[smallest]] = [pq[smallest], pq[idx]];\n            idx = smallest;\n        }\n        return top;\n    }\n\n    pushHeap({ cost: 0, row: sr, col: sc });\n\n    while (pq.length \u003e 0) {\n        const { cost, row, col } = popHeap()!;\n\n        // If we popped a node with cost greater than the known shortest distance, skip\n        if (cost \u003e dist[row][col]) continue;\n\n        // If we reached the target\n        if (row === tr \u0026\u0026 col === tc) {\n            console.log(cost);\n            return;\n        }\n\n        // Explore neighbors\n        for (const [dr, dc] of dirs) {\n            const nr = row + dr;\n            const nc = col + dc;\n\n            if (nr \u003e= 0 \u0026\u0026 nr \u003c H \u0026\u0026 nc \u003e= 0 \u0026\u0026 nc \u003c W) {\n                const cell = grid[nr][nc];\n                if (cell === \"#\") continue; // Wall\n\n                let moveCost = 0;\n                if (cell \u003e= \"0\" \u0026\u0026 cell \u003c= \"9\") {\n                    moveCost = parseInt(cell, 10);\n                }\n                // S and T cost 0 to enter\n\n                const newCost = cost + moveCost;\n\n                if (newCost \u003c dist[nr][nc]) {\n                    dist[nr][nc] = newCost;\n                    pushHeap({ cost: newCost, row: nr, col: nc });\n                }\n            }\n        }\n    }\n\n    // If target is unreachable\n    console.log(-1);\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1780967601,
-    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh",
+    "created":  1781090546,
+    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh-noreason",
     "system_fingerprint":  "b1-1faa48e",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  654,
+                  "completion_tokens":  1148,
                   "prompt_tokens":  193,
-                  "total_tokens":  847,
+                  "total_tokens":  1341,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-U5P713HvQQf4eTHf1An4L2k6KxZy9F3c",
+    "id":  "chatcmpl-P8nurOJok3ksrw5wkejbzqh14kqTluYa",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  193,
-                    "prompt_ms":  297.327,
-                    "prompt_per_token_ms":  1.5405544041450776,
-                    "prompt_per_second":  649.1169654959018,
-                    "predicted_n":  654,
-                    "predicted_ms":  8510.705,
-                    "predicted_per_token_ms":  13.013310397553516,
-                    "predicted_per_second":  76.84439773203277,
-                    "draft_n":  419,
-                    "draft_n_accepted":  408
+                    "prompt_ms":  306.896,
+                    "prompt_per_token_ms":  1.5901347150259069,
+                    "prompt_per_second":  628.8775350607372,
+                    "predicted_n":  1148,
+                    "predicted_ms":  15455.966,
+                    "predicted_per_token_ms":  13.463385017421603,
+                    "predicted_per_second":  74.27552570961919,
+                    "draft_n":  723,
+                    "draft_n_accepted":  705
                 }
 }

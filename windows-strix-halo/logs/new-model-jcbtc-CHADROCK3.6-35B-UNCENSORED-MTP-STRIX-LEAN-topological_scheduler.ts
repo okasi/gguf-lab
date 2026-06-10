@@ -1,148 +1,184 @@
-﻿import * as fs from 'fs';
+﻿import fs from "fs";
 
-class MinBinaryHeap {
-    private data: string[] = [];
+interface MinHeap<T> {
+    elements: T[];
+    compare: (a: T, b: T) => number;
+    swap(i: number, j: number): void;
+    push(item: T): void;
+    pop(): T | undefined;
+    peek(): T | undefined;
+    size(): number;
+}
 
-    private getLeftIndex(i: number): number {
-        return 2 * i + 1;
+class BinaryMinHeap implements MinHeap<string> {
+    public elements: string[] = [];
+    private compare: (a: string, b: string) => number;
+
+    constructor(compare: (a: string, b: string) => number) {
+        this.compare = compare;
     }
 
-    private getRightIndex(i: number): number {
-        return 2 * i + 2;
-    }
-
-    private getParentIndex(i: number): number {
+    private parent(i: number): number {
         return Math.floor((i - 1) / 2);
     }
 
+    private leftChild(i: number): number {
+        return 2 * i + 1;
+    }
+
+    private rightChild(i: number): number {
+        return 2 * i + 2;
+    }
+
     private swap(i: number, j: number): void {
-        const temp = this.data[i];
-        this.data[i] = this.data[j];
-        this.data[j] = temp;
-    }
-
-    private siftUp(): void {
-        let currentIndex = 0;
-        while (currentIndex > 0) {
-            const parentIndex = this.getParentIndex(currentIndex);
-            if (this.data[parentIndex] <= this.data[currentIndex]) {
-                break;
-            }
-            this.swap(currentIndex, parentIndex);
-            currentIndex = parentIndex;
-        }
-    }
-
-    private siftDown(): void {
-        let currentIndex = 0;
-        const length = this.data.length;
-        while (this.getLeftIndex(currentIndex) < length) {
-            let leftIndex = this.getLeftIndex(currentIndex);
-            let rightIndex = this.getRightIndex(currentIndex);
-            let smallerIndex = leftIndex;
-
-            if (rightIndex < length && this.data[rightIndex] < this.data[leftIndex]) {
-                smallerIndex = rightIndex;
-            }
-
-            if (this.data[currentIndex] <= this.data[smallerIndex]) {
-                break;
-            }
-
-            this.swap(currentIndex, smallerIndex);
-            currentIndex = smallerIndex;
-        }
+        const temp = this.elements[i];
+        this.elements[i] = this.elements[j];
+        this.elements[j] = temp;
     }
 
     public push(item: string): void {
-        this.data.push(item);
-        this.siftUp();
+        this.elements.push(item);
+        this.siftUp(this.elements.length - 1);
     }
 
     public pop(): string | undefined {
-        if (this.data.length === 0) {
+        if (this.elements.length === 0) {
             return undefined;
         }
-        const top = this.data[0];
-        const last = this.data.pop()!;
-        if (this.data.length > 0) {
-            this.data[0] = last;
-            this.siftDown();
+        const result = this.elements[0];
+        const last = this.elements.pop()!;
+        if (this.elements.length > 0) {
+            this.elements[0] = last;
+            this.siftDown(0);
         }
-        return top;
+        return result;
     }
 
-    public isEmpty(): boolean {
-        return this.data.length === 0;
+    public peek(): string | undefined {
+        return this.elements.length > 0 ? this.elements[0] : undefined;
     }
 
     public size(): number {
-        return this.data.length;
+        return this.elements.length;
+    }
+
+    private siftUp(index: number): void {
+        while (index > 0) {
+            const parentIndex = this.parent(index);
+            if (this.compare(this.elements[index], this.elements[parentIndex]) < 0) {
+                this.swap(index, parentIndex);
+                index = parentIndex;
+            } else {
+                break;
+            }
+        }
+    }
+
+    private siftDown(index: number): void {
+        const lastIndex = this.elements.length - 1;
+        while (true) {
+            const leftIndex = this.leftChild(index);
+            const rightIndex = this.rightChild(index);
+            let smallest = index;
+
+            if (leftIndex <= lastIndex && this.compare(this.elements[leftIndex], this.elements[smallest]) < 0) {
+                smallest = leftIndex;
+            }
+            if (rightIndex <= lastIndex && this.compare(this.elements[rightIndex], this.elements[smallest]) < 0) {
+                smallest = rightIndex;
+            }
+
+            if (smallest !== index) {
+                this.swap(index, smallest);
+                index = smallest;
+            } else {
+                break;
+            }
+        }
     }
 }
 
 function solve(): void {
-    const input = fs.readFileSync(0, 'utf8').trim();
-    const lines = input.split('\n');
-    let lineIndex = 0;
+    const input = fs.readFileSync(0, "utf8");
+    const lines = input.split("\n").filter(line => line.trim() !== "");
+    
+    if (lines.length < 2) {
+        console.log("IMPOSSIBLE");
+        return;
+    }
 
-    const firstLine = lines[lineIndex++].trim().split(/\s+/);
+    const firstLine = lines[0].trim().split(/\s+/);
     const N = parseInt(firstLine[0], 10);
     const M = parseInt(firstLine[1], 10);
 
-    const taskNames = lines[lineIndex++].trim().split(/\s+/);
-    
-    // Map task name to index
-    const nameToIndex = new Map<string, number>();
-    for (let i = 0; i < N; i++) {
-        nameToIndex.set(taskNames[i], i);
+    if (isNaN(N) || isNaN(M) || N <= 0 || M < 0) {
+        console.log("IMPOSSIBLE");
+        return;
     }
 
-    // Adjacency list and in-degree array
-    const adj: number[][] = new Array(N).fill(null).map(() => []);
-    const inDegree: number[] = new Array(N).fill(0);
+    const taskNamesLine = lines[1].trim().split(/\s+/);
+    const taskNames = taskNamesLine.filter(name => name.length > 0);
 
-    for (let i = 0; i < M; i++) {
-        const edge = lines[lineIndex++].trim().split(/\s+/);
-        const fromName = edge[0];
-        const toName = edge[1];
-        
-        const fromIdx = nameToIndex.get(fromName)!;
-        const toIdx = nameToIndex.get(toName)!;
-        
-        adj[fromIdx].push(toIdx);
-        inDegree[toIdx]++;
+    if (taskNames.length !== N) {
+        console.log("IMPOSSIBLE");
+        return;
     }
 
-    const pq = new MinBinaryHeap();
-    
-    // Initialize heap with tasks that have no dependencies
-    for (let i = 0; i < N; i++) {
-        if (inDegree[i] === 0) {
-            pq.push(taskNames[i]);
+    const adjacencyList: Map<string, Set<string>> = new Map();
+    const inDegree: Map<string, number> = new Map();
+
+    for (const name of taskNames) {
+        adjacencyList.set(name, new Set());
+        inDegree.set(name, 0);
+    }
+
+    for (let i = 2; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.length === 0) continue;
+        const parts = line.split(/\s+/);
+        if (parts.length < 2) continue;
+        const from = parts[0];
+        const to = parts[1];
+
+        if (!adjacencyList.has(from) || !adjacencyList.has(to)) {
+            console.log("IMPOSSIBLE");
+            return;
+        }
+
+        if (!adjacencyList.get(from)!.has(to)) {
+            adjacencyList.get(from)!.add(to);
+            inDegree.set(to, inDegree.get(to)! + 1);
+        }
+    }
+
+    const minHeap = new BinaryMinHeap((a: string, b: string) => a.localeCompare(b));
+
+    for (const name of taskNames) {
+        if (inDegree.get(name)! === 0) {
+            minHeap.push(name);
         }
     }
 
     const buildOrder: string[] = [];
-    
-    while (!pq.isEmpty()) {
-        const currentName = pq.pop()!;
-        const currentIdx = nameToIndex.get(currentName)!;
-        
-        buildOrder.push(currentName);
-        
-        for (const neighborIdx of adj[currentIdx]) {
-            inDegree[neighborIdx]--;
-            if (inDegree[neighborIdx] === 0) {
-                pq.push(taskNames[neighborIdx]);
+
+    while (minHeap.size() > 0) {
+        const current = minHeap.pop()!;
+        buildOrder.push(current);
+
+        const neighbors = adjacencyList.get(current)!;
+        for (const neighbor of neighbors) {
+            const newDegree = inDegree.get(neighbor)! - 1;
+            inDegree.set(neighbor, newDegree);
+            if (newDegree === 0) {
+                minHeap.push(neighbor);
             }
         }
     }
 
     if (buildOrder.length !== N) {
-        console.log('IMPOSSIBLE');
+        console.log("IMPOSSIBLE");
     } else {
-        console.log(buildOrder.join(' '));
+        console.log(buildOrder.join(" "));
     }
 }
 

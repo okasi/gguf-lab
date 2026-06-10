@@ -1,107 +1,146 @@
-﻿const fs = require('fs');
+﻿import { readFileSync } from "fs";
 
-const buffer = fs.readFileSync(0, 'utf8');
-const lines = buffer.toString().split('\n').filter(line => line.trim().length > 0);
+function main() {
+  const input = readFileSync(0, "utf8");
+  const lines = input.trim().split("\n");
+  const [hStr, wStr] = lines[0].trim().split(/\s+/);
+  const H = parseInt(hStr, 10);
+  const W = parseInt(wStr, 10);
 
-if (lines.length < 2) {
-  console.log(-1);
-  process.exit(0);
-}
-
-const [H, W] = lines[0].trim().split(/\s+/).map(Number);
-const grid = lines.slice(1, H + 1).map(line => line.trim());
-
-let startRow = -1, startCol = -1;
-for (let r = 0; r < H; r++) {
-  for (let c = 0; c < W; c++) {
-    if (grid[r][c] === 'S') {
-      startRow = r;
-      startCol = c;
-      break;
+  const grid = [];
+  for (let i = 0; i < H; i++) {
+    if (i < lines.length) {
+      grid.push(lines[i + 1]);
     }
   }
-  if (startRow !== -1) break;
-}
 
-if (startRow === -1) {
-  console.log(-1);
-  process.exit(0);
-}
+  const dirs = [
+    { dr: -1, dc: 0 },
+    { dr: 1, dc: 0 },
+    { dr: 0, dc: -1 },
+    { dr: 0, dc: 1 },
+  ];
 
-const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
-const entries = [];
-
-class Entry {
-  constructor(cost: number, row: number, col: number) {
-    this.cost = cost;
-    this.row = row;
-    this.col = col;
-  }
-}
-
-entries.push(new Entry(0, startRow, startCol));
-
-function siftUp(array, index) {
-  const length = array.length;
-  while (index > 0) {
-    const parent = Math.floor((index - 1) / 2);
-    if (array[parent].cost <= array[index].cost) break;
-    [array[parent], array[index]] = [array[index], array[parent]];
-    index = parent;
-  }
-}
-
-function siftDown(array, start) {
-  let root = start;
-  const length = array.length;
-  while (true) {
-    let child = 2 * root + 1;
-    if (child >= length) break;
-    if (child + 1 < length && array[child + 1].cost < array[child].cost) {
-      child++;
+  let startR = -1, startC = -1;
+  for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+      if (grid[r][c] === "S") {
+        startR = r;
+        startC = c;
+        break;
+      }
     }
-    if (array[child].cost < array[root].cost) {
-      [array[child], array[root]] = [array[root], array[child]];
-      root = child;
-    } else {
-      break;
+    if (startR !== -1) break;
+  }
+
+  if (startR === -1) {
+    console.log("-1");
+    return;
+  }
+
+  class MinHeap<T> {
+    items: Array<{ cost: number; r: number; c: number }>;
+
+    constructor() {
+      this.items = [];
+    }
+
+    push(item: T) {
+      this.items.push(item);
+      this.bubbleUp();
+    }
+
+    pop(): T | undefined {
+      if (this.items.length === 0) return undefined;
+      const min = this.items[0];
+      const last = this.items.pop();
+      if (this.items.length > 0) {
+        this.items[0] = last;
+        this.bubbleDown();
+      }
+      return min;
+    }
+
+    size(): number {
+      return this.items.length;
+    }
+
+    private bubbleUp() {
+      let i = this.items.length - 1;
+      while (i > 0) {
+        const j = Math.floor((i - 1) / 2);
+        if (this.items[i].cost <= this.items[j].cost) break;
+        [this.items[i], this.items[j]] = [this.items[j], this.items[i]];
+        i = j;
+      }
+    }
+
+    private bubbleDown() {
+      let i = 0;
+      while (true) {
+        const left = 2 * i + 1;
+        const right = 2 * i + 2;
+        const smallest = i;
+
+        if (left < this.items.length && this.items[left].cost < this.items[smallest].cost) {
+          smallest = left;
+        }
+        if (right < this.items.length && this.items[right].cost < this.items[smallest].cost) {
+          smallest = right;
+        }
+
+        if (smallest !== i) {
+          [this.items[i], this.items[smallest]] = [this.items[smallest], this.items[i]];
+          i = smallest;
+        } else {
+          break;
+        }
+      }
     }
   }
-}
 
-const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+  const dist = Array(H).fill(null).map(() => Array(W).fill(Infinity));
+  const heap = new MinHeap<{ cost: number; r: number; c: number }>();
+  const type = {} as any;
 
-while (entries.length > 0) {
-  const entry = entries[0];
-  entries.shift();
+  heap.push({ cost: 0, r: startR, c: startC });
+  dist[startR][startC] = 0;
 
-  if (entry.cost > dist[entry.row][entry.col]) continue;
+  while (heap.size() > 0) {
+    const { cost, r, c } = heap.pop() as any;
 
-  if (entry.row === H - 1 && entry.col === W - 1 && grid[entry.row][entry.col] === 'T') {
-    console.log(entry.cost);
-    process.exit(0);
-  }
+    if (cost > dist[r][c]) continue;
 
-  for (const [dr, dc] of directions) {
-    const nr = entry.row + dr;
-    const nc = entry.col + dc;
+    if (grid[r][c] === "T") {
+      console.log(cost);
+      return;
+    }
 
-    if (nr >= 0 && nr < H && nc >= 0 && nc < W && grid[nr][nc] !== '#') {
-      let costToEnter = 0;
-      if (grid[nr][nc] >= '0' && grid[nr][nc] <= '9') {
-        costToEnter = parseInt(grid[nr][nc], 10);
-      } else if (grid[nr][nc] === 'T') {
-        costToEnter = 0;
+    for (const dir of dirs) {
+      const nr = r + dir.dr;
+      const nc = c + dir.dc;
+
+      if (nr < 0 || nr >= H || nc < 0 || nc >= W) continue;
+      const char = grid[nr][nc];
+
+      if (char === "#") continue;
+
+      let weight = 0;
+      if (char === "S" || char === "T") {
+        weight = 0;
+      } else {
+        weight = parseInt(char, 10);
       }
 
-      const newCost = entry.cost + costToEnter;
+      const newCost = cost + weight;
       if (newCost < dist[nr][nc]) {
         dist[nr][nc] = newCost;
-        entries.push(new Entry(newCost, nr, nc));
-        siftUp(entries, entries.length - 1);
+        heap.push({ cost: newCost, r: nr, c: nc });
       }
     }
   }
+
+  console.log("-1");
 }
 
-console.log(-1);
+main();

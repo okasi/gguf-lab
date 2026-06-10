@@ -65,19 +65,16 @@ class Parser {
         return tokens;
     }
     peek() {
-        return this.tokens[this.pos] || null;
+        return this.tokens[this.pos];
     }
     consume() {
         return this.tokens[this.pos++];
     }
-    parse() {
-        return this.expression();
-    }
-    expression() {
-        let node = this.term();
+    parseExpression() {
+        let node = this.parseTerm();
         while (this.peek() === '+' || this.peek() === '-') {
             const op = this.consume();
-            const right = this.term();
+            const right = this.parseTerm();
             if (op === '+')
                 node += right;
             else
@@ -85,11 +82,11 @@ class Parser {
         }
         return node;
     }
-    term() {
-        let node = this.unary();
+    parseTerm() {
+        let node = this.parseUnary();
         while (this.peek() === '*' || this.peek() === '/') {
             const op = this.consume();
-            const right = this.unary();
+            const right = this.parseUnary();
             if (op === '*') {
                 node *= right;
             }
@@ -100,25 +97,28 @@ class Parser {
         }
         return node;
     }
-    unary() {
+    parseUnary() {
         if (this.peek() === '+') {
             this.consume();
-            return this.unary();
+            return this.parseUnary();
         }
         if (this.peek() === '-') {
             this.consume();
-            return -this.unary();
+            return -this.parseUnary();
         }
-        return this.primary();
+        return this.parsePrimary();
     }
-    primary() {
+    parsePrimary() {
         const token = this.consume();
         if (token === '(') {
-            const result = this.expression();
+            const val = this.parseExpression();
             this.consume(); // consume ')'
-            return result;
+            return val;
         }
         return parseInt(token, 10);
+    }
+    evaluate() {
+        return this.parseExpression();
     }
 }
 function main() {
@@ -126,6 +126,6 @@ function main() {
     if (!input)
         return;
     const parser = new Parser(input);
-    process.stdout.write(parser.parse().toString() + "\n");
+    process.stdout.write(parser.evaluate().toString() + "\n");
 }
 main();

@@ -5,32 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "To prevent infinite tool-calling loops, implement a multi-layered defense strategy focusing on **contextual awareness** and **execution constraints**:\n\n1.  **Iteration Limits:** Enforce a hard maximum on the number of sequential tool calls per turn. Once reached, trigger a \"failure/timeout\" response to the user rather than continuing the loop.\n2.  **Stateful History Monitoring:** Implement a semantic check on the conversation buffer. If the agent’s most recent thought and the tool output are identical or highly similar to the previous exchange, flag a \"repetitive state\" and force a reasoning reset.\n3.  **Error-Driven Diversification:** When a tool returns an error or the same result repeatedly, inject a \"system nudge\" into the prompt, explicitly instructing the agent to try a different approach or conclude that the task is impossible.\n4.  **Output Validation:** Use structured output schemas to ensure the agent cannot generate malformed or redundant instructions that trigger repetitive error-correction cycles."
+                                        "content":  "To prevent infinite tool-calling loops, implement a multi-layered defense strategy focusing on **State Tracking**, **Constraints**, and **Observability**.\n\n1.  **Iteration Limits:** Enforce a hard `max_iterations` cap on the agent’s control loop. Once reached, terminate execution and return a \"maximum steps exceeded\" error to prevent unbounded compute consumption.\n2.  **History Context Management:** Agents often loop because they receive identical error messages or redundant data. Implement **semantic deduplication** in the conversation history. If a tool output is identical to the previous $N$ turns, the agent is likely stuck; trigger an alert or force a context reset.\n3.  **Error Handling \u0026 Feedback:** Instead of returning raw stack traces, provide \"actionable feedback\" in the tool output (e.g., *\"Parameter \u0027date\u0027 must be YYYY-MM-DD\"*). This guides the LLM toward corrective reasoning rather than retrying the same faulty syntax.\n4.  **Loop Detection:** Track tool-call signatures to detect repetitive patterns in the prompt history."
                                     }
                     }
                 ],
-    "created":  1780962585,
-    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh",
-    "system_fingerprint":  "b9535-da87e9b61",
+    "created":  1781091530,
+    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  206,
+                  "completion_tokens":  225,
                   "prompt_tokens":  39,
-                  "total_tokens":  245,
+                  "total_tokens":  264,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-QzqcvbgiCAeLb4kENEEN0eunOIHULw1B",
+    "id":  "chatcmpl-9itd7H7UYORubRmd5eaKFolnPI6z9IHa",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  39,
-                    "prompt_ms":  574.659,
-                    "prompt_per_token_ms":  14.734846153846153,
-                    "prompt_per_second":  67.86633464367564,
-                    "predicted_n":  206,
-                    "predicted_ms":  2838.932,
-                    "predicted_per_token_ms":  13.781223300970872,
-                    "predicted_per_second":  72.5624988552033
+                    "prompt_ms":  145.256,
+                    "prompt_per_token_ms":  3.7245128205128206,
+                    "prompt_per_second":  268.4914908850581,
+                    "predicted_n":  225,
+                    "predicted_ms":  3865.485,
+                    "predicted_per_token_ms":  17.179933333333334,
+                    "predicted_per_second":  58.20744356788345,
+                    "draft_n":  364,
+                    "draft_n_accepted":  136
                 }
 }

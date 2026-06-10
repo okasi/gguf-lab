@@ -1,110 +1,98 @@
 ﻿import * as fs from 'fs';
 
-const input = fs.readFileSync(0, 'utf8').trimEnd().split(/\r?\n/);
-const [H, W] = input[0].trim().split(/\s+/).map(Number);
-const grid = input.slice(1, H + 1);
+const lines = fs.readFileSync(0, 'utf8').trimEnd().split(/\r?\n/);
+const [H, W] = lines[0].trim().split(/\s+/).map(Number);
+const grid = lines.slice(1, H + 1);
 
 let startIdx = -1;
 let targetIdx = -1;
-const cost: number[] = new Array(H * W);
 
-for (let i = 0; i < H; i++) {
-  const line = grid[i];
-  for (let j = 0; j < W; j++) {
-    const ch = line[j];
-    const idx = i * W + j;
-    if (ch === 'S') {
-      startIdx = idx;
-      cost[idx] = 0;
-    } else if (ch === 'T') {
-      targetIdx = idx;
-      cost[idx] = 0;
-    } else if (ch === '#') {
-      cost[idx] = -1; // wall
-    } else {
-      cost[idx] = Number(ch); // digit 0-9
-    }
+for (let r = 0; r < H; r++) {
+  for (let c = 0; c < W; c++) {
+    const ch = grid[r][c];
+    const idx = r * W + c;
+    if (ch === 'S') startIdx = idx;
+    if (ch === 'T') targetIdx = idx;
   }
 }
 
-if (startIdx === -1 || targetIdx === -1) {
-  console.log(-1);
-  process.exit(0);
-}
+const INF = Number.MAX_SAFE_INTEGER;
+const dist = new Array(H * W).fill(INF);
+dist[startIdx] = 0;
 
-class MinHeap {
-  private data: Array<[number, number]> = [];
-  push(item: [number, number]) {
-    this.data.push(item);
-    this.bubbleUp(this.data.length - 1);
+class MinHeap<T> {
+  private heap: T[] = [];
+  constructor(private cmp: (a: T, b: T) => boolean) {}
+  size() { return this.heap.length; }
+  push(item: T) {
+    this.heap.push(item);
+    this.bubbleUp(this.heap.length - 1);
   }
-  pop(): [number, number] | undefined {
-    if (this.data.length === 0) return undefined;
-    const top = this.data[0];
-    const last = this.data.pop()!;
-    if (this.data.length > 0) {
-      this.data[0] = last;
+  pop(): T | undefined {
+    if (this.heap.length === 0) return undefined;
+    const top = this.heap[0];
+    const last = this.heap.pop()!;
+    if (this.heap.length > 0) {
+      this.heap[0] = last;
       this.bubbleDown(0);
     }
     return top;
   }
-  size() {
-    return this.data.length;
-  }
   private bubbleUp(idx: number) {
     while (idx > 0) {
       const parent = (idx - 1) >> 1;
-      if (this.data[parent][0] <= this.data[idx][0]) break;
-      [this.data[parent], this.data[idx]] = [this.data[idx], this.data[parent]];
+      if (this.cmp(this.heap[parent], this.heap[idx])) break;
+      [this.heap[parent], this.heap[idx]] = [this.heap[idx], this.heap[parent]];
       idx = parent;
     }
   }
   private bubbleDown(idx: number) {
-    const n = this.data.length;
+    const n = this.heap.length;
     while (true) {
-      let left = (idx << 1) + 1;
-      let right = left + 1;
+      let left = idx * 2 + 1;
+      let right = idx * 2 + 2;
       let smallest = idx;
-      if (left < n && this.data[left][0] < this.data[smallest][0]) smallest = left;
-      if (right < n && this.data[right][0] < this.data[smallest][0]) smallest = right;
+      if (left < n && !this.cmp(this.heap[smallest], this.heap[left])) smallest = left;
+      if (right < n && !this.cmp(this.heap[smallest], this.heap[right])) smallest = right;
       if (smallest === idx) break;
-      [this.data[smallest], this.data[idx]] = [this.data[idx], this.data[smallest]];
+      [this.heap[smallest], this.heap[idx]] = [this.heap[idx], this.heap[smallest]];
       idx = smallest;
     }
   }
 }
 
-const dist = new Array(H * W).fill(Infinity);
-dist[startIdx] = 0;
-const heap = new MinHeap();
-heap.push([0, startIdx]);
+interface Node {
+  cost: number;
+  idx: number;
+}
 
-const dirs = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-];
+const heap = new MinHeap<Node>((a, b) => a.cost < b.cost);
+heap.push({ cost: 0, idx: startIdx });
+
+const dr = [-1, 1, 0, 0];
+const dc = [0, 0, -1, 1];
 
 while (heap.size() > 0) {
-  const [d, idx] = heap.pop()!;
-  if (d !== dist[idx]) continue;
+  const { cost, idx } = heap.pop()!;
+  if (cost > dist[idx]) continue;
   if (idx === targetIdx) break;
-  const i = Math.floor(idx / W);
-  const j = idx % W;
-  for (const [di, dj] of dirs) {
-    const ni = i + di;
-    const nj = j + dj;
-    if (ni < 0 || ni >= H || nj < 0 || nj >= W) continue;
-    const nidx = ni * W + nj;
-    if (cost[nidx] === -1) continue; // wall
-    const nd = d + cost[nidx];
-    if (nd < dist[nidx]) {
-      dist[nidx] = nd;
-      heap.push([nd, nidx]);
+  const r = Math.floor(idx / W);
+  const c = idx % W;
+  for (let dir = 0; dir < 4; dir++) {
+    const nr = r + dr[dir];
+    const nc = c + dc[dir];
+    if (nr < 0 || nr >= H || nc < 0 || nc >= W) continue;
+    const ch = grid[nr][nc];
+    if (ch === '#') continue;
+    const nIdx = nr * W + nc;
+    const add = ch === 'S' || ch === 'T' ? 0 : Number(ch);
+    const newCost = cost + add;
+    if (newCost < dist[nIdx]) {
+      dist[nIdx] = newCost;
+      heap.push({ cost: newCost, idx: nIdx });
     }
   }
 }
 
-const result = dist[targetIdx] === Infinity ? -1 : dist[targetIdx];
-console.log(result.toString());
+const answer = dist[targetIdx] === INF ? -1 : dist[targetIdx];
+console.log(answer.toString());

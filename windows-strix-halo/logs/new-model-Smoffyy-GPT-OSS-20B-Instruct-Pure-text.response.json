@@ -5,14 +5,14 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "Tool‑calling agents must guard against infinite or redundant tool loops by tracking and validating each invocation.  \n1. **Stateful Call Stack** – Maintain a stack of tool calls and their arguments. Before re‑invoking a tool, compare the new arguments with the stack. If identical, skip or break the loop.  \n2. **Visited Set** – Store a hash of each",
-                                        "reasoning_content":  "We need a concise technical explanation, under 160 words, about how tool-calling agents should avoid repeated tool loops. That is, a problem where an agent repeatedly calls a tool in a loop, maybe due to misinterpreting the tool output, or not updating state. The explanation should mention strategies like maintaining a call stack, checking for repeated actions, using state flags, timeouts, or limiting calls. Also mention detecting loops via state comparison, or using a visited set. Also mention that the agent should track context, and use the tool\u0027s output to modify its plan. Also mention that the agent should detect if the tool output hasn\u0027t changed. Also mention using a loop detection algorithm. Also mention using a maximum number of tool calls per step, or using a recursion depth limit. Keep under 160 words. Let\u0027s craft around 140 words."
+                                        "content":  "Tool‑calling agents can avoid repeated tool loops by treating each tool invocation as a state transition and tracking those states.\n\n1. **State hashing** – After each call, hash the resulting observation (including the tool name, arguments, and output). Store the hash in a *visited* set.  \n2. **Loop detection** – Before invoking a tool, check if its resulting state hash already exists. If so, skip or alter the plan.  \n3. **Depth limit** – Impose a hard maximum on the number of consecutive tool calls (",
+                                        "reasoning_content":  "We need a concise technical explanation, under 160 words, about how tool-calling agents should avoid repeated tool loops. That is, to prevent infinite loops or redundant calls. We need to mention state tracking, loop detection, using heuristics, bounding number of calls, using context, caching, etc. 160 words max. Let\u0027s craft maybe 120 words.\n\nWe should mention: maintain a call stack, detect repeated states, use a unique identifier for each tool invocation, maintain a visited set, limit depth, use plan evaluation, use a penalty for repeated calls, use a heuristic to break loops, use a timeout. Provide concise explanation.\n\nLet\u0027s aim for 130 words."
                                     }
                     }
                 ],
-    "created":  1780968431,
-    "model":  "smoffyy-gpt-oss-20b-pure-refresh",
-    "system_fingerprint":  "b9535-da87e9b61",
+    "created":  1781090057,
+    "model":  "smoffyy-gpt-oss-20b-pure-refresh-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
                   "completion_tokens":  256,
@@ -22,16 +22,16 @@
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-ikg7wdWXMKZd8yqDCalKvuxvqBURNfIS",
+    "id":  "chatcmpl-HLorO1pqQNL3HHix3pWcvf1zM4I2Obg5",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  91,
-                    "prompt_ms":  660.607,
-                    "prompt_per_token_ms":  7.259417582417582,
-                    "prompt_per_second":  137.7520976919712,
+                    "prompt_ms":  252.487,
+                    "prompt_per_token_ms":  2.7745824175824176,
+                    "prompt_per_second":  360.4145956029419,
                     "predicted_n":  256,
-                    "predicted_ms":  5330.83,
-                    "predicted_per_token_ms":  20.8235546875,
-                    "predicted_per_second":  48.02254057998473
+                    "predicted_ms":  5216.46,
+                    "predicted_per_token_ms":  20.376796875,
+                    "predicted_per_second":  49.07542663032018
                 }
 }

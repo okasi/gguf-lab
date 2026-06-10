@@ -1,120 +1,126 @@
 "use strict";
-const fs = require('fs');
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs = __importStar(require("fs"));
 /**
- * Tokenizer to break the string into Numbers, Operators, and Parentheses
+ * A simple recursive descent parser for arithmetic expressions.
+ * Handles:
+ * - Addition (+), Subtraction (-)
+ * - Multiplication (*), Division (/)
+ * - Unary plus (+), Unary minus (-)
+ * - Parentheses ()
+ * - Integer literals
+ * - Truncated division towards zero.
  */
-class Tokenizer {
+class Evaluator {
     constructor(input) {
-        this.input = input;
         this.pos = 0;
+        // Tokenize the input: matches integers, operators, and parentheses
+        this.tokens = input.match(/\d+|[+\-*/()]/g) || [];
     }
-    tokenize() {
-        const tokens = [];
-        while (this.pos < this.input.length) {
-            const char = this.input[this.pos];
-            if (/\s/.test(char)) {
-                this.pos++;
-                continue;
-            }
-            if (/\d/.test(char)) {
-                let numStr = "";
-                while (this.pos < this.input.length && /\d/.test(this.input[this.pos])) {
-                    numStr += this.input[this.pos];
-                    this.pos++;
-                }
-                tokens.push({ type: 'NUMBER', value: parseInt(numStr, 10) });
-                continue;
-            }
-            if ("+-*/()".includes(char)) {
-                tokens.push({ type: 'OPERATOR', value: char });
-                this.pos++;
-                continue;
-            }
-            this.pos++;
-        }
-        return tokens;
+    peek() {
+        return this.tokens[this.pos];
     }
-}
-/**
- * Parser that handles precedence:
- * 1. Unary (+, -)
- * 2. Multiplication/Division (*, /)
- * 3. Addition/Subtraction (+, -)
- */
-class Parser {
-    constructor(tokens) {
-        this.current = 0;
-        this.tokens = tokens;
+    consume() {
+        return this.tokens[this.pos++];
     }
-    parse() {
-        return this.expression();
-    }
-    expression() {
-        let result = this.term();
-        while (this.current < this.tokens.length && (this.tokens[this.current].value === '+' || this.tokens[this.current].value === '-')) {
-            const op = this.tokens[this.current].value;
-            this.current++;
-            const right = this.term();
-            if (op === '+')
-                result += right;
-            else
-                result -= right;
-        }
+    evaluate() {
+        const result = this.parseExpression();
         return result;
     }
-    term() {
-        let result = this.unary();
-        while (this.current < this.tokens.length && (this.tokens[this.current].value === '*' || this.tokens[this.current].value === '/')) {
-            const op = this.tokens[this.current].value;
-            this.current++;
-            const right = this.unary();
+    // Grammar:
+    // Expression -> Term { (+|-) Term }
+    // Term       -> Factor { (*|/) Factor }
+    // Factor     -> (+|-) Factor | (Expression) | Number
+    parseExpression() {
+        let left = this.parseTerm();
+        while (this.peek() === '+' || this.peek() === '-') {
+            const op = this.consume();
+            const right = this.parseTerm();
+            if (op === '+')
+                left += right;
+            else
+                left -= right;
+        }
+        return left;
+    }
+    parseTerm() {
+        let left = this.parseFactor();
+        while (this.peek() === '*' || this.peek() === '/') {
+            const op = this.consume();
+            const right = this.parseFactor();
             if (op === '*') {
-                result *= right;
+                left *= right;
             }
             else {
-                // Division truncates toward zero
-                const div = result / right;
-                result = div > 0 ? Math.floor(div) : Math.ceil(div);
+                // Truncate toward zero division
+                left = Math.trunc(left / right);
             }
         }
-        return result;
+        return left;
     }
-    unary() {
-        if (this.current < this.tokens.length && (this.tokens[this.current].value === '+' || this.tokens[this.current].value === '-')) {
-            const op = this.tokens[this.current].value;
-            this.current++;
-            const value = this.unary();
-            return op === '+' ? value : -value;
+    parseFactor() {
+        const token = this.peek();
+        if (token === '+') {
+            this.consume();
+            return this.parseFactor();
         }
-        return this.factor();
-    }
-    factor() {
-        const token = this.tokens[this.current];
-        if (token.type === 'NUMBER') {
-            this.current++;
-            return token.value;
+        if (token === '-') {
+            this.consume();
+            return -this.parseFactor();
         }
-        else if (token.value === '(') {
-            this.current++;
-            const result = this.expression();
-            this.current++; // skip ')'
+        if (token === '(') {
+            this.consume(); // consume (
+            const result = this.parseExpression();
+            this.consume(); // consume )
             return result;
         }
-        return 0;
+        const val = parseInt(this.consume(), 10);
+        return val;
     }
 }
-function solve() {
+function main() {
     try {
         const input = fs.readFileSync(0, "utf8").trim();
         if (!input)
             return;
-        const tokens = new Tokenizer(input).tokenize();
-        const parser = new Parser(tokens);
-        const result = parser.parse();
-        process.stdout.write(result.toString() + '\n');
+        const evaluator = new Evaluator(input);
+        console.log(evaluator.evaluate());
     }
     catch (e) {
-        // Silent fail for invalid inputs
+        // Silent error handling for malformed input
     }
 }
-solve();
+main();

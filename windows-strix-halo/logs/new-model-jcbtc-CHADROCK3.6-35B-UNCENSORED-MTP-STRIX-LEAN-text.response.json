@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "To avoid repeated tool loops, agents must implement state-aware tracking. First, maintain a history of previously executed tools and their outputs. Before invoking a tool, check if it was recently called with identical parameters. If a duplicate call is detected, analyze the previous result; if it yields no new information or indicates failure, bypass the tool or modify parameters to ensure distinctness.\n\nSecond, establish a maximum iteration limit or token budget to cap execution depth. If the agent reaches this limit without a definitive final answer, switch to a \"stop\" or \"finalize\" state to return the best available result. Additionally, incorporate explicit feedback mechanisms where the LLM evaluates the relevance of each tool response. If consecutive responses are redundant or unhelpful, the agent should terminate the tool-calling sequence. Combining history tracking, parameter variation, and hard limits effectively prevents infinite recursion and ensures efficient execution."
+                                        "content":  "To avoid repeated tool loops, agents must implement state-aware observation history. Before invoking a tool, the agent should compare the current observation against previous responses from the same tool. If identical or sufficiently similar results are detected, the agent should halt further invocations of that specific tool. Additionally, agents should maintain a set of visited states or unique request identifiers to detect cycles. If a loop is identified, the agent can either summarize the recurring output, apply a variation (such as pagination parameters), or escalate to a default fallback response. This strategy prevents infinite recursion and optimizes token usage. By explicitly checking for redundancy in the conversation history, agents ensure progress is made or a definitive conclusion is reached, rather than oscillating between identical tool calls and outputs."
                                     }
                     }
                 ],
-    "created":  1780967558,
-    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh",
+    "created":  1781090480,
+    "model":  "jcbtc-chadrock35-mtp-strix-lean-refresh-noreason",
     "system_fingerprint":  "b1-1faa48e",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  179,
+                  "completion_tokens":  150,
                   "prompt_tokens":  38,
-                  "total_tokens":  217,
+                  "total_tokens":  188,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-MApvSzsJZMVa5cU7s4YPIRjJBSpn8Zic",
+    "id":  "chatcmpl-IdT2K6PUnQF1X6mhunBwExu9ju1escnj",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  38,
-                    "prompt_ms":  386.534,
-                    "prompt_per_token_ms":  10.171947368421053,
-                    "prompt_per_second":  98.30959242912654,
-                    "predicted_n":  179,
-                    "predicted_ms":  2836.497,
-                    "predicted_per_token_ms":  15.846351955307261,
-                    "predicted_per_second":  63.10600716306063,
-                    "draft_n":  66,
-                    "draft_n_accepted":  53
+                    "prompt_ms":  196.676,
+                    "prompt_per_token_ms":  5.175684210526316,
+                    "prompt_per_second":  193.21116963940696,
+                    "predicted_n":  150,
+                    "predicted_ms":  2322.706,
+                    "predicted_per_token_ms":  15.484706666666668,
+                    "predicted_per_second":  64.57984781543595,
+                    "draft_n":  49,
+                    "draft_n_accepted":  43
                 }
 }

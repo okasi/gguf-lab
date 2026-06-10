@@ -46,21 +46,24 @@ class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
         this.map = new Map();
-        this.head = new ListNode('', 0);
-        this.tail = new ListNode('', 0);
+        this.head = new ListNode("", 0);
+        this.tail = new ListNode("", 0);
         this.head.next = this.tail;
         this.tail.prev = this.head;
     }
     detach(node) {
         const prev = node.prev;
         const next = node.next;
-        prev.next = next;
-        next.prev = prev;
+        if (prev)
+            prev.next = next;
+        if (next)
+            next.prev = prev;
     }
-    attachToHead(node) {
+    attachToFront(node) {
         node.next = this.head.next;
         node.prev = this.head;
-        this.head.next.prev = node;
+        if (this.head.next)
+            this.head.next.prev = node;
         this.head.next = node;
     }
     get(key) {
@@ -68,7 +71,7 @@ class LRUCache {
         if (!node)
             return -1;
         this.detach(node);
-        this.attachToHead(node);
+        this.attachToFront(node);
         return node.value;
     }
     put(key, value) {
@@ -76,19 +79,17 @@ class LRUCache {
         if (existingNode) {
             existingNode.value = value;
             this.detach(existingNode);
-            this.attachToHead(existingNode);
+            this.attachToFront(existingNode);
         }
         else {
             if (this.map.size >= this.capacity) {
                 const lru = this.tail.prev;
-                if (lru !== this.head) {
-                    this.map.delete(lru.key);
-                    this.detach(lru);
-                }
+                this.detach(lru);
+                this.map.delete(lru.key);
             }
             const newNode = new ListNode(key, value);
             this.map.set(key, newNode);
-            this.attachToHead(newNode);
+            this.attachToFront(newNode);
         }
     }
     delete(key) {
@@ -98,17 +99,12 @@ class LRUCache {
             this.map.delete(key);
         }
     }
-    getKeysOrdered() {
+    getOrderedKeys() {
         const keys = [];
         let current = this.head.next;
-        while (current !== this.tail) {
-            if (current) {
-                keys.push(current.key);
-                current = current.next;
-            }
-            else {
-                break;
-            }
+        while (current !== this.tail && current !== null) {
+            keys.push(current.key);
+            current = current.next;
         }
         return keys;
     }
@@ -129,27 +125,23 @@ function solve() {
     const cache = new LRUCache(C);
     const getResults = [];
     for (let i = 1; i <= N; i++) {
-        const line = lines[i];
+        const line = lines[i]?.trim();
         if (!line)
             continue;
-        const parts = line.trim().split(/\s+/);
-        const cmd = parts[0];
-        if (cmd === 'PUT') {
-            const key = parts[1];
-            const val = parseInt(parts[2]);
-            cache.put(key, val);
+        const parts = line.split(/\s+/);
+        const command = parts[0];
+        if (command === 'PUT') {
+            cache.put(parts[1], parseInt(parts[2]));
         }
-        else if (cmd === 'GET') {
-            const key = parts[1];
-            getResults.push(cache.get(key));
+        else if (command === 'GET') {
+            getResults.push(cache.get(parts[1]));
         }
-        else if (cmd === 'DEL') {
-            const key = parts[1];
-            cache.delete(key);
+        else if (command === 'DEL') {
+            cache.delete(parts[1]);
         }
     }
-    process.stdout.write((getResults.length > 0 ? getResults.join(' ') : "EMPTY") + "\n");
-    const remainingKeys = cache.getKeysOrdered();
-    process.stdout.write((remainingKeys.length > 0 ? remainingKeys.join(' ') : "EMPTY") + "\n");
+    process.stdout.write(getResults.length > 0 ? getResults.join(' ') + '\n' : 'EMPTY\n');
+    const remainingKeys = cache.getOrderedKeys();
+    process.stdout.write(remainingKeys.length > 0 ? remainingKeys.join(' ') + '\n' : 'EMPTY\n');
 }
 solve();

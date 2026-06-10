@@ -1,114 +1,96 @@
-﻿const fs = require('fs');
+﻿import * as fs from "fs";
 
-const input = fs.readFileSync(0, 'utf8').trim();
+const input = fs.readFileSync(0, "utf8").trim();
 
-// Tokenizer
-function tokenize(expression: string): string[] {
-  const tokens: string[] = [];
-  let num = '';
-  for (let i = 0; i < expression.length; i++) {
-    const ch = expression[i];
-    if (/\d/.test(ch)) {
-      num += ch;
-    } else {
-      if (num) {
-        tokens.push(num);
-        num = '';
+type OperatorType = '+' | '-' | '*' | '/' | '(' | ')';
+type Operator = { type: OperatorType, precedence: number };
+type Token = number | Operator;
+
+const operators: { [key in OperatorType]: Operator } = {
+  '+': { type: '+', precedence: 1 },
+  '-': { type: '-', precedence: 1 },
+  '*': { type: '*', precedence: 2 },
+  '/': { type: '/', precedence: 2 },
+  '(': { type: '(', precedence: 0 },
+  ')': { type: ')', precedence: 0 }
+};
+
+function shuntingYard(expression: string): Token[] {
+  const queue: Token[] = [];
+  const stack: Operator[] = [];
+
+  let currentNumber = "";
+  let index = 0;
+
+  while (index < expression.length) {
+    const char = expression[index];
+
+    if (/\d/.test(char) || char === '.') {
+      currentNumber += char;
+    } else if (char === '+' || char === '-' || char === '*' || char === '/' || char === '(' || char === ')') {
+      if (currentNumber.length > 0) {
+        queue.push(parseFloat(currentNumber));
+        currentNumber = "";
       }
-      if (/[+*/()-]/.test(ch)) {
-        tokens.push(ch);
-      }
-    }
-  }
-  if (num) {
-    tokens.push(num);
-  }
-  return tokens;
-}
 
-// Shunting-yard algorithm
-function shuntingYard(tokens: string[]): string[] {
-  const output: string[] = [];
-  const operators: string[] = [];
-  const precedence: { [key: string]: number } = {
-    '+': 1,
-    '-': 1,
-    '*': 2,
-    '/': 2,
-    'u+': 3,
-    'u-': 3,
-  };
-  const isOperator = (token: string): boolean => /[+\-*/]/.test(token);
-  const is unaryOperator = (token: string, index: number): boolean => {
-    if (token !== '+' && token !== '-') return false;
-    if (index === 0) return true;
-    const prev = tokens[index - 1];
-    return prev === '(' || isOperator(prev);
-  };
-
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (/\d/.test(token)) {
-      output.push(token);
-    } else if (token === '(') {
-      operators.push(token);
-    } else if (token === ')') {
-      while (operators.length && operators[operators.length - 1] !== '(') {
-        output.push(operators.pop()!);
-      }
-      operators.pop(); // Remove '('
-    } else if (isOperator(token)) {
-      if (isUnaryOperator(token, i)) {
-        operators.push('u' + token);
-      } else {
-        while (
-          operators.length &&
-          precedence[operators[operators.length - 1]] >= precedence[token]
-        ) {
-          output.push(operators.pop()!);
+      const op = operators[char];
+      if (op.type === '(') {
+        stack.push(op);
+      } else if (op.type === ')') {
+        while (stack.length > 0 && stack[stack.length - 1].type !== '(') {
+          queue.push(stack.pop()!);
         }
-        operators.push(token);
+        stack.pop();
+      } else {
+        while (stack.length > 0 && stack[stack.length - 1].precedence >= op.precedence) {
+          queue.push(stack.pop()!);
+        }
+        stack.push(op);
       }
     }
+
+    index++;
   }
-  while (operators.length) {
-    output.push(operators.pop()!);
+
+  if (currentNumber.length > 0) {
+    queue.push(parseFloat(currentNumber));
   }
-  return output;
+
+  while (stack.length > 0) {
+    queue.push(stack.pop()!);
+  }
+
+  return queue;
 }
 
-// Evaluate postfix expression
-function evaluatePostfix(postfix: string[]): number {
+function evaluate(expression: string): number {
+  const queue = shuntingYard(expression);
   const stack: number[] = [];
-  for (const token of postfix) {
-    if (/\d/.test(token)) {
-      stack.push(parseInt(token, 10));
-    } else if (token === 'u+') {
-      stack.push(stack.pop()!);
-    } else if (token === 'u-') {
-      stack.push(-stack.pop()!);
+
+  for (const token of queue) {
+    if (typeof token === "number") {
+      stack.push(token);
     } else {
-      const b = stack.pop()!;
-      const a = stack.pop()!;
-      switch (token) {
+      const right = stack.pop()!;
+      const left = stack.pop()!;
+      switch (token.type) {
         case '+':
-          stack.push(a + b);
+          stack.push(left + right);
           break;
         case '-':
-          stack.push(a - b);
+          stack.push(left - right);
           break;
         case '*':
-          stack.push(a * b);
+          stack.push(left * right);
           break;
         case '/':
-          stack.push(Math.trunc(a / b));
+          stack.push(Math.trunc(left / right));
           break;
       }
     }
   }
+
   return stack[0];
 }
 
-const tokens = tokenize(input);
-const postfix = shuntingYard(tokens);
-console.log(evaluatePostfix(postfix));
+console.log(evaluate(input));

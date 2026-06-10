@@ -34,128 +34,172 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-class DoublyLinkedListNode {
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        this.prev = null;
-        this.next = null;
-    }
-}
 class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
+        this.head = -1; // Points to the most recently used node
+        this.tail = -1; // Points to the least recently used node
         this.count = 0;
-        this.map = new Map();
-        // Create sentinel nodes
-        this.head = new DoublyLinkedListNode('', 0);
-        this.tail = new DoublyLinkedListNode('', 0);
-        // Link sentinel nodes
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
-    }
-    addToFront(node) {
-        node.next = this.head.next;
-        node.prev = this.head;
-        this.head.next.prev = node;
-        this.head.next = node;
-    }
-    removeNode(node) {
-        node.prev.next = node.next;
-        node.next.prev = node.prev;
-    }
-    moveToFront(node) {
-        this.removeNode(node);
-        this.addToFront(node);
-    }
-    evictTail() {
-        const node = this.tail.prev;
-        if (node && node !== this.tail) {
-            this.removeNode(node);
-            this.map.delete(node.key);
-            this.count--;
+        // Pre-allocate arrays for performance. Max capacity is 200000.
+        const maxSize = 200000;
+        this.next = new Array(maxSize).fill(-1);
+        this.prev = new Array(maxSize).fill(-1);
+        this.indexToKey = new Array(maxSize);
+        this.indexToValue = new Array(maxSize);
+        // Hash map to quickly find the index of a key
+        this.keyToIndex = new Map();
+        // Free list to reuse indices
+        this.freeList = [];
+        for (let i = 0; i < maxSize; i++) {
+            this.freeList.push(i);
         }
     }
-    put(key, value) {
-        const existingNode = this.map.get(key);
-        if (existingNode) {
-            existingNode.value = value;
-            this.moveToFront(existingNode);
-            return;
+    allocate() {
+        if (this.freeList.length === 0) {
+            // Should not happen given constraints, but fallback
+            return this.indexToKey.length;
         }
-        const newNode = new DoublyLinkedListNode(key, value);
-        this.map.set(key, newNode);
-        this.addToFront(newNode);
+        return this.freeList.pop();
+    }
+    free(index) {
+        this.next[index] = -1;
+        this.prev[index] = -1;
+        this.indexToKey[index] = undefined;
+        this.indexToValue[index] = 0;
+        this.freeList.push(index);
+    }
+    removeNode(index) {
+        const prevIdx = this.prev[index];
+        const nextIdx = this.next[index];
+        if (prevIdx !== -1) {
+            this.next[prevIdx] = nextIdx;
+        }
+        else {
+            // This node is the head
+            this.head = nextIdx;
+        }
+        if (nextIdx !== -1) {
+            this.prev[nextIdx] = prevIdx;
+        }
+        else {
+            // This node is the tail
+            this.tail = prevIdx;
+        }
+        this.count--;
+    }
+    addToHead(index) {
+        this.next[index] = this.head;
+        this.prev[index] = -1;
+        if (this.head !== -1) {
+            this.prev[this.head] = index;
+        }
+        this.head = index;
+        if (this.tail === -1) {
+            this.tail = index;
+        }
         this.count++;
-        if (this.count > this.capacity) {
-            this.evictTail();
+    }
+    moveToHead(index) {
+        if (this.head === index) {
+            return; // Already most recently used
         }
+        this.removeNode(index);
+        this.addToHead(index);
     }
     get(key) {
-        const existingNode = this.map.get(key);
-        if (!existingNode) {
+        const index = this.keyToIndex.get(key);
+        if (index === undefined) {
             return -1;
         }
-        this.moveToFront(existingNode);
-        return existingNode.value;
+        this.moveToHead(index);
+        return this.indexToValue[index];
     }
-    del(key) {
-        const existingNode = this.map.get(key);
-        if (existingNode) {
-            this.removeNode(existingNode);
-            this.map.delete(key);
-            this.count--;
+    put(key, value) {
+        const index = this.keyToIndex.get(key);
+        if (index !== undefined) {
+            // Key exists, update value and move to head
+            this.indexToValue[index] = value;
+            this.moveToHead(index);
+        }
+        else {
+            // Key doesn't exist
+            if (this.count >= this.capacity) {
+                // Evict least recently used
+                const lruIndex = this.tail;
+                if (lruIndex !== -1) {
+                    this.keyToIndex.delete(this.indexToKey[lruIndex]);
+                    this.free(lruIndex);
+                }
+            }
+            else {
+                // Not full, allocate new node
+                const newIndex = this.allocate();
+                this.keyToIndex.set(key, newIndex);
+                this.indexToKey[newIndex] = key;
+                this.indexToValue[newIndex] = value;
+                this.addToHead(newIndex);
+            }
         }
     }
-    getKeysInOrder() {
-        const keys = [];
-        let current = this.head.next;
-        while (current && current !== this.tail) {
-            keys.push(current.key);
-            current = current.next;
+    remove(key) {
+        const index = this.keyToIndex.get(key);
+        if (index !== undefined) {
+            this.keyToIndex.delete(key);
+            this.removeNode(index);
+            this.free(index);
         }
-        return keys;
+    }
+    getKeysOrdered() {
+        const result = [];
+        let current = this.head;
+        while (current !== -1) {
+            result.push(this.indexToKey[current]);
+            current = this.next[current];
+        }
+        return result;
     }
 }
 function main() {
-    const input = fs.readFileSync(0, 'utf8').trim();
-    const lines = input.split('\n');
-    if (lines.length === 0) {
+    const input = fs.readFileSync(0, "utf8").trim();
+    if (!input)
         return;
-    }
-    const [C_str, N_str] = lines[0].split(' ');
-    const C = parseInt(C_str, 10);
-    const N = parseInt(N_str, 10);
-    const cache = new LRUCache(C);
+    const lines = input.split("\n");
+    const firstLine = lines[0].trim().split(/\s+/);
+    const capacity = parseInt(firstLine[0], 10);
+    const numOperations = parseInt(firstLine[1], 10);
+    const cache = new LRUCache(capacity);
     const getResults = [];
-    for (let i = 1; i <= N && i < lines.length; i++) {
-        const parts = lines[i].trim().split(' ');
-        const operation = parts[0];
+    let hasGet = false;
+    for (let i = 1; i <= numOperations; i++) {
+        const line = lines[i].trim();
+        const parts = line.split(/\s+/);
+        const op = parts[0];
         const key = parts[1];
-        if (operation === 'PUT') {
+        if (op === "GET") {
+            const value = cache.get(key);
+            getResults.push(value.toString());
+            hasGet = true;
+        }
+        else if (op === "PUT") {
             const value = parseInt(parts[2], 10);
             cache.put(key, value);
         }
-        else if (operation === 'GET') {
-            const result = cache.get(key);
-            getResults.push(result);
-        }
-        else if (operation === 'DEL') {
-            cache.del(key);
+        else if (op === "DEL") {
+            cache.remove(key);
         }
     }
-    if (getResults.length === 0) {
-        console.log('EMPTY');
+    if (hasGet) {
+        console.log(getResults.join(" "));
     }
     else {
-        console.log(getResults.join(' '));
+        console.log("EMPTY");
     }
-    const keys = cache.getKeysInOrder();
-    if (keys.length === 0) {
-        console.log('EMPTY');
+    const remainingKeys = cache.getKeysOrdered();
+    if (remainingKeys.length > 0) {
+        console.log(remainingKeys.join(" "));
     }
     else {
-        console.log(keys.join(' '));
+        console.log("EMPTY");
     }
 }
 main();

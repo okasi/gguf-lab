@@ -5,32 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "To prevent infinite loops, tool-calling agents must implement **stateful tracking** and **termination logic** at the orchestration layer. \n\nKey mechanisms include:\n\n1.  **Maximum Iteration Limits:** Define a hard cap on the number of sequential tool calls per user request. Once reached, the agent must return an error or a \"failure to complete\" summary.\n2.  **History Deduplication:** Maintain a sliding window of executed tool calls. Before executing a new call, the agent checks if the identical tool and arguments have been called recently. If detected, it must trigger a \"stagnation\" exception.\n3.  **Stateful Memory:** Ensure the LLM receives the full history of previous outputs. This allows the model to recognize that a specific action yielded a repeated result, prompting it to try an alternative approach.\n4.  **Feedback Loops:** If a tool returns an error, the agent should be instructed to \"reason\" about the failure rather than blindly retrying the same command."
+                                        "content":  "To prevent infinite loops, tool-calling agents must implement **stateful tracking** and **termination logic** at the orchestration layer. \n\nKey mechanisms include:\n\n1.  **Max Iteration Limits:** Define a hard cap on the number of sequential tool calls per user request. Once reached, the agent must return a failure error.\n2.  **Contextual Deduplication:** Store a history of executed tool calls. Before execution, the agent checks if the current call (parameters + tool name) matches a previous entry in the session history.\n3.  **State Progress Validation:** Use a \"Progress Tracker\" that compares the current tool output against the original goal. If the delta is zero or the output is identical to a previous step, trigger a \"no progress\" exception.\n4.  **Deterministic Fallbacks:** If a loop is detected, force the agent to summarize its failure and request human intervention or a different strategy."
                                     }
                     }
                 ],
-    "created":  1780961741,
-    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh",
-    "system_fingerprint":  "b9535-da87e9b61",
+    "created":  1781091417,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  208,
+                  "completion_tokens":  192,
                   "prompt_tokens":  39,
-                  "total_tokens":  247,
+                  "total_tokens":  231,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-YB72aRhRpFnJ2LeHTDFVRw0m6RQkeDbu",
+    "id":  "chatcmpl-u10aOEx40DgZcSkz3loKGvXhnUbUC0Pj",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  39,
-                    "prompt_ms":  294.999,
-                    "prompt_per_token_ms":  7.564076923076923,
-                    "prompt_per_second":  132.2038379791118,
-                    "predicted_n":  208,
-                    "predicted_ms":  8189.416,
-                    "predicted_per_token_ms":  39.37219230769231,
-                    "predicted_per_second":  25.398636483969064
+                    "prompt_ms":  142.409,
+                    "prompt_per_token_ms":  3.6515128205128202,
+                    "prompt_per_second":  273.85909598410217,
+                    "predicted_n":  192,
+                    "predicted_ms":  5366.077,
+                    "predicted_per_token_ms":  27.948317708333335,
+                    "predicted_per_second":  35.78032890694636,
+                    "draft_n":  304,
+                    "draft_n_accepted":  118
                 }
 }

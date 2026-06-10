@@ -1,132 +1,130 @@
-﻿import fs from 'fs';
-
+﻿const fs = require('fs');
 class Node {
-  public key: string;
-  public value: number;
-  public prev: Node | null;
-  public next: Node | null;
-
-  constructor(key: string, value: number) {
-    this.key = key;
-    this.value = value;
-  }
+  constructor(public key: string, public value: number) {}
 }
-
 class LRUCache {
   private capacity: number;
   private map: Map<string, Node>;
-  private head: Node;
-  private tail: Node;
+  private head: Node | null;
+  private tail: Node | null;
 
   constructor(capacity: number) {
     this.capacity = capacity;
-    this.map = new Map<string, Node>();
-    this.head = new Node(null, null);
-    this.tail = new Node(null, null);
-    this.head.prev = this.tail;
-    this.tail.next = this.head;
+    this.map = new Map();
+    this.head = null;
+    this.tail = null;
   }
 
-  private addToHead(node: Node) {
-    node.prev = this.head;
-    node.next = this.head.next;
-    this.head.next.prev = node;
-    this.head.next = node;
-  }
-
-  private removeNode(node: Node) {
-    const prev = node.prev;
-    const next = node.next;
-    prev.next = next;
-    next.prev = prev;
-  }
-
-  get(key: string): number | -1 {
-    if (!this.map.has(key)) return -1;
-    const node = this.map.get(key)!;
-    this.removeNode(node);
-    this.addToHead(node);
-    return node.value;
-  }
-
-  put(key: string, value: number): void {
+  set(key: string, value: number): void {
     if (this.map.has(key)) {
       const node = this.map.get(key)!;
       node.value = value;
-      this.removeNode(node);
-      this.addToHead(node);
+      this.moveToHead(node);
       return;
     }
     const newNode = new Node(key, value);
     this.map.set(key, newNode);
     this.addToHead(newNode);
     if (this.map.size > this.capacity) {
-      const lru = this.tail.prev;
-      this.removeNode(lru);
-      this.map.delete(lru.key);
+      this.removeTail();
     }
+  }
+
+  get(key: string): number | -1 {
+    if (!this.map.has(key)) return -1;
+    const node = this.map.get(key)!;
+    this.moveToHead(node);
+    return node.value;
   }
 
   del(key: string): void {
-    if (!this.map.has(key)) return;
-    const node = this.map.get(key)!;
+    if (this.map.has(key)) {
+      const node = this.map.get(key);
+      this.removeNode(node);
+      this.map.delete(key);
+    }
+  }
+
+  private addToHead(node: Node): void {
+    if (!this.head) {
+      this.head = node;
+      this.tail = node;
+    } else {
+      node.next = this.head;
+      this.head.prev = node;
+      this.head = node;
+    }
+  }
+
+  private removeNode(node: Node): void {
+    if (node.prev) {
+      node.prev.next = node.next;
+    } else {
+      this.head = node.next;
+    }
+    if (node.next) {
+      node.next.prev = node.prev;
+    } else {
+      this.tail = node.prev;
+    }
+  }
+
+  private moveToHead(node: Node): void {
     this.removeNode(node);
-    this.map.delete(key);
+    this.addToHead(node);
   }
 
-  getKeys(): string[] {
-    const keys: string[] = [];
-    let curr = this.head.next;
-    while (curr !== this.tail) {
-      keys.push(curr.key);
-      curr = curr.next;
-    }
-    return keys;
-  }
-}
-
-function main() {
-  const data = fs.readFileSync(0, "utf8").trim().split('\n');
-  if (data.length < 2) return;
-  const [C, N] = data[0].split(/\s+/);
-  const cache = new LRUCache(Number(C));
-  const results: string[] = [];
-
-  for (let i = 1; i <= N; ++i) {
-    const line = data[i];
-    if (!line.trim()) continue;
-    const parts = line.split(' ');
-    const op = parts[0];
-    switch (op) {
-      case 'GET':
-        results.push(cache.get(parts[1]));
-        break;
-      case 'PUT':
-        cache.put(parts[1], Number(parts[2]));
-        break;
-      case 'DEL':
-        cache.del(parts[1]);
-        break;
+  private removeTail(): void {
+    if (!this.tail) return;
+    const toDelete = this.tail;
+    this.removeNode(toDelete);
+    this.map.delete(toDelete.key);
+    if (this.tail) this.tail = this.tail.prev;
+    else {
+      this.head = null;
+      this.tail = null;
     }
   }
+}
+const fs = require('fs');
+const data = fs.readFileSync(0, 'utf8');
+const lines = data.trim().split('\n');
+if (lines.length < 1) {
+  console.log('EMPTY');
+  console.log('EMPTY');
+  process.exit(0);
+}
+const C = Number(lines[0].trim());
+const N = Number(lines[1].trim());
+const cache = new LRUCache(C);
+let getResults: string[] = [];
 
-  const output: string[] = [];
-  if (results.length > 0) {
-    output.push(results.join(''));
-  } else {
-    output.push('EMPTY');
+for (let i = 2; i < lines.length; ++i) {
+  const line = lines[i].trim();
+  if (!line) continue;
+  const parts = line.split(' ');
+  if (parts[0] === 'PUT') {
+    const key = parts[1];
+    const value = Number(parts.slice(2).join(''));
+    cache.set(key, value);
+  } else if (parts[0] === 'GET') {
+    const result = cache.get(parts[1]);
+    getResults.push(result.toString());
+  } else if (parts[0] === 'DEL') {
+    cache.del(parts[1]);
   }
-
-  const remainingKeys = cache.getKeys();
-  if (remainingKeys.length === 0) {
-    output.push('EMPTY');
-  } else {
-    output.push(remainingKeys.join(''));
-  }
-
-  console.log(output.join('\n'));
 }
 
-if (require.main === module) {
-  main();
+if (getResults.length > 0) console.log(getResults.join(' '));
+else console.log('EMPTY');
+
+const remainingKeys: string[] = [];
+if (cache.head) {
+  let curr = cache.head;
+  while (curr) {
+    remainingKeys.push(curr.key);
+    curr = curr.next;
+  }
 }
+if (remainingKeys.length > 0) console.log(remainingKeys.join(' '));
+else console.log('EMPTY');

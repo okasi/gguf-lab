@@ -1,113 +1,136 @@
-﻿import * as fs from "fs";
+﻿import { readFileSync } from 'fs';
 
-class MinHeap {
-    private data: string[] = [];
+// Min-heap implementation
+class MinHeap<T> {
+    private data: T[];
+    private compare: (a: T, b: T) => number;
 
-    push(item: string): void {
-        this.data.push(item);
-        this.swim(this.data.length - 1);
+    constructor(compare: (a: T, b: T) => number) {
+        this.data = [];
+        this.compare = compare;
     }
 
-    pop(): string {
-        if (this.data.length === 0) {
-            throw new Error("Heap is empty");
-        }
+    public push(item: T): void {
+        this.data.push(item);
+        this.siftUp(this.data.length - 1);
+    }
+
+    public pop(): T {
         const top = this.data[0];
-        this.data[0] = this.data[this.data.length - 1];
-        this.data.pop();
-        this.sink(0);
+        const last = this.data.pop();
+        if (this.data.length > 0 && last !== undefined) {
+            this.data[0] = last;
+            this.siftDown(0);
+        }
         return top;
     }
 
-    get size(): number {
-        return this.data.length;
+    public peek(): T | undefined {
+        return this.data[0];
     }
 
-    private swim(index: number): void {
+    public isEmpty(): boolean {
+        return this.data.length === 0;
+    }
+
+    private siftUp(index: number): void {
         while (index > 0) {
-            const parent = Math.floor((index - 1) / 2);
-            if (this.compare(this.data[parent], this.data[index]) <= 0) {
+            const parentIndex = Math.floor((index - 1) / 2);
+            if (this.compare(this.data[index], this.data[parentIndex]) >= 0) {
                 break;
             }
-            this.swap(index, parent);
-            index = parent;
+            this.swap(index, parentIndex);
+            index = parentIndex;
         }
     }
 
-    private sink(index: number): void {
+    private siftDown(index: number): void {
+        const length = this.data.length;
         while (true) {
+            let smallest = index;
             const left = 2 * index + 1;
             const right = 2 * index + 2;
-            let smallest = index;
 
-            if (left < this.data.length && this.compare(this.data[left], this.data[smallest]) < 0) {
+            if (left < length && this.compare(this.data[left], this.data[smallest]) < 0) {
                 smallest = left;
             }
-            if (right < this.data.length && this.compare(this.data[right], this.data[smallest]) < 0) {
+            if (right < length && this.compare(this.data[right], this.data[smallest]) < 0) {
                 smallest = right;
             }
 
             if (smallest === index) {
                 break;
             }
+
             this.swap(index, smallest);
             index = smallest;
         }
     }
 
     private swap(i: number, j: number): void {
-        [this.data[i], this.data[j]] = [this.data[j], this.data[i]];
-    }
-
-    private compare(a: string, b: string): number {
-        if (a < b) return -1;
-        if (a > b) return 1;
-        return 0;
+        const temp = this.data[i];
+        this.data[i] = this.data[j];
+        this.data[j] = temp;
     }
 }
 
-function solve(): void {
-    const input = fs.readFileSync(0, "utf8");
-    const tokens = input.trim().split(/\s+/);
-    if (tokens.length === 0) return;
+function main(): void {
+    const input = readFileSync(0, "utf8").trim().split('\n');
+    let lineIndex = 0;
 
-    const N = parseInt(tokens[0]);
-    const M = parseInt(tokens[1]);
+    if (lineIndex >= input.length) return;
+    const firstLine = input[lineIndex++].trim().split(/\s+/);
+    const N = parseInt(firstLine[0], 10);
+    const M = parseInt(firstLine[1], 10);
 
-    const tasks = tokens.slice(2, 2 + N);
-    const edges = tokens.slice(2 + N);
+    if (lineIndex >= input.length) return;
+    const taskNames = input[lineIndex++].trim().split(/\s+/);
 
-    const adj: Map<string, string[]> = new Map();
-    const inDegree: Map<string, number> = new Map();
+    // Map task names to indices 0..N-1
+    const nameToIdx: Map<string, number> = new Map();
+    taskNames.forEach((name, idx) => {
+        nameToIdx.set(name, idx);
+    });
 
-    for (const task of tasks) {
-        adj.set(task, []);
-        inDegree.set(task, 0);
-    }
+    // Build adjacency list and in-degree array
+    const adj: number[][] = Array.from({ length: N }, () => []);
+    const inDegree: number[] = new Array(N).fill(0);
 
     for (let i = 0; i < M; i++) {
-        const from = edges[i * 2];
-        const to = edges[i * 2 + 1];
-        adj.get(from)!.push(to);
-        inDegree.set(to, (inDegree.get(to) || 0) + 1);
-    }
+        if (lineIndex >= input.length) break;
+        const parts = input[lineIndex++].trim().split(/\s+/);
+        const fromName = parts[0];
+        const toName = parts[1];
+        const fromIdx = nameToIdx.get(fromName);
+        const toIdx = nameToIdx.get(toName);
 
-    const heap = new MinHeap();
-    for (const task of tasks) {
-        if (inDegree.get(task) === 0) {
-            heap.push(task);
+        if (fromIdx !== undefined && toIdx !== undefined) {
+            adj[fromIdx].push(toIdx);
+            inDegree[toIdx]++;
         }
     }
 
-    const result: string[] = [];
-    while (heap.size > 0) {
-        const current = heap.pop();
-        result.push(current);
+    // Min-heap of task indices, ordered by task name (lexicographically)
+    const heap = new MinHeap<number>((a, b) => {
+        return taskNames[a].localeCompare(taskNames[b]);
+    });
 
-        for (const neighbor of adj.get(current)!) {
-            const newDegree = inDegree.get(neighbor)! - 1;
-            inDegree.set(neighbor, newDegree);
-            if (newDegree === 0) {
+    // Add all tasks with in-degree 0 to the heap
+    for (let i = 0; i < N; i++) {
+        if (inDegree[i] === 0) {
+            heap.push(i);
+        }
+    }
+
+    const result: number[] = [];
+
+    while (!heap.isEmpty()) {
+        const currentIdx = heap.pop();
+        result.push(currentIdx);
+
+        for (const neighbor of adj[currentIdx]) {
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] === 0) {
                 heap.push(neighbor);
             }
         }
@@ -116,8 +139,9 @@ function solve(): void {
     if (result.length < N) {
         console.log("IMPOSSIBLE");
     } else {
-        console.log(result.join(" "));
+        const output = result.map(idx => taskNames[idx]).join(' ');
+        console.log(output);
     }
 }
 
-solve();
+main();

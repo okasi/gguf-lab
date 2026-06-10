@@ -1,160 +1,203 @@
-﻿import * as fs from 'fs';
-
-class DoublyLinkedListNode {
-  key: string;
-  value: number;
-  prev: DoublyLinkedListNode | null;
-  next: DoublyLinkedListNode | null;
-
-  constructor(key: string, value: number) {
-    this.key = key;
-    this.value = value;
-    this.prev = null;
-    this.next = null;
-  }
-}
+﻿import * as fs from "fs";
 
 class LRUCache {
-  private capacity: number;
-  private count: number;
-  private head: DoublyLinkedListNode;
-  private tail: DoublyLinkedListNode;
-  private map: Map<string, DoublyLinkedListNode>;
+    private capacity: number;
+    private head: number;
+    private tail: number;
+    private next: number[];
+    private prev: number[];
+    private keyToIndex: Map<string, number>;
+    private indexToKey: string[];
+    private indexToValue: number[];
+    private count: number;
+    private freeList: number[];
 
-  constructor(capacity: number) {
-    this.capacity = capacity;
-    this.count = 0;
-    this.map = new Map();
-
-    // Create sentinel nodes
-    this.head = new DoublyLinkedListNode('', 0);
-    this.tail = new DoublyLinkedListNode('', 0);
-
-    // Link sentinel nodes
-    this.head.next = this.tail;
-    this.tail.prev = this.head;
-  }
-
-  private addToFront(node: DoublyLinkedListNode): void {
-    node.next = this.head.next;
-    node.prev = this.head;
-
-    this.head.next!.prev = node;
-    this.head.next = node;
-  }
-
-  private removeNode(node: DoublyLinkedListNode): void {
-    node.prev!.next = node.next;
-    node.next!.prev = node.prev;
-  }
-
-  private moveToFront(node: DoublyLinkedListNode): void {
-    this.removeNode(node);
-    this.addToFront(node);
-  }
-
-  private evictTail(): void {
-    const node = this.tail.prev;
-    if (node && node !== this.tail) {
-      this.removeNode(node);
-      this.map.delete(node.key);
-      this.count--;
-    }
-  }
-
-  put(key: string, value: number): void {
-    const existingNode = this.map.get(key);
-    if (existingNode) {
-      existingNode.value = value;
-      this.moveToFront(existingNode);
-      return;
+    constructor(capacity: number) {
+        this.capacity = capacity;
+        this.head = -1; // Points to the most recently used node
+        this.tail = -1; // Points to the least recently used node
+        this.count = 0;
+        
+        // Pre-allocate arrays for performance. Max capacity is 200000.
+        const maxSize = 200000;
+        this.next = new Array(maxSize).fill(-1);
+        this.prev = new Array(maxSize).fill(-1);
+        this.indexToKey = new Array(maxSize);
+        this.indexToValue = new Array(maxSize);
+        
+        // Hash map to quickly find the index of a key
+        this.keyToIndex = new Map();
+        
+        // Free list to reuse indices
+        this.freeList = [];
+        for (let i = 0; i < maxSize; i++) {
+            this.freeList.push(i);
+        }
     }
 
-    const newNode = new DoublyLinkedListNode(key, value);
-    this.map.set(key, newNode);
-    this.addToFront(newNode);
-    this.count++;
-
-    if (this.count > this.capacity) {
-      this.evictTail();
-    }
-  }
-
-  get(key: string): number {
-    const existingNode = this.map.get(key);
-    if (!existingNode) {
-      return -1;
+    private allocate(): number {
+        if (this.freeList.length === 0) {
+            // Should not happen given constraints, but fallback
+            return this.indexToKey.length;
+        }
+        return this.freeList.pop()!;
     }
 
-    this.moveToFront(existingNode);
-    return existingNode.value;
-  }
-
-  del(key: string): void {
-    const existingNode = this.map.get(key);
-    if (existingNode) {
-      this.removeNode(existingNode);
-      this.map.delete(key);
-      this.count--;
-    }
-  }
-
-  getKeysInOrder(): string[] {
-    const keys: string[] = [];
-    let current = this.head.next;
-
-    while (current && current !== this.tail) {
-      keys.push(current.key);
-      current = current.next;
+    private free(index: number): void {
+        this.next[index] = -1;
+        this.prev[index] = -1;
+        this.indexToKey[index] = undefined!;
+        this.indexToValue[index] = 0;
+        this.freeList.push(index);
     }
 
-    return keys;
-  }
+    private removeNode(index: number): void {
+        const prevIdx = this.prev[index];
+        const nextIdx = this.next[index];
+
+        if (prevIdx !== -1) {
+            this.next[prevIdx] = nextIdx;
+        } else {
+            // This node is the head
+            this.head = nextIdx;
+        }
+
+        if (nextIdx !== -1) {
+            this.prev[nextIdx] = prevIdx;
+        } else {
+            // This node is the tail
+            this.tail = prevIdx;
+        }
+
+        this.count--;
+    }
+
+    private addToHead(index: number): void {
+        this.next[index] = this.head;
+        this.prev[index] = -1;
+
+        if (this.head !== -1) {
+            this.prev[this.head] = index;
+        }
+
+        this.head = index;
+
+        if (this.tail === -1) {
+            this.tail = index;
+        }
+
+        this.count++;
+    }
+
+    moveToHead(index: number): void {
+        if (this.head === index) {
+            return; // Already most recently used
+        }
+
+        this.removeNode(index);
+        this.addToHead(index);
+    }
+
+    get(key: string): number {
+        const index = this.keyToIndex.get(key);
+        if (index === undefined) {
+            return -1;
+        }
+        
+        this.moveToHead(index);
+        return this.indexToValue[index];
+    }
+
+    put(key: string, value: number): void {
+        const index = this.keyToIndex.get(key);
+
+        if (index !== undefined) {
+            // Key exists, update value and move to head
+            this.indexToValue[index] = value;
+            this.moveToHead(index);
+        } else {
+            // Key doesn't exist
+            if (this.count >= this.capacity) {
+                // Evict least recently used
+                const lruIndex = this.tail;
+                if (lruIndex !== -1) {
+                    this.keyToIndex.delete(this.indexToKey[lruIndex]);
+                    this.free(lruIndex);
+                }
+            } else {
+                // Not full, allocate new node
+                const newIndex = this.allocate();
+                this.keyToIndex.set(key, newIndex);
+                this.indexToKey[newIndex] = key;
+                this.indexToValue[newIndex] = value;
+                this.addToHead(newIndex);
+            }
+        }
+    }
+
+    remove(key: string): void {
+        const index = this.keyToIndex.get(key);
+        if (index !== undefined) {
+            this.keyToIndex.delete(key);
+            this.removeNode(index);
+            this.free(index);
+        }
+    }
+
+    getKeysOrdered(): string[] {
+        const result: string[] = [];
+        let current = this.head;
+        while (current !== -1) {
+            result.push(this.indexToKey[current]);
+            current = this.next[current];
+        }
+        return result;
+    }
 }
 
 function main(): void {
-  const input = fs.readFileSync(0, 'utf8').trim();
-  const lines = input.split('\n');
+    const input = fs.readFileSync(0, "utf8").trim();
+    if (!input) return;
 
-  if (lines.length === 0) {
-    return;
-  }
+    const lines = input.split("\n");
+    const firstLine = lines[0].trim().split(/\s+/);
+    const capacity = parseInt(firstLine[0], 10);
+    const numOperations = parseInt(firstLine[1], 10);
 
-  const [C_str, N_str] = lines[0].split(' ');
-  const C = parseInt(C_str, 10);
-  const N = parseInt(N_str, 10);
+    const cache = new LRUCache(capacity);
+    const getResults: string[] = [];
+    let hasGet = false;
 
-  const cache = new LRUCache(C);
-  const getResults: number[] = [];
+    for (let i = 1; i <= numOperations; i++) {
+        const line = lines[i].trim();
+        const parts = line.split(/\s+/);
+        const op = parts[0];
+        const key = parts[1];
 
-  for (let i = 1; i <= N && i < lines.length; i++) {
-    const parts = lines[i].trim().split(' ');
-    const operation = parts[0];
-    const key = parts[1];
-
-    if (operation === 'PUT') {
-      const value = parseInt(parts[2], 10);
-      cache.put(key, value);
-    } else if (operation === 'GET') {
-      const result = cache.get(key);
-      getResults.push(result);
-    } else if (operation === 'DEL') {
-      cache.del(key);
+        if (op === "GET") {
+            const value = cache.get(key);
+            getResults.push(value.toString());
+            hasGet = true;
+        } else if (op === "PUT") {
+            const value = parseInt(parts[2], 10);
+            cache.put(key, value);
+        } else if (op === "DEL") {
+            cache.remove(key);
+        }
     }
-  }
 
-  if (getResults.length === 0) {
-    console.log('EMPTY');
-  } else {
-    console.log(getResults.join(' '));
-  }
+    if (hasGet) {
+        console.log(getResults.join(" "));
+    } else {
+        console.log("EMPTY");
+    }
 
-  const keys = cache.getKeysInOrder();
-  if (keys.length === 0) {
-    console.log('EMPTY');
-  } else {
-    console.log(keys.join(' '));
-  }
+    const remainingKeys = cache.getKeysOrdered();
+    if (remainingKeys.length > 0) {
+        console.log(remainingKeys.join(" "));
+    } else {
+        console.log("EMPTY");
+    }
 }
 
 main();

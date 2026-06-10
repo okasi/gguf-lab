@@ -1,120 +1,147 @@
-﻿import * as fs from 'fs';
+﻿import { readFileSync } from "fs";
 
 class MinHeap {
-    private heap: string[];
+    private items: string[];
 
     constructor() {
-        this.heap = [];
+        this.items = [];
     }
 
-    private parent(i: number): number {
-        return (i - 1) >> 1;
+    public push(item: string): void {
+        this.items.push(item);
+        this._bubbleUp(this.items.length - 1);
     }
 
-    private left(i: number): number {
-        return (i << 1) + 1;
-    }
-
-    private right(i: number): number {
-        return (i << 1) + 2;
-    }
-
-    private swap(i: number, j: number) {
-        [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];
-    }
-
-    push(value: string) {
-        this.heap.push(value);
-        let i = this.heap.length - 1;
-        while (i > 0 && this.heap[i] < this.heap[this.parent(i)]) {
-            this.swap(i, this.parent(i));
-            i = this.parent(i);
+    public pop(): string | undefined {
+        if (this.items.length === 0) {
+            return undefined;
         }
-    }
-
-    pop(): string | undefined {
-        if (this.heap.length === 0) return undefined;
-        const root = this.heap[0];
-        const last = this.heap.pop();
-        if (this.heap.length > 0) {
-            this.heap[0] = last!;
-            this.bubbleDown(0);
+        if (this.items.length === 1) {
+            return this.items.pop()!;
         }
+        const root = this.items[0];
+        this.items[0] = this.items.pop()!;
+        this._sinkDown(0);
         return root;
     }
 
-    private bubbleDown(i: number) {
-        const n = this.heap.length;
-        while (true) {
-            let smallest = i;
-            const l = this.left(i);
-            const r = this.right(i);
+    public size(): number {
+        return this.items.length;
+    }
 
-            if (l < n && this.heap[l] < this.heap[smallest]) {
-                smallest = l;
-            }
-            if (r < n && this.heap[r] < this.heap[smallest]) {
-                smallest = r;
-            }
-
-            if (smallest !== i) {
-                this.swap(i, smallest);
-                i = smallest;
+    private _bubbleUp(index: number): void {
+        while (index > 0) {
+            const parent = Math.floor((index - 1) / 2);
+            if (this.items[index] < this.items[parent]) {
+                this._swap(index, parent);
+                index = parent;
             } else {
                 break;
             }
         }
     }
 
-    isEmpty(): boolean {
-        return this.heap.length === 0;
-    }
-}
-
-function main() {
-    const input = fs.readFileSync(0, 'utf8').trim();
-    const lines = input.split(/\r?\n/);
-    const [N, M] = lines[0].split(/\s+/).map(Number);
-    const tasks = lines[1].split(/\s+/);
-
-    const adj: Record<string, string[]> = {};
-    const inDegree: Record<string, number> = {};
-
-    for (const task of tasks) {
-        adj[task] = [];
-        inDegree[task] = 0;
-    }
-
-    for (let i = 2; i < 2 + M; i++) {
-        const [A, B] = lines[i].split(/\s+/);
-        adj[A].push(B);
-        inDegree[B] = (inDegree[B] || 0) + 1;
-    }
-
-    const pq = new MinHeap();
-    for (const task of tasks) {
-        if (inDegree[task] === 0) {
-            pq.push(task);
-        }
-    }
-
-    const result: string[] = [];
-    while (!pq.isEmpty()) {
-        const u = pq.pop()!;
-        result.push(u);
-        for (const v of adj[u]) {
-            inDegree[v]--;
-            if (inDegree[v] === 0) {
-                pq.push(v);
+    private _sinkDown(index: number): void {
+        const length = this.items.length;
+        while (true) {
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
+            let smallest = index;
+            if (left < length && this.items[left] < this.items[smallest]) {
+                smallest = left;
+            }
+            if (right < length && this.items[right] < this.items[smallest]) {
+                smallest = right;
+            }
+            if (smallest !== index) {
+                this._swap(index, smallest);
+                index = smallest;
+            } else {
+                break;
             }
         }
     }
 
-    if (result.length === N) {
-        console.log(result.join(' '));
-    } else {
-        console.log('IMPOSSIBLE');
+    private _swap(i: number, j: number): void {
+        const temp = this.items[i];
+        this.items[i] = this.items[j];
+        this.items[j] = temp;
     }
 }
 
-main();
+function solve(input: string): string {
+    const lines = input.trim().split(/\r?\n/);
+    if (lines.length < 2) {
+        return "IMPOSSIBLE";
+    }
+
+    const [nStr, mStr] = lines[0].trim().split(/\s+/).map(Number);
+    if (isNaN(nStr) || isNaN(mStr)) {
+        return "IMPOSSIBLE";
+    }
+    const N = nStr;
+    const M = mStr;
+
+    const taskNames = lines[1].trim().split(/\s+/);
+    if (taskNames.length !== N) {
+        return "IMPOSSIBLE";
+    }
+
+    const adj: Map<string, string[]> = new Map();
+    const inDegree: Map<string, number> = new Map();
+
+    for (const name of taskNames) {
+        adj.set(name, []);
+        inDegree.set(name, 0);
+    }
+
+    for (let i = 0; i < M; i++) {
+        if (i + 2 >= lines.length) {
+            break;
+        }
+        const parts = lines[i + 2].trim().split(/\s+/);
+        if (parts.length < 2) {
+            continue;
+        }
+        const [A, B] = parts;
+        if (!adj.has(A) || !adj.has(B)) {
+            return "IMPOSSIBLE";
+        }
+        adj.get(A)!.push(B);
+        inDegree.set(B, (inDegree.get(B) || 0) + 1);
+    }
+
+    const heap = new MinHeap();
+    for (const [name, deg] of inDegree) {
+        if (deg === 0) {
+            heap.push(name);
+        }
+    }
+
+    const result: string[] = [];
+
+    while (heap.size() > 0) {
+        const current = heap.pop()!;
+        result.push(current);
+
+        const neighbors = adj.get(current);
+        if (neighbors) {
+            for (const neighbor of neighbors) {
+                const newDeg = (inDegree.get(neighbor) || 0) - 1;
+                inDegree.set(neighbor, newDeg);
+                if (newDeg === 0) {
+                    heap.push(neighbor);
+                }
+            }
+        }
+    }
+
+    if (result.length !== N) {
+        return "IMPOSSIBLE";
+    }
+
+    return result.join(" ");
+}
+
+const input = readFileSync(0, "utf8");
+console.log(solve(input));

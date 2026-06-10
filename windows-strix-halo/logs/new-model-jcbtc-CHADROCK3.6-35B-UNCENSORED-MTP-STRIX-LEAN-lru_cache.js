@@ -1,118 +1,80 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __importStar(require("fs"));
+const fs_1 = __importDefault(require("fs"));
+function createNode(key, value) {
+    return { key, value, prev: null, next: null };
+}
 class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
         this.map = new Map();
-        // Dummy head and tail
-        this.head = { key: '', value: 0, prev: null, next: null };
-        this.tail = { key: '', value: 0, prev: null, next: null };
+        this.head = createNode("", 0);
+        this.tail = createNode("", 0);
         this.head.next = this.tail;
         this.tail.prev = this.head;
         this.size = 0;
     }
-    addToHead(node) {
-        node.prev = this.head;
-        node.next = this.head.next;
-        this.head.next.prev = node;
-        this.head.next = node;
-    }
-    removeNode(node) {
+    removeFromList(node) {
         const prev = node.prev;
         const next = node.next;
-        if (prev && next) {
-            prev.next = next;
-            next.prev = prev;
-        }
-        node.prev = null;
-        node.next = null;
+        prev.next = next;
+        next.prev = prev;
     }
-    moveToHead(node) {
-        this.removeNode(node);
-        this.addToHead(node);
-    }
-    popTail() {
-        const res = this.tail.prev;
-        if (res) {
-            this.removeNode(res);
-        }
-        return res;
-    }
-    put(key, value) {
-        const existing = this.map.get(key);
-        if (existing) {
-            existing.value = value;
-            this.moveToHead(existing);
-            return;
-        }
-        const newNode = {
-            key,
-            value,
-            prev: null,
-            next: null
-        };
-        this.addToHead(newNode);
-        this.map.set(key, newNode);
-        this.size++;
-        if (this.size > this.capacity) {
-            const tail = this.popTail();
-            this.map.delete(tail.key);
-            this.size--;
-        }
+    addToFront(node) {
+        const oldFirst = this.head.next;
+        this.head.next = node;
+        node.prev = this.head;
+        node.next = oldFirst;
+        oldFirst.prev = node;
     }
     get(key) {
         const node = this.map.get(key);
         if (!node) {
             return -1;
         }
-        this.moveToHead(node);
+        this.moveToFront(node);
         return node.value;
     }
-    del(key) {
-        const node = this.map.get(key);
-        if (!node) {
-            return false;
+    put(key, value) {
+        const existing = this.map.get(key);
+        if (existing) {
+            existing.value = value;
+            this.moveToFront(existing);
+            return;
         }
-        this.removeNode(node);
-        this.map.delete(key);
-        this.size--;
-        return true;
+        if (this.size >= this.capacity) {
+            this.evictLRU();
+        }
+        const node = createNode(key, value);
+        this.map.set(key, node);
+        this.addToFront(node);
+        this.size++;
     }
-    getKeysInOrder() {
+    delete(key) {
+        const node = this.map.get(key);
+        if (node) {
+            this.removeFromList(node);
+            this.map.delete(key);
+            this.size--;
+        }
+    }
+    moveToFront(node) {
+        this.removeFromList(node);
+        this.addToFront(node);
+    }
+    evictLRU() {
+        const lru = this.tail.prev;
+        if (lru === this.head) {
+            return;
+        }
+        this.removeFromList(lru);
+        this.map.delete(lru.key);
+        this.size--;
+    }
+    getKeys() {
         const result = [];
         let current = this.head.next;
         while (current && current !== this.tail) {
@@ -123,41 +85,51 @@ class LRUCache {
     }
 }
 function main() {
-    const input = fs.readFileSync(0, 'utf8');
-    const lines = input.trim().split('\n');
-    if (lines.length === 0)
+    const input = fs_1.default.readFileSync(0, "utf8").trim();
+    if (!input) {
+        console.log("EMPTY");
+        console.log("EMPTY");
         return;
+    }
+    const lines = input.split("\n");
     const firstLine = lines[0].trim().split(/\s+/);
-    const capacity = parseInt(firstLine[0], 10);
-    const n = parseInt(firstLine[1], 10);
-    const cache = new LRUCache(capacity);
+    const C = parseInt(firstLine[0], 10);
+    const N = parseInt(firstLine[1], 10);
+    const cache = new LRUCache(C);
     const getResults = [];
-    for (let i = 1; i <= n; i++) {
-        const line = lines[i].trim().split(/\s+/);
-        if (line.length === 0)
+    for (let i = 1; i <= N && i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line)
             continue;
-        const operation = line[0];
-        switch (operation) {
-            case 'PUT':
-                const putKey = line[1];
-                const putValue = parseInt(line[2], 10);
-                cache.put(putKey, putValue);
-                break;
-            case 'GET':
-                const getKey = line[1];
-                const getResult = cache.get(getKey);
-                getResults.push(getResult.toString());
-                break;
-            case 'DEL':
-                const delKey = line[1];
-                cache.del(delKey);
-                break;
+        const parts = line.split(/\s+/);
+        const op = parts[0].toUpperCase();
+        if (op === "PUT" && parts.length >= 3) {
+            const key = parts[1];
+            const value = parseInt(parts[2], 10);
+            cache.put(key, value);
+        }
+        else if (op === "GET" && parts.length >= 2) {
+            const key = parts[1];
+            const result = cache.get(key);
+            getResults.push(result);
+        }
+        else if (op === "DEL" && parts.length >= 2) {
+            const key = parts[1];
+            cache.delete(key);
         }
     }
-    const getOutput = getResults.length > 0 ? getResults.join(' ') : 'EMPTY';
-    const remainingKeys = cache.getKeysInOrder();
-    const keysOutput = remainingKeys.length > 0 ? remainingKeys.join(' ') : 'EMPTY';
-    console.log(getOutput);
-    console.log(keysOutput);
+    if (getResults.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
+        console.log(getResults.join(" "));
+    }
+    const remainingKeys = cache.getKeys();
+    if (remainingKeys.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
+        console.log(remainingKeys.join(" "));
+    }
 }
 main();

@@ -73,12 +73,10 @@ class MinHeap {
             let left = 2 * index + 1;
             let right = 2 * index + 2;
             let smallest = index;
-            if (left < this.heap.length && this.compare(this.heap[left], this.heap[smallest]) < 0) {
+            if (left < this.heap.length && this.compare(this.heap[left], this.heap[smallest]) < 0)
                 smallest = left;
-            }
-            if (right < this.heap.length && this.compare(this.heap[right], this.heap[smallest]) < 0) {
+            if (right < this.heap.length && this.compare(this.heap[right], this.heap[smallest]) < 0)
                 smallest = right;
-            }
             if (smallest === index)
                 break;
             [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
@@ -87,26 +85,28 @@ class MinHeap {
     }
 }
 function solve() {
-    const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    let ptr = 0;
-    if (ptr >= input.length)
+    const input = fs.readFileSync(0, 'utf8');
+    const lines = input.split(/\s+/);
+    let cursor = 0;
+    if (lines[cursor] === "")
+        cursor++;
+    if (cursor >= lines.length)
         return;
-    const N = parseInt(input[ptr++]);
-    const M = parseInt(input[ptr++]);
-    if (isNaN(N))
-        return;
+    const N = parseInt(lines[cursor++]);
+    const M = parseInt(lines[cursor++]);
     const tasks = [];
-    const inDegree = new Map();
-    const adj = new Map();
     for (let i = 0; i < N; i++) {
-        const task = input[ptr++];
-        tasks.push(task);
-        inDegree.set(task, 0);
+        tasks.push(lines[cursor++]);
+    }
+    const adj = new Map();
+    const inDegree = new Map();
+    for (const task of tasks) {
         adj.set(task, []);
+        inDegree.set(task, 0);
     }
     for (let i = 0; i < M; i++) {
-        const u = input[ptr++];
-        const v = input[ptr++];
+        const u = lines[cursor++];
+        const v = lines[cursor++];
         adj.get(u)?.push(v);
         inDegree.set(v, (inDegree.get(v) || 0) + 1);
     }
@@ -129,10 +129,10 @@ function solve() {
         }
     }
     if (result.length === N) {
-        process.stdout.write(result.join(" ") + "\n");
+        process.stdout.write(result.join(' ') + '\n');
     }
     else {
-        process.stdout.write("IMPOSSIBLE\n");
+        process.stdout.write('IMPOSSIBLE\n');
     }
 }
 solve();

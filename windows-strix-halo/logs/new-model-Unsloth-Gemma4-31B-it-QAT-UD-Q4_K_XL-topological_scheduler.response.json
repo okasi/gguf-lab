@@ -5,32 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "import * as fs from \u0027fs\u0027;\n\nclass MinHeap\u003cT\u003e {\n    private heap: T[] = [];\n\n    constructor(private compare: (a: T, b: T) =\u003e number) {}\n\n    push(val: T) {\n        this.heap.push(val);\n        this.bubbleUp();\n    }\n\n    pop(): T | undefined {\n        if (this.size() === 0) return undefined;\n        const top = this.heap[0];\n        const bottom = this.heap.pop();\n        if (this.size() \u003e 0 \u0026\u0026 bottom !== undefined) {\n            this.heap[0] = bottom;\n            this.bubbleDown();\n        }\n        return top;\n    }\n\n    size(): number {\n        return this.heap.length;\n    }\n\n    private bubbleUp() {\n        let index = this.heap.length - 1;\n        while (index \u003e 0) {\n            let parentIndex = Math.floor((index - 1) / 2);\n            if (this.compare(this.heap[index], this.heap[parentIndex]) \u003e= 0) break;\n            [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];\n            index = parentIndex;\n        }\n    }\n\n    private bubbleDown() {\n        let index = 0;\n        while (true) {\n            let left = 2 * index + 1;\n            let right = 2 * index + 2;\n            let smallest = index;\n\n            if (left \u003c this.heap.length \u0026\u0026 this.compare(this.heap[left], this.heap[smallest]) \u003c 0) {\n                smallest = left;\n            }\n            if (right \u003c this.heap.length \u0026\u0026 this.compare(this.heap[right], this.heap[smallest]) \u003c 0) {\n                smallest = right;\n            }\n            if (smallest === index) break;\n            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n            index = smallest;\n        }\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    let ptr = 0;\n\n    if (ptr \u003e= input.length) return;\n    const N = parseInt(input[ptr++]);\n    const M = parseInt(input[ptr++]);\n\n    if (isNaN(N)) return;\n\n    const tasks: string[] = [];\n    const inDegree: Map\u003cstring, number\u003e = new Map();\n    const adj: Map\u003cstring, string[]\u003e = new Map();\n\n    for (let i = 0; i \u003c N; i++) {\n        const task = input[ptr++];\n        tasks.push(task);\n        inDegree.set(task, 0);\n        adj.set(task, []);\n    }\n\n    for (let i = 0; i \u003c M; i++) {\n        const u = input[ptr++];\n        const v = input[ptr++];\n        adj.get(u)?.push(v);\n        inDegree.set(v, (inDegree.get(v) || 0) + 1);\n    }\n\n    const pq = new MinHeap\u003cstring\u003e((a, b) =\u003e a.localeCompare(b));\n    for (const task of tasks) {\n        if (inDegree.get(task) === 0) {\n            pq.push(task);\n        }\n    }\n\n    const result: string[] = [];\n    while (pq.size() \u003e 0) {\n        const u = pq.pop()!;\n        result.push(u);\n\n        const neighbors = adj.get(u) || [];\n        for (const v of neighbors) {\n            inDegree.set(v, inDegree.get(v)! - 1);\n            if (inDegree.get(v) === 0) {\n                pq.push(v);\n            }\n        }\n    }\n\n    if (result.length === N) {\n        process.stdout.write(result.join(\" \") + \"\\n\");\n    } else {\n        process.stdout.write(\"IMPOSSIBLE\\n\");\n    }\n}\n\nsolve();"
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nclass MinHeap\u003cT\u003e {\n    private heap: T[] = [];\n\n    constructor(private compare: (a: T, b: T) =\u003e number) {}\n\n    push(val: T) {\n        this.heap.push(val);\n        this.bubbleUp();\n    }\n\n    pop(): T | undefined {\n        if (this.size() === 0) return undefined;\n        const top = this.heap[0];\n        const bottom = this.heap.pop();\n        if (this.size() \u003e 0 \u0026\u0026 bottom !== undefined) {\n            this.heap[0] = bottom;\n            this.bubbleDown();\n        }\n        return top;\n    }\n\n    size() {\n        return this.heap.length;\n    }\n\n    private bubbleUp() {\n        let index = this.heap.length - 1;\n        while (index \u003e 0) {\n            let parentIndex = Math.floor((index - 1) / 2);\n            if (this.compare(this.heap[index], this.heap[parentIndex]) \u003e= 0) break;\n            [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];\n            index = parentIndex;\n        }\n    }\n\n    private bubbleDown() {\n        let index = 0;\n        while (true) {\n            let left = 2 * index + 1;\n            let right = 2 * index + 2;\n            let smallest = index;\n\n            if (left \u003c this.heap.length \u0026\u0026 this.compare(this.heap[left], this.heap[smallest]) \u003c 0) smallest = left;\n            if (right \u003c this.heap.length \u0026\u0026 this.compare(this.heap[right], this.heap[smallest]) \u003c 0) smallest = right;\n            if (smallest === index) break;\n\n            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n            index = smallest;\n        }\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \u0027utf8\u0027);\n    const lines = input.split(/\\s+/);\n    let cursor = 0;\n\n    if (lines[cursor] === \"\") cursor++;\n    if (cursor \u003e= lines.length) return;\n\n    const N = parseInt(lines[cursor++]);\n    const M = parseInt(lines[cursor++]);\n\n    const tasks = [];\n    for (let i = 0; i \u003c N; i++) {\n        tasks.push(lines[cursor++]);\n    }\n\n    const adj = new Map\u003cstring, string[]\u003e();\n    const inDegree = new Map\u003cstring, number\u003e();\n\n    for (const task of tasks) {\n        adj.set(task, []);\n        inDegree.set(task, 0);\n    }\n\n    for (let i = 0; i \u003c M; i++) {\n        const u = lines[cursor++];\n        const v = lines[cursor++];\n        adj.get(u)?.push(v);\n        inDegree.set(v, (inDegree.get(v) || 0) + 1);\n    }\n\n    const pq = new MinHeap\u003cstring\u003e((a, b) =\u003e a.localeCompare(b));\n    for (const task of tasks) {\n        if (inDegree.get(task) === 0) {\n            pq.push(task);\n        }\n    }\n\n    const result: string[] = [];\n    while (pq.size() \u003e 0) {\n        const u = pq.pop()!;\n        result.push(u);\n\n        const neighbors = adj.get(u) || [];\n        for (const v of neighbors) {\n            inDegree.set(v, inDegree.get(v)! - 1);\n            if (inDegree.get(v) === 0) {\n                pq.push(v);\n            }\n        }\n    }\n\n    if (result.length === N) {\n        process.stdout.write(result.join(\u0027 \u0027) + \u0027\\n\u0027);\n    } else {\n        process.stdout.write(\u0027IMPOSSIBLE\\n\u0027);\n    }\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1780967530,
-    "model":  "unsloth-gemma4-31b-it-qat-ud-q4-k-xl-refresh",
-    "system_fingerprint":  "b9535-da87e9b61",
+    "created":  1781092433,
+    "model":  "unsloth-gemma4-31b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  983,
-                  "prompt_tokens":  194,
-                  "total_tokens":  1177,
+                  "completion_tokens":  978,
+                  "prompt_tokens":  217,
+                  "total_tokens":  1195,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-aTrD1wqo0BhpbVMXlUdSv7iRVVsAGBTW",
+    "id":  "chatcmpl-CRrMc70N0pf6LKg03JlVLPWOE0AxRmDw",
     "timings":  {
                     "cache_n":  0,
-                    "prompt_n":  194,
-                    "prompt_ms":  1180.608,
-                    "prompt_per_token_ms":  6.08560824742268,
-                    "prompt_per_second":  164.3221119965306,
-                    "predicted_n":  983,
-                    "predicted_ms":  86063.632,
-                    "predicted_per_token_ms":  87.55201627670397,
-                    "predicted_per_second":  11.421781502319122
+                    "prompt_n":  217,
+                    "prompt_ms":  1093.22,
+                    "prompt_per_token_ms":  5.037880184331797,
+                    "prompt_per_second":  198.49618558021257,
+                    "predicted_n":  978,
+                    "predicted_ms":  34444.646,
+                    "predicted_per_token_ms":  35.21947443762781,
+                    "predicted_per_second":  28.393382240014894,
+                    "draft_n":  820,
+                    "draft_n_accepted":  774
                 }
 }

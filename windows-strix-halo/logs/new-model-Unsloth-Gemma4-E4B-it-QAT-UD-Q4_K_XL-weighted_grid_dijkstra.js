@@ -34,13 +34,22 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
+const priority_queue_1 = require("@datastructures-js/priority-queue");
+/**
+ * Finds the minimum cost path from 'S' to 'T' in a grid with variable movement costs.
+ * Uses Dijkstra's algorithm.
+ */
 function solve() {
     const input = fs.readFileSync(0, 'utf8').trim().split('\n');
-    if (input.length === 0 || input[0].length === 0) {
+    if (input.length === 0)
         return;
+    const [hStr, wStr] = input[0].trim().split(/\s+/);
+    const H = parseInt(hStr);
+    const W = parseInt(wStr);
+    const grid = [];
+    for (let i = 1; i <= H; i++) {
+        grid.push(input[i].trim().split(''));
     }
-    const [H, W] = input[0].trim().split(/\s+/).map(Number);
-    const grid = input.slice(1, H + 1).map(line => line.trim().split(''));
     let startRow = -1, startCol = -1;
     let targetRow = -1, targetCol = -1;
     for (let r = 0; r < H; r++) {
@@ -56,56 +65,58 @@ function solve() {
         }
     }
     if (startRow === -1 || targetRow === -1) {
-        // Should not happen based on problem description, but good practice
         console.log(-1);
         return;
     }
-    // Priority Queue: [cost, row, col]
-    // We will implement a simple min-priority queue using an array sort for simplicity,
-    // though a binary heap would be more efficient for large grids.
-    let pq = [];
+    // Distances initialized to infinity
     const dist = Array(H).fill(0).map(() => Array(W).fill(Infinity));
-    // Initial state
+    // Priority Queue stores [cost, row, col]
+    // We use a min-heap based on cost.
+    const pq = new priority_queue_1.PriorityQueue((a, b) => a[0] - b[0]);
+    // Initialize start node
     dist[startRow][startCol] = 0;
-    pq.push([0, startRow, startCol]);
-    const dr = [-1, 1, 0, 0]; // Up, Down, Left, Right
-    const dc = [0, 0, -1, 1];
-    while (pq.length > 0) {
-        // Simple extraction of min cost element (slow O(N) instead of O(log N))
-        pq.sort((a, b) => a[0] - b[0]);
-        const [cost, r, c] = pq.shift();
-        if (cost > dist[r][c]) {
+    pq.enqueue([0, startRow, startCol]);
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    while (!pq.isEmpty()) {
+        const [currentCost, r, c] = pq.dequeue();
+        if (currentCost > dist[r][c]) {
             continue;
         }
         if (r === targetRow && c === targetCol) {
-            console.log(cost);
+            console.log(currentCost);
             return;
         }
-        for (let i = 0; i < 4; i++) {
-            const nr = r + dr[i];
-            const nc = c + dc[i];
-            if (nr >= 0 && nr < H && nc >= 0 && nc < W && grid[nr][nc] !== '#') {
-                let moveCost = 0;
+        for (const [dr, dc] of directions) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
                 const cell = grid[nr][nc];
-                if (cell >= '0' && cell <= '9') {
+                let moveCost = 0;
+                if (cell === '#') {
+                    // Wall
+                    continue;
+                }
+                else if (cell === 'S' || cell === 'T') {
+                    // Start or Target cost is 0 to enter
+                    moveCost = 0;
+                }
+                else if (cell >= '0' && cell <= '9') {
+                    // Digit cost
                     moveCost = parseInt(cell);
                 }
-                // 'S' and 'T' cost 0, which is the default if they are encountered here.
-                const newCost = cost + moveCost;
+                else {
+                    // Should not happen based on problem description
+                    continue;
+                }
+                const newCost = currentCost + moveCost;
                 if (newCost < dist[nr][nc]) {
                     dist[nr][nc] = newCost;
-                    pq.push([newCost, nr, nc]);
+                    pq.enqueue([newCost, nr, nc]);
                 }
             }
         }
     }
-    // If the loop finishes and target wasn't reached
-    if (dist[targetRow][targetCol] === Infinity) {
-        console.log(-1);
-    }
-    else {
-        // This case should have been caught inside the loop, but as a fallback
-        console.log(dist[targetRow][targetCol]);
-    }
+    // If target was not reached
+    console.log(-1);
 }
 solve();

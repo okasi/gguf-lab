@@ -3,14 +3,22 @@ param(
     [string]$ServerOverride = "",
     [string]$ModelsJson = "",
     [int]$Port = 18080,
-    [string]$SuitesOverride = ""
+    [string]$SuitesOverride = "",
+    [ValidateSet("auto", "off")]
+    [string]$Reasoning = "auto",
+    [string]$AliasSuffix = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 $Root = $PSScriptRoot
+. (Join-Path $Root "ModelDraft.ps1")
+. (Join-Path $Root "ReasoningArgs.ps1")
 $LogDir = Join-Path $Root "logs"
-$Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+$Server = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
+if (-not (Test-Path -LiteralPath $Server)) {
+    $Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+}
 if ($ServerOverride) {
     $Server = $ServerOverride
 }
@@ -183,7 +191,8 @@ $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 
 foreach ($m in $Models) {
-    if ($OnlyAliases.Count -gt 0 -and $OnlyAliases -notcontains $m.Alias) {
+    $runAlias = Get-ReadmeAlias -Model $m -AliasSuffix $AliasSuffix
+    if ($OnlyAliases.Count -gt 0 -and $OnlyAliases -notcontains $runAlias -and $OnlyAliases -notcontains $m.Alias) {
         continue
     }
 
@@ -193,11 +202,28 @@ foreach ($m in $Models) {
             throw "$pathKey not found for $($m.Name): $($m[$pathKey])"
         }
     }
+    if ($m.ContainsKey("Mtp") -and $m.Mtp) {
+        $needsDraft = ($m.ContainsKey("ModelDraft") -and $m.ModelDraft) -or
+            ($m.ContainsKey("ModelDraftFile") -and $m.ModelDraftFile) -or
+            ($m.ContainsKey("MtpAutoDiscoveryFile") -and $m.MtpAutoDiscoveryFile)
+        if ($needsDraft) {
+            $draftPath = if ($m.ContainsKey("ModelDraft") -and $m.ModelDraft) {
+                [string]$m.ModelDraft
+            } else {
+                $auto = if ($m.ContainsKey("MtpAutoDiscoveryFile")) { [string]$m.MtpAutoDiscoveryFile } else { "" }
+                $draftFile = if ($m.ContainsKey("ModelDraftFile")) { [string]$m.ModelDraftFile } else { "" }
+                Resolve-ModelDraftPath -ModelPath $m.Model -DraftFile $draftFile -AutoDiscoveryFile $auto
+            }
+            if (-not $draftPath -or -not (Test-Path -LiteralPath $draftPath)) {
+                throw "ModelDraft not found for $($m.Name). Run Download-Gemma4-QAT-MTP.ps1 or set ModelDraft."
+            }
+        }
+    }
 
-    $serverOut = Join-Path $LogDir "benchloop-$($m.Alias)-server.out.log"
-    $serverErr = Join-Path $LogDir "benchloop-$($m.Alias)-server.err.log"
-    $benchOut = Join-Path $LogDir "benchloop-$($m.Alias).out.log"
-    $benchErr = Join-Path $LogDir "benchloop-$($m.Alias).err.log"
+    $serverOut = Join-Path $LogDir "benchloop-$runAlias-server.out.log"
+    $serverErr = Join-Path $LogDir "benchloop-$runAlias-server.err.log"
+    $benchOut = Join-Path $LogDir "benchloop-$runAlias.out.log"
+    $benchErr = Join-Path $LogDir "benchloop-$runAlias.err.log"
     Remove-Item $serverOut,$serverErr,$benchOut,$benchErr -ErrorAction SilentlyContinue
 
     $ctxSize = Get-ModelValue -Model $m -Key "CtxSize" -Default "262144"
@@ -207,6 +233,8 @@ foreach ($m in $Models) {
     $minP = Get-ModelValue -Model $m -Key "MinP" -Default "0.0"
     $repeatPenalty = Get-ModelValue -Model $m -Key "RepeatPenalty" -Default "1.0"
     $imageMinTokens = Get-ModelValue -Model $m -Key "ImageMinTokens" -Default "256"
+    $flashAttn = Get-FlashAttnValue -Model $m
+    $cacheTypes = Get-CacheTypeValues -Model $m
 
     if ($m.ContainsKey("RawServerArgs") -and $null -ne $m.RawServerArgs) {
         $serverArgs = @($m.RawServerArgs | ForEach-Object {
@@ -216,15 +244,15 @@ foreach ($m in $Models) {
     } else {
         $serverArgs = @(
             "--model", $m.Model,
-            "--alias", $m.Alias,
+            "--alias", $runAlias,
             "--host", "127.0.0.1",
             "--port", "$Port",
             "--ctx-size", $ctxSize,
             "-np", "1",
             "-ngl", "99",
-            "--flash-attn", "on",
-            "--cache-type-k", "q8_0",
-            "--cache-type-v", "q8_0",
+            "--flash-attn", $flashAttn,
+            "--cache-type-k", $cacheTypes.K,
+            "--cache-type-v", $cacheTypes.V,
             "--temp", $temp,
             "--top-p", $topP,
             "--top-k", $topK,
@@ -242,18 +270,14 @@ foreach ($m in $Models) {
         if ($m.ContainsKey("Mmproj") -and $null -ne $m.Mmproj -and "$($m.Mmproj)" -ne "") {
             $serverArgs += @("--mmproj", $m.Mmproj)
         }
-        if ($m.ContainsKey("Mtp") -and $m.Mtp) {
-            $serverArgs += @("--spec-type", "draft-mtp", "--spec-draft-n-min", "1", "--spec-draft-n-max", "2")
-        }
+        $serverArgs = Add-SpeculativeServerArgs -Model $m -ServerArgs $serverArgs
         if ($m.ContainsKey("ExtraServerArgs") -and $null -ne $m.ExtraServerArgs) {
             $serverArgs += $m.ExtraServerArgs
         }
         if ($m.ContainsKey("GptOss") -and $m.GptOss) {
             $serverArgs += @("--jinja")
         }
-        if ($serverArgs -notcontains "--reasoning") {
-            $serverArgs += @("--reasoning", "auto")
-        }
+        $serverArgs = Add-ReasoningServerArgs -ServerArgs $serverArgs -Reasoning $Reasoning -ModelName ([string]$m.Name)
     }
 
     $serverProcess = $null
@@ -261,7 +285,7 @@ foreach ($m in $Models) {
         $serverForRun = if ($m.ContainsKey("Server") -and -not [string]::IsNullOrWhiteSpace($m.Server)) { $m.Server } else { $Server }
         $serverProcess = Start-LoggedProcess -FilePath $serverForRun -ArgumentList $serverArgs -WorkingDirectory $Root -StdOutLog $serverOut -StdErrLog $serverErr
         Write-Host "Started llama-server PID $($serverProcess.Id)"
-        Wait-Model -Alias $m.Alias
+        Wait-Model -Alias $runAlias
 
         $env:BENCHLOOP_TEMPERATURE = $temp
         $env:BENCHLOOP_TOP_P = $topP
@@ -274,7 +298,7 @@ foreach ($m in $Models) {
 
         $benchArgs = @(
             "run",
-            "--model", $m.Alias,
+            "--model", $runAlias,
             "--endpoint", $Endpoint,
             "--provider", "openai_compat",
             "--suites", $Suites,
@@ -300,3 +324,4 @@ foreach ($m in $Models) {
 }
 
 Write-Host "All README BenchLoop runs finished."
+exit 0

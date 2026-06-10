@@ -1,126 +1,80 @@
-﻿import * as fs from 'fs';
+﻿import { readFileSync } from 'fs';
 
 function solve(): void {
-    const input = fs.readFileSync(0, "utf8").trim();
-    const lines = input.split('\n');
-    const [H, W] = lines[0].trim().split(/\s+/).map(Number);
-    const grid = lines.slice(1).filter(line => line.length > 0);
-
-    let startRow = -1, startCol = -1;
-    let targetRow = -1, targetCol = -1;
-
-    for (let r = 0; r < H; r++) {
-        for (let c = 0; c < W; c++) {
-            const char = grid[r][c];
-            if (char === 'S') {
-                startRow = r;
-                startCol = c;
-            } else if (char === 'T') {
-                targetRow = r;
-                targetCol = c;
+    const input: string = readFileSync(0, "utf8").trim();
+    const lines: string[] = input.split('\n');
+    
+    const firstLine: string[] = lines[0].split(' ').map(Number);
+    const H: number = firstLine[0];
+    const W: number = firstLine[1];
+    
+    const grid: string[][] = [];
+    let startR: number = -1;
+    let startC: number = -1;
+    let endR: number = -1;
+    let endC: number = -1;
+    
+    for (let r: number = 0; r < H; r++) {
+        grid[r] = lines[r + 1].split('');
+        for (let c: number = 0; c < W; c++) {
+            const cell: string = grid[r][c];
+            if (cell === 'S') {
+                startR = r;
+                startC = c;
+            } else if (cell === 'T') {
+                endR = r;
+                endC = c;
             }
         }
     }
-
-    const INF = Number.MAX_SAFE_INTEGER;
-    const dist = Array.from({ length: H }, () => Array(W).fill(INF));
-    dist[startRow][startCol] = 0;
-
-    class MinHeap {
-        heap: number[][] = [];
-
-        push(cost: number, r: number, c: number): void {
-            this.heap.push([cost, r, c]);
-            this._bubbleUp(this.heap.length - 1);
-        }
-
-        pop(): [number, number, number] | undefined {
-            if (this.heap.length === 0) return undefined;
-            const top = this.heap[0];
-            const last = this.heap.pop();
-            if (this.heap.length > 0 && last) {
-                this.heap[0] = last;
-                this._sinkDown(0);
-            }
-            return top;
-        }
-
-        isEmpty(): boolean {
-            return this.heap.length === 0;
-        }
-
-        private _bubbleUp(index: number): void {
-            while (index > 0) {
-                const parentIndex = Math.floor((index - 1) / 2);
-                if (this.heap[index][0] < this.heap[parentIndex][0]) {
-                    [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-                    index = parentIndex;
-                } else {
-                    break;
-                }
-            }
-        }
-
-        private _sinkDown(index: number): void {
-            const length = this.heap.length;
-            while (true) {
-                let leftChildIndex = 2 * index + 1;
-                let rightChildIndex = 2 * index + 2;
-                let smallestIndex = index;
-
-                if (leftChildIndex < length && this.heap[leftChildIndex][0] < this.heap[smallestIndex][0]) {
-                    smallestIndex = leftChildIndex;
-                }
-                if (rightChildIndex < length && this.heap[rightChildIndex][0] < this.heap[smallestIndex][0]) {
-                    smallestIndex = rightChildIndex;
-                }
-
-                if (smallestIndex !== index) {
-                    [this.heap[index], this.heap[smallestIndex]] = [this.heap[smallestIndex], this.heap[index]];
-                    index = smallestIndex;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-
-    const pq = new MinHeap();
-    pq.push(0, startRow, startCol);
-
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-    while (!pq.isEmpty()) {
-        const [cost, r, c] = pq.pop()!;
-
-        if (r === targetRow && c === targetCol) {
+    
+    const dist: number[][] = Array(H).fill(null).map(() => Array(W).fill(Infinity));
+    dist[startR][startC] = 0;
+    
+    // Priority queue: [cost, r, c]
+    // Using a simple array as a priority queue (min-heap simulation or just sorting)
+    // For large grids, a proper min-heap is better, but for typical competitive programming constraints,
+    // an array-based approach with sorting or unshift/unshift can work if N is small.
+    // However, to be safe and efficient, let's implement a simple min-heap or use Array.sort.
+    // Given the constraints are not specified, let's use Array.sort for simplicity as it's O(N log N) per extract.
+    
+    const pq: [number, number, number][] = [[0, startR, startC]];
+    
+    const directions: [number, number][] = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    
+    while (pq.length > 0) {
+        // Extract min
+        pq.sort((a, b) => a[0] - b[0]);
+        const [cost, r, c] = pq.shift()!;
+        
+        if (cost > dist[r][c]) continue;
+        
+        if (r === endR && c === endC) {
             console.log(cost);
             return;
         }
-
-        if (cost > dist[r][c]) continue;
-
+        
         for (const [dr, dc] of directions) {
-            const nr = r + dr;
-            const nc = c + dc;
-
+            const nr: number = r + dr;
+            const nc: number = c + dc;
+            
             if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
-                const char = grid[nr][nc];
-                if (char !== '#') {
-                    let enterCost = 0;
-                    if (char >= '0' && char <= '9') {
-                        enterCost = char.charCodeAt(0) - 48;
-                    }
-                    const newCost = cost + enterCost;
-                    if (newCost < dist[nr][nc]) {
-                        dist[nr][nc] = newCost;
-                        pq.push(newCost, nr, nc);
-                    }
+                const cell: string = grid[nr][nc];
+                if (cell === '#') continue;
+                
+                let newCost: number = cost;
+                if (cell !== 'S' && cell !== 'T') {
+                    newCost += parseInt(cell, 10);
+                }
+                
+                if (newCost < dist[nr][nc]) {
+                    dist[nr][nc] = newCost;
+                    pq.push([newCost, nr, nc]);
                 }
             }
         }
     }
-
+    
     console.log(-1);
 }
 

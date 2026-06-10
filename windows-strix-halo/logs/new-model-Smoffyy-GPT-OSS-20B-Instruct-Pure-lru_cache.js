@@ -35,76 +35,58 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class Node {
-    constructor(key, value) {
+    constructor(key, val) {
         this.prev = null;
         this.next = null;
         this.key = key;
-        this.value = value;
+        this.val = val;
     }
 }
 class LRUCache {
     constructor(capacity) {
-        this.size = 0;
         this.map = new Map();
-        this.head = null; // most recent
-        this.tail = null; // least recent
         this.capacity = capacity;
+        this.head = new Node('', 0); // dummy head (most recent)
+        this.tail = new Node('', 0); // dummy tail (least recent)
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
     }
-    moveToHead(node) {
-        if (this.head === node)
-            return;
-        this.removeNode(node);
-        this.addNodeAtHead(node);
+    remove(node) {
+        const prev = node.prev;
+        const next = node.next;
+        prev.next = next;
+        next.prev = prev;
     }
-    addNodeAtHead(node) {
-        node.prev = null;
-        node.next = this.head;
-        if (this.head)
-            this.head.prev = node;
-        this.head = node;
-        if (!this.tail)
-            this.tail = node;
-    }
-    removeNode(node) {
-        if (node.prev)
-            node.prev.next = node.next;
-        else
-            this.head = node.next;
-        if (node.next)
-            node.next.prev = node.prev;
-        else
-            this.tail = node.prev;
-        node.prev = null;
-        node.next = null;
-    }
-    removeTail() {
-        if (!this.tail)
-            return;
-        const node = this.tail;
-        this.removeNode(node);
-        this.map.delete(node.key);
-        this.size--;
+    addToHead(node) {
+        const first = this.head.next;
+        node.next = first;
+        node.prev = this.head;
+        this.head.next = node;
+        first.prev = node;
     }
     get(key) {
         const node = this.map.get(key);
         if (!node)
             return -1;
-        this.moveToHead(node);
-        return node.value;
+        this.remove(node);
+        this.addToHead(node);
+        return node.val;
     }
     put(key, value) {
         const node = this.map.get(key);
         if (node) {
-            node.value = value;
-            this.moveToHead(node);
+            node.val = value;
+            this.remove(node);
+            this.addToHead(node);
         }
         else {
             const newNode = new Node(key, value);
             this.map.set(key, newNode);
-            this.addNodeAtHead(newNode);
-            this.size++;
-            if (this.size > this.capacity) {
-                this.removeTail();
+            this.addToHead(newNode);
+            if (this.map.size > this.capacity) {
+                const lru = this.tail.prev;
+                this.remove(lru);
+                this.map.delete(lru.key);
             }
         }
     }
@@ -112,51 +94,51 @@ class LRUCache {
         const node = this.map.get(key);
         if (!node)
             return;
-        this.removeNode(node);
+        this.remove(node);
         this.map.delete(key);
-        this.size--;
     }
-    getKeys() {
-        const keys = [];
-        let curr = this.head;
-        while (curr) {
-            keys.push(curr.key);
-            curr = curr.next;
+    getKeysFromMRUtoLRU() {
+        const res = [];
+        let cur = this.head.next;
+        while (cur && cur !== this.tail) {
+            res.push(cur.key);
+            cur = cur.next;
         }
-        return keys;
+        return res;
     }
 }
 const input = fs.readFileSync(0, 'utf8').trimEnd().split('\n');
-if (input.length === 0)
+if (input.length === 0) {
+    console.log('EMPTY');
+    console.log('EMPTY');
     process.exit(0);
+}
 const [CStr, NStr] = input[0].trim().split(/\s+/);
 const capacity = parseInt(CStr, 10);
 const N = parseInt(NStr, 10);
 const cache = new LRUCache(capacity);
 const getResults = [];
 for (let i = 1; i <= N; i++) {
-    const line = input[i].trim();
+    const line = input[i];
     if (!line)
         continue;
-    const parts = line.split(/\s+/);
+    const parts = line.trim().split(/\s+/);
     const cmd = parts[0];
-    if (cmd === 'GET') {
-        const key = parts[1];
-        const val = cache.get(key);
-        getResults.push(val);
-    }
-    else if (cmd === 'PUT') {
+    if (cmd === 'PUT') {
         const key = parts[1];
         const value = parseInt(parts[2], 10);
         cache.put(key, value);
+    }
+    else if (cmd === 'GET') {
+        const key = parts[1];
+        const val = cache.get(key);
+        getResults.push(val.toString());
     }
     else if (cmd === 'DEL') {
         const key = parts[1];
         cache.del(key);
     }
 }
-const out1 = getResults.length > 0 ? getResults.join(' ') : 'EMPTY';
-const keys = cache.getKeys();
-const out2 = keys.length > 0 ? keys.join(' ') : 'EMPTY';
-console.log(out1);
-console.log(out2);
+console.log(getResults.length > 0 ? getResults.join(' ') : 'EMPTY');
+const keys = cache.getKeysFromMRUtoLRU();
+console.log(keys.length > 0 ? keys.join(' ') : 'EMPTY');

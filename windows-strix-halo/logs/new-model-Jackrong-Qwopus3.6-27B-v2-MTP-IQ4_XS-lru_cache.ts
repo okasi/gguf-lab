@@ -1,141 +1,106 @@
-﻿import * as fs from 'fs';
-
-class Node {
-    key: string;
-    value: number;
-    prev: Node | null;
-    next: Node | null;
-    constructor(key: string, value: number) {
-        this.key = key;
-        this.value = value;
-        this.prev = null;
-        this.next = null;
-    }
-}
+﻿import fs from "fs";
 
 class LRUCache {
-    private capacity: number;
-    private size: number;
-    private cache: Map<string, Node>;
-    private head: Node;
-    private tail: Node;
+  private capacity: number;
+  private cacheMap: Map<string, number>;
+  private keyOrder: string[];
+  private keyIndex: Map<string, number>;
 
-    constructor(capacity: number) {
-        this.capacity = capacity;
-        this.size = 0;
-        this.cache = new Map();
-        this.head = new Node('', 0);
-        this.tail = new Node('', 0);
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
-    }
+  constructor(capacity: number) {
+    this.capacity = capacity;
+    this.cacheMap = new Map();
+    this.keyOrder = [];
+    this.keyIndex = new Map();
+  }
 
-    private insertAtHead(node: Node): void {
-        node.prev = this.head;
-        node.next = this.head.next;
-        this.head.next.prev = node;
-        this.head.next = node;
+  public get(key: string): number | null {
+    if (!this.cacheMap.has(key)) {
+      return null;
     }
+    this.moveToEnd(key);
+    return this.cacheMap.get(key)!;
+  }
 
-    private removeNode(node: Node): void {
-        node.prev!.next = node.next!;
-        node.next!.prev = node.prev!;
-        node.prev = null;
-        node.next = null;
+  public put(key: string, value: number): void {
+    if (this.cacheMap.has(key)) {
+      this.cacheMap.set(key, value);
+      this.moveToEnd(key);
+      return;
     }
+    if (this.cacheMap.size >= this.capacity) {
+      const leastRecentKey = this.keyOrder[0];
+      this.keyOrder.shift();
+      this.keyIndex.delete(leastRecentKey);
+      this.cacheMap.delete(leastRecentKey);
+    }
+    this.cacheMap.set(key, value);
+    this.keyOrder.push(key);
+    this.keyIndex.set(key, this.keyOrder.length - 1);
+  }
 
-    private moveToFront(node: Node): void {
-        this.removeNode(node);
-        this.insertAtHead(node);
+  public del(key: string): void {
+    if (!this.cacheMap.has(key)) {
+      return;
     }
+    const index = this.keyIndex.get(key)!;
+    this.keyOrder.splice(index, 1);
+    this.keyIndex.delete(key);
+    for (let i = index; i < this.keyOrder.length; i++) {
+      this.keyIndex.set(this.keyOrder[i], i);
+    }
+    this.cacheMap.delete(key);
+  }
 
-    private removeTail(): Node | null {
-        const node = this.tail.prev;
-        if (node === this.head) return null;
-        this.removeNode(node);
-        return node;
-    }
+  public getKeysMostRecentToLeastRecent(): string[] {
+    return this.keyOrder.slice().reverse();
+  }
 
-    get(key: string): number | null {
-        const node = this.cache.get(key);
-        if (!node) return null;
-        this.moveToFront(node);
-        return node.value;
+  private moveToEnd(key: string): void {
+    const index = this.keyIndex.get(key)!;
+    if (index === this.keyOrder.length - 1) {
+      return;
     }
-
-    put(key: string, value: number): void {
-        const node = this.cache.get(key);
-        if (node) {
-            node.value = value;
-            this.moveToFront(node);
-            return;
-        }
-        if (this.size >= this.capacity) {
-            const removed = this.removeTail();
-            if (removed) {
-                this.cache.delete(removed.key);
-            }
-        }
-        const newNode = new Node(key, value);
-        this.insertAtHead(newNode);
-        this.cache.set(key, newNode);
-        this.size++;
+    this.keyOrder.splice(index, 1);
+    this.keyOrder.push(key);
+    this.keyIndex.set(key, this.keyOrder.length - 1);
+    for (let i = index; i < this.keyOrder.length - 1; i++) {
+      this.keyIndex.set(this.keyOrder[i], i);
     }
-
-    del(key: string): void {
-        const node = this.cache.get(key);
-        if (!node) return;
-        this.removeNode(node);
-        this.cache.delete(key);
-        this.size--;
-    }
-
-    getKeysFromMostRecentToLeast(): string[] {
-        const keys: string[] = [];
-        let curr = this.head.next;
-        while (curr !== this.tail) {
-            keys.push(curr.key);
-            curr = curr.next!;
-        }
-        return keys;
-    }
+  }
 }
 
-const input = fs.readFileSync(0, 'utf8').trim();
-const lines = input.split(/\r?\n/);
-const [C, N] = lines[0].split(' ').map(Number);
+function main(): void {
+  const input = fs.readFileSync(0, "utf8").trim();
+  const lines = input.split("\n");
+  const firstLine = lines[0].split(" ");
+  const C = parseInt(firstLine[0], 10);
+  const N = parseInt(firstLine[1], 10);
 
-const lru = new LRUCache(C);
-const getResults: number[] = [];
+  const lru = new LRUCache(C);
+  const getResults: number[] = [];
 
-for (let i = 1; i <= N; i++) {
-    const line = lines[i];
-    if (!line) continue;
-    const parts = line.split(' ');
+  for (let i = 1; i <= N; i++) {
+    const parts = lines[i].split(" ");
     const op = parts[0];
-    if (op === 'PUT') {
-        const key = parts[1];
-        const value = Number(parts[2]);
-        lru.put(key, value);
-    } else if (op === 'GET') {
-        const key = parts[1];
-        const res = lru.get(key);
-        getResults.push(res !== null ? res : -1);
-    } else if (op === 'DEL') {
-        const key = parts[1];
-        lru.del(key);
+    const key = parts[1];
+
+    if (op === "GET") {
+      const val = lru.get(key);
+      getResults.push(val === null ? -1 : val);
+    } else if (op === "PUT") {
+      const value = parseInt(parts[2], 10);
+      lru.put(key, value);
+    } else if (op === "DEL") {
+      lru.del(key);
     }
+  }
+
+  const getOutput = getResults.length > 0 ? getResults.join(" ") : "EMPTY";
+  const keys = lru.getKeysMostRecentToLeastRecent();
+  const keyOutput = keys.length > 0 ? keys.join(" ") : "EMPTY";
+
+  console.log(getOutput);
+  console.log(keyOutput);
 }
 
-if (getResults.length === 0) {
-    console.log('EMPTY');
-} else {
-    console.log(getResults.join(' '));
-}
-
-const keys = lru.getKeysFromMostRecentToLeast();
-if (keys.length === 0) {
-    console.log('EMPTY');
-} else {
-    console.log(keys.join(' '));
-}
+main();

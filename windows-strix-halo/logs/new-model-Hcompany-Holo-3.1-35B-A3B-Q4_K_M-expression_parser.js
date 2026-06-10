@@ -1,117 +1,116 @@
 "use strict";
-const fs = require('fs');
-const input = fs.readFileSync(0, 'utf8').trim();
-// Tokenizer
-function tokenize(expression) {
-    const tokens = [];
-    let num = '';
-    for (let i = 0; i < expression.length; i++) {
-        const ch = expression[i];
-        if (/\d/.test(ch)) {
-            num += ch;
-        }
-        else {
-            if (num) {
-                tokens.push(num);
-                num = '';
-            }
-            if (/[+*/()-]/.test(ch)) {
-                tokens.push(ch);
-            }
-        }
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
-    if (num) {
-        tokens.push(num);
-    }
-    return tokens;
-}
-// Shunting-yard algorithm
-function shuntingYard(tokens) {
-    const output = [];
-    const operators = [];
-    const precedence = {
-        '+': 1,
-        '-': 1,
-        '*': 2,
-        '/': 2,
-        'u+': 3,
-        'u-': 3,
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
     };
-    const isOperator = (token) => /[+\-*/]/.test(token);
-    const is, unaryOperator = (token, index) => {
-        if (token !== '+' && token !== '-')
-            return false;
-        if (index === 0)
-            return true;
-        const prev = tokens[index - 1];
-        return prev === '(' || isOperator(prev);
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
     };
-    for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        if (/\d/.test(token)) {
-            output.push(token);
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs = __importStar(require("fs"));
+const input = fs.readFileSync(0, "utf8").trim();
+const operators = {
+    '+': { type: '+', precedence: 1 },
+    '-': { type: '-', precedence: 1 },
+    '*': { type: '*', precedence: 2 },
+    '/': { type: '/', precedence: 2 },
+    '(': { type: '(', precedence: 0 },
+    ')': { type: ')', precedence: 0 }
+};
+function shuntingYard(expression) {
+    const queue = [];
+    const stack = [];
+    let currentNumber = "";
+    let index = 0;
+    while (index < expression.length) {
+        const char = expression[index];
+        if (/\d/.test(char) || char === '.') {
+            currentNumber += char;
         }
-        else if (token === '(') {
-            operators.push(token);
-        }
-        else if (token === ')') {
-            while (operators.length && operators[operators.length - 1] !== '(') {
-                output.push(operators.pop());
+        else if (char === '+' || char === '-' || char === '*' || char === '/' || char === '(' || char === ')') {
+            if (currentNumber.length > 0) {
+                queue.push(parseFloat(currentNumber));
+                currentNumber = "";
             }
-            operators.pop(); // Remove '('
-        }
-        else if (isOperator(token)) {
-            if (isUnaryOperator(token, i)) {
-                operators.push('u' + token);
+            const op = operators[char];
+            if (op.type === '(') {
+                stack.push(op);
+            }
+            else if (op.type === ')') {
+                while (stack.length > 0 && stack[stack.length - 1].type !== '(') {
+                    queue.push(stack.pop());
+                }
+                stack.pop();
             }
             else {
-                while (operators.length &&
-                    precedence[operators[operators.length - 1]] >= precedence[token]) {
-                    output.push(operators.pop());
+                while (stack.length > 0 && stack[stack.length - 1].precedence >= op.precedence) {
+                    queue.push(stack.pop());
                 }
-                operators.push(token);
+                stack.push(op);
             }
         }
+        index++;
     }
-    while (operators.length) {
-        output.push(operators.pop());
+    if (currentNumber.length > 0) {
+        queue.push(parseFloat(currentNumber));
     }
-    return output;
+    while (stack.length > 0) {
+        queue.push(stack.pop());
+    }
+    return queue;
 }
-// Evaluate postfix expression
-function evaluatePostfix(postfix) {
+function evaluate(expression) {
+    const queue = shuntingYard(expression);
     const stack = [];
-    for (const token of postfix) {
-        if (/\d/.test(token)) {
-            stack.push(parseInt(token, 10));
-        }
-        else if (token === 'u+') {
-            stack.push(stack.pop());
-        }
-        else if (token === 'u-') {
-            stack.push(-stack.pop());
+    for (const token of queue) {
+        if (typeof token === "number") {
+            stack.push(token);
         }
         else {
-            const b = stack.pop();
-            const a = stack.pop();
-            switch (token) {
+            const right = stack.pop();
+            const left = stack.pop();
+            switch (token.type) {
                 case '+':
-                    stack.push(a + b);
+                    stack.push(left + right);
                     break;
                 case '-':
-                    stack.push(a - b);
+                    stack.push(left - right);
                     break;
                 case '*':
-                    stack.push(a * b);
+                    stack.push(left * right);
                     break;
                 case '/':
-                    stack.push(Math.trunc(a / b));
+                    stack.push(Math.trunc(left / right));
                     break;
             }
         }
     }
     return stack[0];
 }
-const tokens = tokenize(input);
-const postfix = shuntingYard(tokens);
-console.log(evaluatePostfix(postfix));
+console.log(evaluate(input));

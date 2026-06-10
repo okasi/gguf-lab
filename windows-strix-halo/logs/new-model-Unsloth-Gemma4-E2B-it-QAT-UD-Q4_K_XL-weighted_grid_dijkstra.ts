@@ -2,16 +2,30 @@
 
 /**
  * Finds the minimum cost path in a rectangular grid using Dijkstra's algorithm.
- * @param H Height of the grid.
- * @param W Width of the grid.
- * @param grid The 2D character array representing the grid.
- * @returns The minimum cost, or -1 if unreachable.
  */
-function solve(H, W, grid) {
-    // 1. Parse the grid and identify S and T locations
+function solve() {
+    const input = fs.readFileSync(0, "utf8").trim().split('\n');
+
+    if (input.length === 0) return;
+
+    // Parse H and W
+    const [H, W] = input[0].trim().split(/\s+/).map(Number);
+
+    if (H === 0 || W === 0) {
+        console.log(-1);
+        return;
+    }
+
+    // Parse grid
+    const grid = [];
+    for (let i = 1; i <= H; i++) {
+        grid.push(input[i].trim().split(''));
+    }
+
     let start = null;
     let target = null;
 
+    // Find start and target
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
             if (grid[r][c] === 'S') {
@@ -22,108 +36,134 @@ function solve(H, W, grid) {
         }
     }
 
-    if (!start || !target) return -1; // Should not happen based on problem description
+    if (!start || !target) {
+        // Should not happen based on problem description, but handle defensively
+        console.log(-1);
+        return;
+    }
 
-    // 2. Initialization for Dijkstra's
-    // Distance map: stores the minimum cost to reach (r, c)
-    const dist = Array(H).fill(0).map(() => Array(W).fill(Infinity));
-    
-    // Priority Queue: stores [cost, r, c]. Min-heap based on cost.
-    // Using an array and sorting/manual heap management is simpler for competitive programming
-    // environments if performance constraints allow, but a proper MinPriorityQueue is ideal.
-    // We'll simulate the priority queue behavior using an array and sorting for simplicity.
-    const pq = [];
+    // Dijkstra's Algorithm setup
+    const INF = Infinity;
+    // dist[r][c] stores the minimum cost to reach cell (r, c)
+    const dist = Array(H).fill(0).map(() => Array(W).fill(INF));
+    // Priority Queue stores [cost, row, col]
+    // We use a simple array simulation for the PQ and sort it, 
+    // as a proper binary heap implementation is complex in a single file submission, 
+    // though less efficient. For competitive programming style, this is often accepted 
+    // if constraints are small, but we'll implement a basic min-priority-queue logic.
 
-    // Start cell cost is 0
-    dist[start.r][start.c] = 0;
-    pq.push([0, start.r, start.c]);
-
-    // Directions: up, down, left, right
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-    // 3. Dijkstra's Algorithm
-    while (pq.length > 0) {
-        // Extract minimum cost element (Simulating Extract-Min from Priority Queue)
-        pq.sort((a, b) => a[0] - b[0]);
-        const [currentCost, r, c] = pq.shift();
-
-        if (currentCost > dist[r][c]) {
-            continue;
+    // Simple Min-Heap structure for the Priority Queue
+    class PriorityQueue {
+        constructor() {
+            this.heap = [];
         }
 
-        // Check if we reached the target
+        enqueue(element) {
+            this.heap.push(element);
+            this.bubbleUp(this.heap.length - 1);
+        }
+
+        dequeue() {
+            if (this.isEmpty()) return null;
+            if (this.heap.length === 1) return this.heap.pop();
+            const min = this.heap[0];
+            this.heap[0] = this.heap.pop();
+            this.bubbleDown(0);
+            return min;
+        }
+
+        isEmpty() {
+            return this.heap.length === 0;
+        }
+
+        bubbleUp(index) {
+            while (index > 0) {
+                let parentIndex = Math.floor((index - 1) / 2);
+                if (this.heap[index][0] < this.heap[parentIndex][0]) {
+                    [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                    index = parentIndex;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        bubbleDown(index) {
+            let smallest = index;
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
+
+            if (left < this.heap.length && this.heap[left][0] < this.heap[smallest][0]) {
+                smallest = left;
+            }
+            if (right < this.heap.length && this.heap[right][0] < this.heap[smallest][0]) {
+                smallest = right;
+            }
+
+            if (smallest !== index) {
+                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+                this.bubbleDown(smallest);
+            }
+        }
+    }
+
+    const pq = new PriorityQueue();
+
+    // Initialize start node
+    dist[start.r][start.c] = 0;
+    // Priority Queue stores [cost, r, c]
+    pq.enqueue([0, start.r, start.c]);
+
+    const dr = [-1, 1, 0, 0]; // Up, Down, Left, Right
+    const dc = [0, 0, -1, 1];
+
+    while (!pq.isEmpty()) {
+        const [d, r, c] = pq.dequeue();
+
+        // If we found a path longer than the recorded minimum, skip
+        if (d > dist[r][c]) continue;
+
         if (r === target.r && c === target.c) {
-            return currentCost;
+            console.log(d);
+            return;
         }
 
         // Explore neighbors
-        for (const [dr, dc] of directions) {
-            const nr = r + dr;
-            const nc = c + dc;
+        for (let i = 0; i < 4; i++) {
+            const nr = r + dr[i];
+            const nc = c + dc[i];
 
             // Check bounds
             if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
                 const cell = grid[nr][nc];
 
-                // Check if it's a wall
-                if (cell === '#') {
+                // Check for wall
+                if (cell === '#') continue;
+
+                let cost = 0;
+                if (cell >= '0' && cell <= '9') {
+                    cost = parseInt(cell);
+                } else if (cell === 'S' || cell === 'T') {
+                    // Entering S or T costs 0, cost is already handled by initial distance setup, 
+                    // but for consistency in transition:
+                    cost = 0;
+                } else {
+                    // Should not happen if input is valid, but treat unknown as wall or ignore
                     continue;
                 }
 
-                // Calculate cost to enter the new cell
-                let moveCost = 0;
-                if (cell >= '0' && cell <= '9') {
-                    moveCost = parseInt(cell);
-                } 
-                // S and T have cost 0 to enter (as per problem statement)
-
-                const newDist = currentCost + moveCost;
+                const newDist = d + cost;
 
                 if (newDist < dist[nr][nc]) {
                     dist[nr][nc] = newDist;
-                    pq.push([newDist, nr, nc]);
+                    pq.enqueue([newDist, nr, nc]);
                 }
             }
         }
     }
 
-    // 4. If target is unreachable
-    return -1;
+    // If target is never reached
+    console.log(-1);
 }
 
-// Main execution block
-function main() {
-    try {
-        // Read all input from stdin
-        const input = fs.readFileSync(0, "utf8").trim().split('\n');
-
-        if (input.length === 0 || input[0].trim() === "") {
-            return;
-        }
-
-        // First line: H W
-        const [H, W] = input[0].trim().split(/\s+/).map(Number);
-        
-        // Next H lines: grid characters
-        const grid = [];
-        for (let i = 1; i <= H; i++) {
-            if (input[i]) {
-                grid.push(input[i].trim().split(''));
-            }
-        }
-
-        if (grid.length !== H) {
-            // Handle case where input might be malformed (e.g., missing lines)
-            // For strict adherence, we assume valid input format is provided.
-            return;
-        }
-
-        const result = solve(H, W, grid);
-        console.log(result);
-
-    } catch (e) {
-        // console.error("Error:", e); // Suppress error output for clean execution if strictly required
-    }
-}
-
-main();
+solve();

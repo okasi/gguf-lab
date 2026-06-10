@@ -34,7 +34,84 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-class Node {
+class LRUCache {
+    constructor(capacity) {
+        this.capacity = capacity;
+        this.map = new Map();
+        this.head = new DLLNode("", -1);
+        this.tail = new DLLNode("", -1);
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
+    }
+    // Remove a node from the doubly linked list
+    removeNode(node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+    // Move a node to the front (most recently used)
+    moveToFront(node) {
+        this.removeNode(node);
+        this.addAtFront(node);
+    }
+    // Add a node to the front (most recently used)
+    addAtFront(node) {
+        node.next = this.head.next;
+        node.prev = this.head;
+        this.head.next.prev = node;
+        this.head.next = node;
+    }
+    // Remove the last node (least recently used)
+    removeLast() {
+        if (this.tail.prev === this.head) {
+            return null;
+        }
+        const last = this.tail.prev;
+        this.removeNode(last);
+        return last;
+    }
+    get(key) {
+        const node = this.map.get(key);
+        if (node === undefined) {
+            return -1;
+        }
+        this.moveToFront(node);
+        return node.value;
+    }
+    put(key, value) {
+        const node = this.map.get(key);
+        if (node !== undefined) {
+            node.value = value;
+            this.moveToFront(node);
+            return;
+        }
+        const newNode = new DLLNode(key, value);
+        this.addAtFront(newNode);
+        this.map.set(key, newNode);
+        if (this.map.size > this.capacity) {
+            const last = this.removeLast();
+            if (last !== null) {
+                this.map.delete(last.key);
+            }
+        }
+    }
+    delete(key) {
+        const node = this.map.get(key);
+        if (node !== undefined) {
+            this.removeNode(node);
+            this.map.delete(key);
+        }
+    }
+    getMostRecentlyUsedKeys() {
+        const keys = [];
+        let current = this.head.next;
+        while (current !== this.tail) {
+            keys.push(current.key);
+            current = current.next;
+        }
+        return keys;
+    }
+}
+class DLLNode {
     constructor(key, value) {
         this.key = key;
         this.value = value;
@@ -42,124 +119,47 @@ class Node {
         this.next = null;
     }
 }
-class DoublyLinkedList {
-    constructor() {
-        this.head = new Node('', 0);
-        this.tail = new Node('', 0);
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
-    }
-    addHead(node) {
-        node.prev = this.head;
-        node.next = this.head.next;
-        this.head.next.prev = node;
-        this.head.next = node;
-    }
-    remove(node) {
-        node.prev.next = node.next;
-        node.next.prev = node.prev;
-        node.prev = null;
-        node.next = null;
-    }
-    moveToHead(node) {
-        this.remove(node);
-        this.addHead(node);
-    }
-    removeTail() {
-        if (this.tail.prev === this.head) {
-            return null;
-        }
-        const node = this.tail.prev;
-        this.remove(node);
-        return node;
-    }
-}
-class LRUCache {
-    constructor(capacity) {
-        this.capacity = capacity;
-        this.size = 0;
-        this.map = new Map();
-        this.list = new DoublyLinkedList();
-    }
-    get(key) {
-        const node = this.map.get(key);
-        if (!node) {
-            return -1;
-        }
-        this.list.moveToHead(node);
-        return node.value;
-    }
-    put(key, value) {
-        const node = this.map.get(key);
-        if (node) {
-            node.value = value;
-            this.list.moveToHead(node);
-            return;
-        }
-        const newNode = new Node(key, value);
-        this.list.addHead(newNode);
-        this.map.set(key, newNode);
-        this.size++;
-        if (this.size > this.capacity) {
-            const tailNode = this.list.removeTail();
-            if (tailNode) {
-                this.map.delete(tailNode.key);
-                this.size--;
-            }
+function main() {
+    const input = fs.readFileSync(0, "utf8").trim();
+    const lines = input.split("\n");
+    const firstLine = lines[0].split(" ");
+    const capacity = parseInt(firstLine[0], 10);
+    const numOperations = parseInt(firstLine[1], 10);
+    const cache = new LRUCache(capacity);
+    const getResults = [];
+    for (let i = 1; i <= numOperations; i++) {
+        const line = lines[i].trim();
+        const parts = line.split(" ");
+        const operation = parts[0];
+        const key = parts[1];
+        switch (operation) {
+            case "PUT":
+                const value = parseInt(parts[2], 10);
+                cache.put(key, value);
+                break;
+            case "GET":
+                const result = cache.get(key);
+                getResults.push(result);
+                break;
+            case "DEL":
+                cache.delete(key);
+                break;
         }
     }
-    delete(key) {
-        const node = this.map.get(key);
-        if (!node) {
-            return;
-        }
-        this.list.remove(node);
-        this.map.delete(key);
-        this.size--;
+    // Output GET results
+    if (getResults.length === 0) {
+        console.log("EMPTY");
     }
-    getKeysInOrder() {
-        const keys = [];
-        let current = this.list.head.next;
-        while (current && current !== this.list.tail) {
-            keys.push(current.key);
-            current = current.next;
-        }
-        return keys;
+    else {
+        console.log(getResults.join(" "));
+    }
+    // Output remaining keys
+    const remainingKeys = cache.getMostRecentlyUsedKeys();
+    if (remainingKeys.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
+        console.log(remainingKeys.join(" "));
     }
 }
-const input = fs.readFileSync(0, "utf8").trim();
-const lines = input.split('\n');
-const firstLine = lines[0].split(' ');
-const capacity = parseInt(firstLine[0], 10);
-const numOps = parseInt(firstLine[1], 10);
-const cache = new LRUCache(capacity);
-const getResults = [];
-for (let i = 1; i <= numOps; i++) {
-    const parts = lines[i].split(' ');
-    const operation = parts[0];
-    const key = parts[1];
-    if (operation === 'GET') {
-        const value = cache.get(key);
-        getResults.push(value);
-    }
-    else if (operation === 'PUT') {
-        const value = parseInt(parts[2], 10);
-        cache.put(key, value);
-    }
-    else if (operation === 'DEL') {
-        cache.delete(key);
-    }
-}
-if (getResults.length === 0) {
-    console.log('EMPTY');
-}
-else {
-    console.log(getResults.join(' '));
-}
-const remainingKeys = cache.getKeysInOrder();
-if (remainingKeys.length === 0) {
-    console.log('EMPTY');
-}
-else {
-    console.log(remainingKeys.join(' '));
-}
+main();

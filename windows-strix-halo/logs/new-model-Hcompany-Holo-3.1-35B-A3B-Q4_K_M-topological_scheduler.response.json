@@ -5,33 +5,32 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "import { readFileSync } from \u0027fs\u0027;\n\n// Binary heap implementation for priority queue\nclass MinHeap\u003cT\u003e {\n  private heap: T[];\n  private compare: (a: T, b: T) =\u003e number;\n\n  constructor(compare: (a: T, b: T) =\u003e number) {\n    this.heap = [];\n    this.compare = compare;\n  }\n\n  push(item: T): void {\n    this.heap.push(item);\n    this.bubbleUp(this.heap.length - 1);\n  }\n\n  pop(): T | undefined {\n    if (this.heap.length === 0) return undefined;\n    const top = this.heap[0];\n    const last = this.heap.pop()!;\n    if (this.heap.length \u003e 0) {\n      this.heap[0] = last;\n      this.bubbleDown(0);\n    }\n    return top;\n  }\n\n  peek(): T | undefined {\n    return this.heap[0];\n  }\n\n  get length(): number {\n    return this.heap.length;\n  }\n\n  private bubbleUp(index: number): void {\n    while (index \u003e 0) {\n      const parentIndex = Math.floor((index - 1) / 2);\n      if (this.compare(this.heap[index], this.heap[parentIndex]) \u003e= 0) break;\n      [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];\n      index = parentIndex;\n    }\n  }\n\n  private bubbleDown(index: number): void {\n    while (true) {\n      let smallest = index;\n      const left = 2 * index + 1;\n      const right = 2 * index + 2;\n\n      if (left \u003c this.heap.length \u0026\u0026 this.compare(this.heap[left], this.heap[smallest]) \u003c 0) {\n        smallest = left;\n      }\n      if (right \u003c this.heap.length \u0026\u0026 this.compare(this.heap[right], this.heap[smallest]) \u003c 0) {\n        smallest = right;\n      }\n      if (smallest === index) break;\n      [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n      index = smallest;\n    }\n  }\n}\n\n// Parse input\nconst input = readFileSync(0, \u0027utf8\u0027).trim().split(\u0027\\n\u0027);\nconst [N, M] = input[0].split(\u0027 \u0027).map(Number);\nconst tasks = input[1].split(\u0027 \u0027);\nconst edges: [string, string][] = [];\n\nfor (let i = 2; i \u003c 2 + M; i++) {\n  const [A, B] = input[i].split(\u0027 \u0027);\n  edges.push([A, B]);\n}\n\n// Build adjacency list and in-degree count\nconst adjacencyList: Map\u003cstring, string[]\u003e = new Map();\nconst inDegree: Map\u003cstring, number\u003e = new Map();\n\nfor (const task of tasks) {\n  adjacencyList.set(task, []);\n  inDegree.set(task, 0);\n}\n\nfor (const [A, B] of edges) {\n  adjacencyList.get(A)!.push(B);\n  inDegree.set(B, inDegree.get(B)! + 1);\n}\n\n// Initialize priority queue with tasks having no dependencies\nconst pq = new MinHeap\u003cstring\u003e((a, b) =\u003e a.localeCompare(b));\nfor (const task of tasks) {\n  if (inDegree.get(task) === 0) {\n    pq.push(task);\n  }\n}\n\n// Perform topological sort\nconst order: string[] = [];\nwhile (pq.length \u003e 0) {\n  const current = pq.pop()!;\n  order.push(current);\n\n  for (const neighbor of adjacencyList.get(current)!) {\n    inDegree.set(neighbor, inDegree.get(neighbor)! - 1);\n    if (inDegree.get(neighbor) === 0) {\n      pq.push(neighbor);\n    }\n  }\n}\n\n// Output result\nif (order.length !== N) {\n  console.log(\u0027IMPOSSIBLE\u0027);\n} else {\n  console.log(order.join(\u0027 \u0027));\n}",
-                                        "reasoning_content":  "I see the user wants a TypeScript program for Node.js that performs topological sorting with a specific requirement for deterministic ordering. The problem is classic topological sort with the added constraint of choosing lexicographically smallest task names when multiple options are available.\n\nI need to implement an efficient solution that:\n1. Uses a priority queue (binary heap) to maintain the lexicographically smallest available tasks\n2. Processes tasks in topological order while respecting dependencies\n3. Handles cycle detection properly\n4. Reads input from stdin using fs.readFileSync\n5. Follows the O((N + M) log N) complexity requirement\n\nThe key insight is that I\u0027ll need to:\n- Build an adjacency list and in-degree count for each task\n- Use a min-heap (priority queue) to always select the lexicographically smallest available task\n- Process tasks by removing them from the heap, outputting them, and updating in-degrees of dependent tasks\n- Detect cycles by checking if we processed all tasks (if not, there\u0027s a cycle)\n\nI should implement a binary heap that maintains the lexicographically smallest element at the top. The heap will store task names, and I\u0027ll use it to efficiently select the next task to process.\n\nThe solution will read input, parse it, build the graph structure, and then perform the topological sort using the priority queue approach. I\u0027ll need to be careful about the cycle detection and the output format.\n\nI\u0027ll write the complete TypeScript code that implements all these requirements without using any external libraries for the priority queue.\n"
+                                        "content":  "import fs from \u0027fs\u0027;\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).toString().split(\u0027\\n\u0027).map(line =\u003e line.trim()).filter(Boolean);\nconst [N, M] = input[0].split(\u0027 \u0027).map(Number);\nconst tasks = input[1].split(\u0027 \u0027);\nconst adj: Record\u003cstring, Set\u003cstring\u003e\u003e = {};\nconst indegree: Record\u003cstring, number\u003e = {};\nfor (const task of tasks) {\n  adj[task] = new Set();\n  indegree[task] = 0;\n}\nfor (let i = 2; i \u003c 2 + M; i++) {\n  const [A, B] = input[i].split(\u0027 \u0027);\n  adj[A].add(B);\n  indegree[B]++;\n}\n\nclass MinHeap {\n  private data: string[] = [];\n\n  push(item: string): void {\n    this.data.push(item);\n    this.bubbleUp(this.data.length - 1);\n  }\n\n  pop(): string | undefined {\n    if (this.data.length === 0) return undefined;\n    if (this.data.length === 1) return this.data.pop();\n    const top = this.data[0];\n    this.data[0] = this.data.pop()!;\n    this.bubbleDown(0);\n    return top;\n  }\n\n  private bubbleUp(idx: number): void {\n    while (idx \u003e 0) {\n      const parentIdx = ((idx + 1) \u003e\u003e 1) - 1;\n      if (this.data[parentIdx] \u003c= this.data[idx]) break;\n      [this.data[parentIdx], this.data[idx]] = [this.data[idx], this.data[parentIdx]];\n      idx = parentIdx;\n    }\n  }\n\n  private bubbleDown(idx: number): void {\n    while (true) {\n      let min = idx;\n      const l = (idx \u003c\u003c 1) + 1, r = (idx \u003c\u003c 1) + 2;\n      if (l \u003c this.data.length \u0026\u0026 this.data[l] \u003c this.data[min]) min = l;\n      if (r \u003c this.data.length \u0026\u0026 this.data[r] \u003c this.data[min]) min = r;\n      if (min === idx) break;\n      [this.data[idx], this.data[min]] = [this.data[min], this.data[idx]];\n      idx = min;\n    }\n  }\n}\n\nconst heap = new MinHeap();\nfor (const task of tasks) {\n  if (indegree[task] === 0) heap.push(task);\n}\n\nconst result: string[] = [];\nwhile (heap.pop()) {\n  const cur = heap.pop()!;\n  result.push(cur);\n  for (const next of adj[cur]) {\n    indegree[next]--;\n    if (indegree[next] === 0) heap.push(next);\n  }\n}\n\nif (result.length !== N) {\n  console.log(\u0027IMPOSSIBLE\u0027);\n} else {\n  console.log(result.join(\u0027 \u0027));\n}"
                                     }
                     }
                 ],
-    "created":  1780963111,
-    "model":  "hcompany-holo-3.1-35b-a3b-q4-refresh",
-    "system_fingerprint":  "b9535-da87e9b61",
+    "created":  1781091795,
+    "model":  "hcompany-holo-3.1-35b-a3b-q4-refresh-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  1249,
-                  "prompt_tokens":  191,
-                  "total_tokens":  1440,
+                  "completion_tokens":  672,
+                  "prompt_tokens":  193,
+                  "total_tokens":  865,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-SuIbf6gLoinq2ILx228aiv4MilvwUlBN",
+    "id":  "chatcmpl-MYzvs0i3axShSOOr8R7zAwE7uuEZqm1O",
     "timings":  {
                     "cache_n":  0,
-                    "prompt_n":  191,
-                    "prompt_ms":  309.166,
-                    "prompt_per_token_ms":  1.6186701570680628,
-                    "prompt_per_second":  617.7910895764735,
-                    "predicted_n":  1249,
-                    "predicted_ms":  19049.496,
-                    "predicted_per_token_ms":  15.251798238590872,
-                    "predicted_per_second":  65.56603912250488
+                    "prompt_n":  193,
+                    "prompt_ms":  311.958,
+                    "prompt_per_token_ms":  1.6163626943005183,
+                    "prompt_per_second":  618.6730264971566,
+                    "predicted_n":  672,
+                    "predicted_ms":  10317.137,
+                    "predicted_per_token_ms":  15.352882440476192,
+                    "predicted_per_second":  65.13434880238577
                 }
 }

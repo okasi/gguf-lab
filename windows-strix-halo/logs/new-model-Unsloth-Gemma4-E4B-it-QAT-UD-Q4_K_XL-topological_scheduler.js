@@ -34,13 +34,15 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-/**
- * A simple Min-Priority Queue implemented using an array representation of a Binary Heap.
- * Stores strings and prioritizes lexicographically smaller strings.
- */
 class PriorityQueue {
-    constructor() {
+    constructor(comparator) {
         this.heap = [];
+        this.comparator = (a, b) => {
+            // For lexicographically smallest task name, the priority should be the task name itself,
+            // and the comparison should prioritize smaller strings.
+            // Here, we treat the task name as the priority.
+            return a.toString().localeCompare(b.toString());
+        };
     }
     size() {
         return this.heap.length;
@@ -48,23 +50,11 @@ class PriorityQueue {
     isEmpty() {
         return this.heap.length === 0;
     }
-    getParentIndex(i) {
-        return Math.floor((i - 1) / 2);
+    peek() {
+        return this.heap.length > 0 ? this.heap[0].value : undefined;
     }
-    getLeftChildIndex(i) {
-        return 2 * i + 1;
-    }
-    getRightChildIndex(i) {
-        return 2 * i + 2;
-    }
-    swap(i, j) {
-        [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];
-    }
-    // Comparison function: lexicographically smaller has higher priority
-    compare(a, b) {
-        return a < b;
-    }
-    enqueue(element) {
+    enqueue(value, priority) {
+        const element = { value, priority };
         this.heap.push(element);
         this.bubbleUp(this.heap.length - 1);
     }
@@ -72,113 +62,101 @@ class PriorityQueue {
         if (this.isEmpty())
             return undefined;
         if (this.heap.length === 1)
-            return this.heap.pop();
-        const min = this.heap[0];
+            return this.heap.pop().value;
+        const min = this.heap[0].value;
         this.heap[0] = this.heap.pop();
-        this.bubbleDown(0);
+        this.sinkDown(0);
         return min;
     }
     bubbleUp(index) {
-        let currentIndex = index;
-        while (currentIndex > 0) {
-            const parentIndex = this.getParentIndex(currentIndex);
-            if (this.compare(this.heap[currentIndex], this.heap[parentIndex])) {
-                this.swap(currentIndex, parentIndex);
-                currentIndex = parentIndex;
+        while (index > 0) {
+            let parentIndex = Math.floor((index - 1) / 2);
+            if (this.compare(this.heap[index], this.heap[parentIndex]) < 0) {
+                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                index = parentIndex;
             }
             else {
                 break;
             }
         }
     }
-    bubbleDown(index) {
-        let currentIndex = index;
+    sinkDown(index) {
         const lastIndex = this.heap.length - 1;
         while (true) {
-            const left = this.getLeftChildIndex(currentIndex);
-            const right = this.getRightChildIndex(currentIndex);
-            let smallest = currentIndex;
-            // Check left child
-            if (left <= lastIndex && this.compare(this.heap[left], this.heap[smallest])) {
-                smallest = left;
+            let leftChildIndex = 2 * index + 1;
+            let rightChildIndex = 2 * index + 2;
+            let smallest = index;
+            if (leftChildIndex <= lastIndex && this.compare(this.heap[leftChildIndex], this.heap[smallest]) < 0) {
+                smallest = leftChildIndex;
             }
-            // Check right child
-            if (right <= lastIndex && this.compare(this.heap[right], this.heap[smallest])) {
-                smallest = right;
+            if (rightChildIndex <= lastIndex && this.compare(this.heap[rightChildIndex], this.heap[smallest]) < 0) {
+                smallest = rightChildIndex;
             }
-            if (smallest !== currentIndex) {
-                this.swap(currentIndex, smallest);
-                currentIndex = smallest;
+            if (smallest !== index) {
+                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+                index = smallest;
             }
             else {
                 break;
             }
         }
+    }
+    // Custom comparison logic based on task name lexicographical order
+    compare(a, b) {
+        return a.value.localeCompare(b.value);
     }
 }
 function solve() {
-    // Read all input from stdin
-    const input = fs.readFileSync(0, "utf8").trim().split("\n");
-    if (input.length < 2) {
+    const input = fs.readFileSync(0, "utf8").trim().split('\n');
+    if (input.length === 0 || input[0] === "") {
         return;
     }
-    // Parse N and M
-    const [n, m] = input[0].trim().split(/\s+/).map(Number);
-    // Parse task names
+    const [N, M] = input[0].trim().split(/\s+/).map(Number);
     const taskNames = input[1].trim().split(/\s+/);
-    if (taskNames.length !== n) {
-        // Handle case where N might be inconsistent with actual input
-        // For robustness, we proceed with min(N, taskNames.length) but assume consistency per problem statement
+    const adj = new Map();
+    const inDegree = new Map();
+    for (const name of taskNames) {
+        adj.set(name, []);
+        inDegree.set(name, 0);
     }
-    // 1. Initialize Graph and In-degrees
-    const adj = {};
-    const inDegree = {};
-    for (const task of taskNames) {
-        adj[task] = [];
-        inDegree[task] = 0;
-    }
-    // 2. Build Graph and calculate In-degrees
-    for (let i = 2; i < 2 + m; i++) {
+    for (let i = 2; i < 2 + M; i++) {
         const line = input[i].trim();
         if (!line)
             continue;
-        const parts = line.split(/\s+/);
-        if (parts.length < 2)
-            continue;
-        const [u, v] = parts; // u must be completed before v (u -> v)
-        if (adj[u] && adj[v]) {
-            adj[u].push(v);
-            inDegree[v]++;
+        const [A, B] = line.split(/\s+/);
+        if (adj.has(A) && adj.has(B)) {
+            adj.get(A).push(B);
+            inDegree.set(B, (inDegree.get(B) || 0) + 1);
         }
     }
-    // 3. Initialize Priority Queue with tasks having in-degree 0
-    const pq = new PriorityQueue();
-    for (const task of taskNames) {
-        if (inDegree[task] === 0) {
-            pq.enqueue(task);
+    // Use PriorityQueue to ensure lexicographically smallest task is chosen when multiple are ready
+    // The PriorityQueue implementation above is adapted to handle string comparison for ordering.
+    const pq = new PriorityQueue(null); // The comparator inside PQ handles the logic
+    for (const name of taskNames) {
+        if (inDegree.get(name) === 0) {
+            // Priority is irrelevant for the internal heap structure since we override comparison, 
+            // but we pass a dummy value.
+            pq.enqueue({ value: name, priority: name.charCodeAt(0) }, 0);
         }
     }
-    // 4. Topological Sort using PQ (Kahn's algorithm variant)
     const buildOrder = [];
     while (!pq.isEmpty()) {
-        // Dequeue the lexicographically smallest available task
         const currentTask = pq.dequeue();
-        buildOrder.push(currentTask);
-        // Process neighbors
-        for (const neighbor of adj[currentTask]) {
-            inDegree[neighbor]--;
-            // If in-degree drops to 0, add it to the PQ
-            if (inDegree[neighbor] === 0) {
-                pq.enqueue(neighbor);
+        const taskName = currentTask.value;
+        buildOrder.push(taskName);
+        const neighbors = adj.get(taskName) || [];
+        for (const neighbor of neighbors) {
+            inDegree.set(neighbor, inDegree.get(neighbor) - 1);
+            if (inDegree.get(neighbor) === 0) {
+                pq.enqueue({ value: neighbor, priority: neighbor.charCodeAt(0) }, 0);
             }
         }
     }
-    // 5. Output Result
-    if (buildOrder.length === n) {
-        console.log(buildOrder.join(" "));
+    if (buildOrder.length !== N) {
+        console.log("IMPOSSIBLE");
     }
     else {
-        console.log("IMPOSSIBLE");
+        console.log(buildOrder.join(" "));
     }
 }
 solve();

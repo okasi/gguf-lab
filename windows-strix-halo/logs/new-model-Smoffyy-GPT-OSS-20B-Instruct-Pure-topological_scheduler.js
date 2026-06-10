@@ -35,50 +35,51 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class MinHeap {
-    constructor(names) {
-        this.heap = [-1]; // dummy at index 0
-        this.names = names;
+    constructor(cmp) {
+        this.data = [];
+        this.cmp = cmp;
     }
-    push(v) {
-        this.heap.push(v);
-        this.bubbleUp(this.heap.length - 1);
+    size() {
+        return this.data.length;
+    }
+    push(item) {
+        this.data.push(item);
+        this.bubbleUp(this.data.length - 1);
     }
     pop() {
-        if (this.heap.length <= 1)
+        if (this.data.length === 0)
             return undefined;
-        const top = this.heap[1];
-        const last = this.heap.pop();
-        if (this.heap.length > 1) {
-            this.heap[1] = last;
-            this.bubbleDown(1);
+        const top = this.data[0];
+        const last = this.data.pop();
+        if (this.data.length > 0) {
+            this.data[0] = last;
+            this.bubbleDown(0);
         }
         return top;
     }
-    size() {
-        return this.heap.length - 1;
-    }
     bubbleUp(idx) {
-        while (idx > 1) {
-            const parent = idx >> 1;
-            if (this.names[this.heap[parent]] <= this.names[this.heap[idx]])
+        while (idx > 0) {
+            const parent = (idx - 1) >> 1;
+            if (this.cmp(this.data[idx], this.data[parent]) < 0) {
+                [this.data[idx], this.data[parent]] = [this.data[parent], this.data[idx]];
+                idx = parent;
+            }
+            else
                 break;
-            [this.heap[parent], this.heap[idx]] = [this.heap[idx], this.heap[parent]];
-            idx = parent;
         }
     }
     bubbleDown(idx) {
-        const len = this.heap.length;
+        const n = this.data.length;
         while (true) {
-            const left = idx << 1;
+            let smallest = idx;
+            const left = idx * 2 + 1;
             const right = left + 1;
-            if (left >= len)
-                break;
-            let smallest = left;
-            if (right < len && this.names[this.heap[right]] < this.names[this.heap[left]]) {
+            if (left < n && this.cmp(this.data[left], this.data[smallest]) < 0)
+                smallest = left;
+            if (right < n && this.cmp(this.data[right], this.data[smallest]) < 0)
                 smallest = right;
-            }
-            if (this.names[this.heap[smallest]] < this.names[this.heap[idx]]) {
-                [this.heap[smallest], this.heap[idx]] = [this.heap[idx], this.heap[smallest]];
+            if (smallest !== idx) {
+                [this.data[idx], this.data[smallest]] = [this.data[smallest], this.data[idx]];
                 idx = smallest;
             }
             else
@@ -86,31 +87,38 @@ class MinHeap {
         }
     }
 }
-const input = fs.readFileSync(0, 'utf8').trim().split(/\s+/);
-let ptr = 0;
-const N = parseInt(input[ptr++], 10);
-const M = parseInt(input[ptr++], 10);
+const input = fs.readFileSync(0, 'utf8').trim();
+if (input.length === 0)
+    process.exit(0);
+const tokens = input.split(/\s+/);
+let pos = 0;
+const N = parseInt(tokens[pos++], 10);
+const M = parseInt(tokens[pos++], 10);
 const names = [];
-for (let i = 0; i < N; i++) {
-    names.push(input[ptr++]);
-}
+for (let i = 0; i < N; i++)
+    names.push(tokens[pos++]);
 const nameToIndex = new Map();
-for (let i = 0; i < N; i++) {
+for (let i = 0; i < N; i++)
     nameToIndex.set(names[i], i);
-}
 const adj = Array.from({ length: N }, () => []);
 const indeg = Array(N).fill(0);
 for (let i = 0; i < M; i++) {
-    const a = input[ptr++];
-    const b = input[ptr++];
-    const ai = nameToIndex.get(a);
-    const bi = nameToIndex.get(b);
-    if (ai !== undefined && bi !== undefined) {
-        adj[ai].push(bi);
-        indeg[bi]++;
-    }
+    const a = tokens[pos++];
+    const b = tokens[pos++];
+    const u = nameToIndex.get(a);
+    const v = nameToIndex.get(b);
+    adj[u].push(v);
+    indeg[v]++;
 }
-const heap = new MinHeap(names);
+const heap = new MinHeap((a, b) => {
+    const na = names[a];
+    const nb = names[b];
+    if (na < nb)
+        return -1;
+    if (na > nb)
+        return 1;
+    return 0;
+});
 for (let i = 0; i < N; i++) {
     if (indeg[i] === 0)
         heap.push(i);
@@ -118,7 +126,7 @@ for (let i = 0; i < N; i++) {
 const result = [];
 while (heap.size() > 0) {
     const u = heap.pop();
-    result.push(u);
+    result.push(names[u]);
     for (const v of adj[u]) {
         indeg[v]--;
         if (indeg[v] === 0)
@@ -129,5 +137,5 @@ if (result.length !== N) {
     console.log('IMPOSSIBLE');
 }
 else {
-    console.log(result.map(i => names[i]).join(' '));
+    console.log(result.join(' '));
 }

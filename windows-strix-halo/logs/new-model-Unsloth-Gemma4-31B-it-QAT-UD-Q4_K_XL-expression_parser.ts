@@ -32,33 +32,29 @@ class Parser {
     }
 
     private peek() {
-        return this.tokens[this.pos] || null;
+        return this.tokens[this.pos];
     }
 
     private consume() {
         return this.tokens[this.pos++];
     }
 
-    public parse(): number {
-        return this.expression();
-    }
-
-    private expression(): number {
-        let node = this.term();
+    private parseExpression(): number {
+        let node = this.parseTerm();
         while (this.peek() === '+' || this.peek() === '-') {
             const op = this.consume();
-            const right = this.term();
+            const right = this.parseTerm();
             if (op === '+') node += right;
             else node -= right;
         }
         return node;
     }
 
-    private term(): number {
-        let node = this.unary();
+    private parseTerm(): number {
+        let node = this.parseUnary();
         while (this.peek() === '*' || this.peek() === '/') {
             const op = this.consume();
-            const right = this.unary();
+            const right = this.parseUnary();
             if (op === '*') {
                 node *= right;
             } else {
@@ -69,26 +65,30 @@ class Parser {
         return node;
     }
 
-    private unary(): number {
+    private parseUnary(): number {
         if (this.peek() === '+') {
             this.consume();
-            return this.unary();
+            return this.parseUnary();
         }
         if (this.peek() === '-') {
             this.consume();
-            return -this.unary();
+            return -this.parseUnary();
         }
-        return this.primary();
+        return this.parsePrimary();
     }
 
-    private primary(): number {
+    private parsePrimary(): number {
         const token = this.consume();
         if (token === '(') {
-            const result = this.expression();
+            const val = this.parseExpression();
             this.consume(); // consume ')'
-            return result;
+            return val;
         }
         return parseInt(token, 10);
+    }
+
+    public evaluate(): number {
+        return this.parseExpression();
     }
 }
 
@@ -96,7 +96,7 @@ function main() {
     const input = fs.readFileSync(0, "utf8").trim();
     if (!input) return;
     const parser = new Parser(input);
-    process.stdout.write(parser.parse().toString() + "\n");
+    process.stdout.write(parser.evaluate().toString() + "\n");
 }
 
 main();

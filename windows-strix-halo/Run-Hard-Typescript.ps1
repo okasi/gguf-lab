@@ -9,16 +9,28 @@
     [string]$CacheTypeK = "q8_0",
     [string]$CacheTypeV = "q8_0",
     [string]$ModelsJson = "",
-    [string]$ResultNameOverride = ""
+    [string]$ResultNameOverride = "",
+    [ValidateSet("auto", "off")]
+    [string]$Reasoning = "auto",
+    [string]$AliasSuffix = "",
+    [switch]$KeepResults
 )
 
 $ErrorActionPreference = "Continue"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $Root "ModelDraft.ps1")
+. (Join-Path $Root "ReasoningArgs.ps1")
+$script:AllowReasoningContentFallback = ($Reasoning -ne "off")
+$script:DefaultCacheTypeK = $CacheTypeK
+$script:DefaultCacheTypeV = $CacheTypeV
 $LogDir = Join-Path $Root "logs"
 $ResultName = if ($ResultNameOverride) { $ResultNameOverride } else { "readme-hard-typescript-results.csv" }
 $ResultPath = Join-Path $LogDir $ResultName
-$Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+$Server = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
+if (-not (Test-Path -LiteralPath $Server)) {
+    $Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+}
 $Node = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
 $Transpiler = Join-Path $Root "tools\ts-runner\transpile-ts.js"
 $Image = Join-Path $Root "test-assets\vision-test.png"
@@ -63,9 +75,20 @@ function New-BatchRun {
         [string]$SystemPrompt = "",
         [object[]]$ExtraServerArgs = @(),
         [string]$Server = "",
+        [string]$FlashAttn = "on",
+        [string]$ModelDraftFile = "",
+        [string]$MtpAutoDiscoveryFile = "",
+        [int]$SpecDraftNMin = 1,
+        [int]$SpecDraftNMax = 2,
         [switch]$GptOss,
-        [switch]$Mtp
+        [switch]$Mtp,
+        [ValidateSet("auto", "off")]
+        [string]$Reasoning = "auto",
+        [string]$CacheTypeK = "",
+        [string]$CacheTypeV = ""
     )
+    $resolvedCacheK = if ($CacheTypeK) { $CacheTypeK } else { $script:DefaultCacheTypeK }
+    $resolvedCacheV = if ($CacheTypeV) { $CacheTypeV } else { $script:DefaultCacheTypeV }
     $args = @(
         "--model", $Model,
         "--alias", $Alias,
@@ -74,9 +97,9 @@ function New-BatchRun {
         "--ctx-size", "$CtxSize",
         "-np", "1",
         "-ngl", "99",
-        "--flash-attn", "on",
-        "--cache-type-k", "$CacheTypeK",
-        "--cache-type-v", "$CacheTypeV",
+        "--flash-attn", $FlashAttn,
+        "--cache-type-k", "$resolvedCacheK",
+        "--cache-type-v", "$resolvedCacheV",
         "--temp", "$Temperature",
         "--top-p", "$TopP",
         "--top-k", "$TopK",
@@ -98,14 +121,20 @@ function New-BatchRun {
         $args += @("--jinja")
     }
     if ($Mtp) {
-        $args += @("--spec-type", "draft-mtp", "--spec-draft-n-min", "1", "--spec-draft-n-max", "2")
+        $mtpModel = @{
+            Mtp = $true
+            Model = $Model
+            ModelDraftFile = $ModelDraftFile
+            MtpAutoDiscoveryFile = $MtpAutoDiscoveryFile
+            SpecDraftNMin = $SpecDraftNMin
+            SpecDraftNMax = $SpecDraftNMax
+        }
+        $args = Add-SpeculativeServerArgs -Model $mtpModel -ServerArgs $args
     }
     if ($ExtraServerArgs.Count -gt 0) {
         $args += $ExtraServerArgs
     }
-    if ($args -notcontains "--reasoning") {
-        $args += @("--reasoning", "auto")
-    }
+    $args = Add-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName $Name
     return @{
         Name = $Name
         Port = $Port
@@ -133,9 +162,11 @@ $parsedModels = Get-Content -LiteralPath $ModelsJson -Raw | ConvertFrom-Json
 foreach ($parsedModel in $parsedModels) {
     $model = ConvertTo-PlainHashtable -Value $parsedModel
     $extra = if ($model.ContainsKey("ExtraServerArgs") -and $null -ne $model.ExtraServerArgs) { @($model.ExtraServerArgs) } else { @() }
+    $runAlias = Get-ReadmeAlias -Model $model -AliasSuffix $AliasSuffix
     $runArgs = @{
         Name = [string]$model.Name
-        Alias = [string]$model.Alias
+        Alias = $runAlias
+        Reasoning = $Reasoning
         Model = [string]$model.Model
         Mmproj = if ($model.ContainsKey("Mmproj") -and $null -ne $model.Mmproj) { [string]$model.Mmproj } else { "" }
         Port = if ($model.ContainsKey("Port") -and $model.Port) { [int]$model.Port } else { $GemmaPort }
@@ -156,6 +187,14 @@ foreach ($parsedModel in $parsedModels) {
     }
     if ($model.ContainsKey("GptOss") -and $model.GptOss) { $runArgs.GptOss = $true }
     if ($model.ContainsKey("Mtp") -and $model.Mtp) { $runArgs.Mtp = $true }
+    if ($model.ContainsKey("FlashAttn") -and $model.FlashAttn) { $runArgs.FlashAttn = [string]$model.FlashAttn }
+    $modelCache = Get-CacheTypeValues -Model $model
+    $runArgs.CacheTypeK = $modelCache.K
+    $runArgs.CacheTypeV = $modelCache.V
+    if ($model.ContainsKey("ModelDraftFile") -and $model.ModelDraftFile) { $runArgs.ModelDraftFile = [string]$model.ModelDraftFile }
+    if ($model.ContainsKey("MtpAutoDiscoveryFile") -and $model.MtpAutoDiscoveryFile) { $runArgs.MtpAutoDiscoveryFile = [string]$model.MtpAutoDiscoveryFile }
+    if ($model.ContainsKey("SpecDraftNMin") -and $null -ne $model.SpecDraftNMin) { $runArgs.SpecDraftNMin = [int]$model.SpecDraftNMin }
+    if ($model.ContainsKey("SpecDraftNMax") -and $null -ne $model.SpecDraftNMax) { $runArgs.SpecDraftNMax = [int]$model.SpecDraftNMax }
     $Runs += New-BatchRun @runArgs
 }
 if ($OnlyModels.Count -gt 0) {
@@ -493,7 +532,16 @@ function Start-LoggedProcess {
 }
 
 foreach ($p in @($GemmaPort, $GptOssPort)) { Stop-PortProcess -LocalPort $p }
-Remove-Item -LiteralPath $ResultPath -Force -ErrorAction SilentlyContinue
+if ($KeepResults -and (Test-Path -LiteralPath $ResultPath)) {
+    $Results = @(Import-Csv -LiteralPath $ResultPath)
+    if ($OnlyModels.Count -gt 0) {
+        $rerunNames = @($Runs | ForEach-Object { $_.Name })
+        $Results = @($Results | Where-Object { $rerunNames -notcontains $_.Model })
+    }
+} else {
+    Remove-Item -LiteralPath $ResultPath -Force -ErrorAction SilentlyContinue
+    $Results = @()
+}
 
 foreach ($run in $Runs) {
     $safe = $run.Name -replace "[^A-Za-z0-9._-]", "_"
@@ -537,9 +585,9 @@ foreach ($run in $Runs) {
             $visionLog = Join-Path $LogDir "new-model-$safe-vision.response.json"
             $visionResp | ConvertTo-Json -Depth 18 | Out-File -Encoding utf8 -LiteralPath $visionLog
             $content = $visionResp.choices[0].message.content
-            $reasoning = $visionResp.choices[0].message.reasoning_content
-            $seen = ((("$content $reasoning") -match "(?i)red") -and (("$content $reasoning") -match "(?i)blue") -and (("$content $reasoning") -match "(?i)QWEN"))
-            $visionNote = if (-not [string]::IsNullOrWhiteSpace($content)) { $content } else { $reasoning }
+            $reasoningContent = $visionResp.choices[0].message.reasoning_content
+            $seen = ((("$content $reasoningContent") -match "(?i)red") -and (("$content $reasoningContent") -match "(?i)blue") -and (("$content $reasoningContent") -match "(?i)QWEN"))
+            $visionNote = if (-not [string]::IsNullOrWhiteSpace($content)) { $content } else { $reasoningContent }
             Add-Result ([pscustomobject]@{ Time=(Get-Date).ToString("s"); Model=$run.Name; Mode="vision"; Passed=if($seen){"1"}else{"0"}; Total="1"; LoadCommittedMiB=$mem.TotalCommittedMiB; PromptTPS=$visionResp.timings.prompt_per_second; GenerationTPS=$visionResp.timings.predicted_per_second; PromptTokens=$visionResp.timings.prompt_n; GenerationTokens=$visionResp.timings.predicted_n; Note=$visionNote; Log=$visionLog })
         } else {
             Add-Result ([pscustomobject]@{ Time=(Get-Date).ToString("s"); Model=$run.Name; Mode="vision"; Passed="N/A"; Total="N/A"; LoadCommittedMiB=$mem.TotalCommittedMiB; PromptTPS=""; GenerationTPS=""; PromptTokens=""; GenerationTokens=""; Note="no mmproj in repo"; Log="" })
@@ -559,7 +607,7 @@ foreach ($run in $Runs) {
             $respLog = Join-Path $LogDir "new-model-$safe-$($problem.Id).response.json"
             $resp | ConvertTo-Json -Depth 18 | Out-File -Encoding utf8 -LiteralPath $respLog
             $content = $resp.choices[0].message.content
-            if ([string]::IsNullOrWhiteSpace($content) -and $resp.choices[0].message.reasoning_content) { $content = $resp.choices[0].message.reasoning_content }
+            if ($script:AllowReasoningContentFallback -and [string]::IsNullOrWhiteSpace($content) -and $resp.choices[0].message.reasoning_content) { $content = $resp.choices[0].message.reasoning_content }
             $code = Get-Code -Text $content
             $test = Test-TypeScript -Problem $problem -Code $code -SafeName $safe
             Add-Result ([pscustomobject]@{ Time=(Get-Date).ToString("s"); Model=$run.Name; Mode="code:$($problem.Id)"; Passed=$test.Passed; Total=$test.Total; LoadCommittedMiB=$mem.TotalCommittedMiB; PromptTPS=$resp.timings.prompt_per_second; GenerationTPS=$resp.timings.predicted_per_second; PromptTokens=$resp.timings.prompt_n; GenerationTokens=$resp.timings.predicted_n; Note=$test.Note; Log=$respLog })

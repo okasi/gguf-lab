@@ -1,107 +1,93 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
+const fs = require('fs');
 class MinHeap {
-    constructor() { this.arr = []; }
-    push(x) {
-        this.arr.push(x);
-        this.heapifyDown();
+    constructor() {
+        this.heap = [];
+        this.size = 0;
+        this.compare = (a, b) => a < b;
+    }
+    push(item) {
+        this.heap.push(item);
+        this.size++;
+        this._siftUp(this.size - 1);
     }
     pop() {
-        if (this.arr.length === 0)
-            return null;
-        const root = this.arr.shift();
-        const n = this.arr.length;
-        let i = 0;
-        while (true) {
-            let smallest = i;
-            const left = 2 * i + 1;
-            const right = 2 * i + 2;
-            if (left < n && this.arr[left] < this.arr[smallest])
-                smallest = left;
-            if (right < n && this.arr[right] < this.arr[smallest])
-                smallest = right;
-            if (smallest !== i) {
-                [this.arr[i], this.arr[smallest]] = [this.arr[smallest], this.arr[i]];
-                i = smallest;
-            }
-            else
-                break;
-        }
-        return root;
+        if (this.size === 0)
+            return undefined;
+        const result = this.heap[0];
+        this.heap[0] = this.heap[this.size - 1];
+        this.heap.pop();
+        this._siftDown(0);
+        this.size--;
+        return result;
     }
-    heapifyDown() {
-        let i = this.arr.length - 1;
-        while (i > 0) {
-            const parent = Math.floor((i - 1) / 2);
-            if (this.arr[parent] > this.arr[i]) {
-                [this.arr[parent], this.arr[i]] = [this.arr[i], this.arr[parent]];
-                i = parent;
-            }
-            else
+    _siftUp(index) {
+        while (index > 0) {
+            const parent = Math.floor((index - 1) / 2);
+            if (this.compare(this.heap[parent], this.heap[index]))
                 break;
+            [this.heap[parent], this.heap[index]] = [this.heap[index], this.heap[parent]];
+            index = parent;
         }
     }
-    heapifyUp() {
-        let i = this.arr.length - 1;
-        while (i > 0) {
-            const parent = Math.floor((i - 1) / 2);
-            if (this.arr[parent] > this.arr[i]) {
-                [this.arr[parent], this.arr[i]] = [this.arr[i], this.arr[parent]];
-                i = parent;
-            }
-            else
-                break;
+    _siftDown(index) {
+        const left = 2 * index + 1;
+        const right = 2 * index + 2;
+        let smallest = index;
+        if (left < this.size && this.compare(this.heap[left], this.heap[smallest]))
+            smallest = left;
+        if (right < this.size && this.compare(this.heap[right], this.heap[smallest]))
+            smallest = right;
+        if (smallest !== index) {
+            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+            this._siftDown(smallest);
         }
     }
-    size() {
-        return this.arr.length;
-    }
+    size() { return this.size; }
 }
 function main() {
-    const data = fs_1.default.readFileSync(0, "utf8").trim().split(/\s+/);
-    if (data.length === 0)
+    const data = fs.readFileSync(0, "utf8").trim().split(/\s+/);
+    if (data.length < 2) {
+        console.log("IMPOSSIBLE");
         return;
-    const it = data.begin();
-    const N = Number(it++);
-    const M = Number(it++);
-    const tasks = new Set();
-    for (let i = 0; i < N; i++) {
-        tasks.add(it++);
     }
-    const adjacency = new Map();
-    const indegree = new Map();
-    for (const key of tasks) {
-        indegree.set(key, 0);
-        adjacency.set(key, new Set());
+    let idx = 0;
+    const N = parseInt(data[idx++]);
+    const M = parseInt(data[idx++]);
+    const tasks = [];
+    for (let i = 0; i < N; ++i)
+        tasks.push(data[idx++]);
+    const graph = new Map();
+    const indeg = new Map();
+    for (const t of tasks) {
+        indeg.set(t, 0);
+        graph.set(t, new Set());
     }
-    while (it < data.length) {
-        const A = it++;
-        const B = it++;
-        if (!adjacency.has(A))
-            adjacency.set(A, new Set());
-        if (!adjacency.has(B))
-            adjacency.set(B, new Set());
-        adjacency.get(A).add(B);
-        indegree.set(B, (indegree.get(B) ?? 0) + 1);
+    for (let i = 0; i < M; ++i) {
+        const A = data[idx++];
+        const B = data[idx++];
+        if (!graph.has(A))
+            graph.set(A, new Set());
+        if (!graph.has(B))
+            graph.set(B, new Set());
+        graph.get(A).add(B);
+        indeg.set(B, (indeg.get(B) || 0) + 1);
     }
     const heap = new MinHeap();
-    for (const [task, deg] of indegree.entries()) {
-        if (deg === 0)
-            heap.push(task);
+    for (const t of tasks) {
+        if (indeg.get(t) === 0)
+            heap.push(t);
     }
     const result = [];
     while (heap.size() > 0) {
-        const task = heap.pop();
-        result.push(task);
-        for (const neighbor of adjacency.get(task) ?? []) {
-            indegree.set(neighbor, (indegree.get(neighbor) ?? 0) - 1);
-            if (indegree.get(neighbor) === 0) {
+        const node = heap.pop();
+        result.push(node);
+        if (!graph.has(node))
+            continue;
+        for (const neighbor of graph.get(node)) {
+            indeg.set(neighbor, (indeg.get(neighbor) || 0) - 1);
+            if (indeg.get(neighbor) === 0)
                 heap.push(neighbor);
-            }
         }
     }
     if (result.length !== N) {
@@ -111,4 +97,5 @@ function main() {
         console.log(result.join(' '));
     }
 }
-main();
+if (require.main === module)
+    main();

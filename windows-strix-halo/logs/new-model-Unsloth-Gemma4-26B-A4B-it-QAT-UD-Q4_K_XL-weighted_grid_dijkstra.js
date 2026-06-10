@@ -45,11 +45,12 @@ class MinHeap {
     pop() {
         if (this.size() === 0)
             return undefined;
-        if (this.size() === 1)
-            return this.heap.pop().value;
         const top = this.heap[0].value;
-        this.heap[0] = this.heap.pop();
-        this.bubbleDown();
+        const bottom = this.heap.pop();
+        if (this.size() > 0) {
+            this.heap[0] = bottom;
+            this.bubbleDown();
+        }
         return top;
     }
     size() {
@@ -71,19 +72,19 @@ class MinHeap {
         while (true) {
             let left = 2 * index + 1;
             let right = 2 * index + 2;
-            let swap = null;
+            let swap = -1;
             if (left < length) {
                 if (this.heap[left].priority < this.heap[index].priority) {
                     swap = left;
                 }
             }
             if (right < length) {
-                if ((swap === null && this.heap[right].priority < this.heap[index].priority) ||
-                    (swap !== null && this.heap[right].priority < this.heap[left].priority)) {
+                if ((swap === -1 && this.heap[right].priority < this.heap[index].priority) ||
+                    (swap !== -1 && this.heap[right].priority < this.heap[left].priority)) {
                     swap = right;
                 }
             }
-            if (swap === null)
+            if (swap === -1)
                 break;
             [this.heap[index], this.heap[swap]] = [this.heap[swap], this.heap[index]];
             index = swap;
@@ -91,60 +92,67 @@ class MinHeap {
     }
 }
 function solve() {
-    const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    if (input.length < 2)
+    const input = fs.readFileSync(0, "utf8");
+    const lines = input.split(/\s+/);
+    if (lines.length < 2)
         return;
-    const H = parseInt(input[0]);
-    const W = parseInt(input[1]);
+    let idx = 0;
+    const H = parseInt(lines[idx++]);
+    const W = parseInt(lines[idx++]);
     const grid = [];
-    let startPos = [-1, -1];
-    let targetPos = [-1, -1];
-    let currentIdx = 2;
     for (let i = 0; i < H; i++) {
-        const rowStr = input[currentIdx++];
-        const row = rowStr.split('');
-        grid.push(row);
-        for (let j = 0; j < W; j++) {
-            if (row[j] === 'S')
-                startPos = [i, j];
-            if (row[j] === 'T')
-                targetPos = [i, j];
+        grid.push(lines[idx++].split(''));
+    }
+    let startR = -1, startC = -1;
+    let targetR = -1, targetC = -1;
+    for (let r = 0; r < H; r++) {
+        for (let c = 0; c < W; c++) {
+            if (grid[r][c] === 'S') {
+                startR = r;
+                startC = c;
+            }
+            else if (grid[r][c] === 'T') {
+                targetR = r;
+                targetC = c;
+            }
         }
     }
     const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
     const pq = new MinHeap();
-    dist[startPos[0]][startPos[1]] = 0;
-    pq.push(0, { r: startPos[0], c: startPos[1], cost: 0 });
+    dist[startR][startC] = 0;
+    pq.push(0, { r: startR, c: startC, cost: 0 });
     const dr = [-1, 1, 0, 0];
     const dc = [0, 0, -1, 1];
-    let minCost = -1;
     while (pq.size() > 0) {
         const current = pq.pop();
-        const { r, c, cost } = current;
-        if (cost > dist[r][c])
+        const d = current.cost;
+        if (d > dist[current.r][current.c])
             continue;
-        if (r === targetPos[0] && c === targetPos[1]) {
-            minCost = cost;
-            break;
+        if (current.r === targetR && current.c === targetC) {
+            console.log(d);
+            return;
         }
         for (let i = 0; i < 4; i++) {
-            const nr = r + dr[i];
-            const nc = c + dc[i];
+            const nr = current.r + dr[i];
+            const nc = current.c + dc[i];
             if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
                 const char = grid[nr][nc];
                 if (char === '#')
                     continue;
-                let moveCost = 0;
+                let stepCost = 0;
                 if (char >= '0' && char <= '9') {
-                    moveCost = parseInt(char);
+                    stepCost = parseInt(char);
                 }
-                if (dist[r][c] + moveCost < dist[nr][nc]) {
-                    dist[nr][nc] = dist[r][c] + moveCost;
+                else if (char === 'S' || char === 'T') {
+                    stepCost = 0;
+                }
+                if (dist[current.r][current.c] + stepCost < dist[nr][nc]) {
+                    dist[nr][nc] = dist[current.r][current.c] + stepCost;
                     pq.push(dist[nr][nc], { r: nr, c: nc, cost: dist[nr][nc] });
                 }
             }
         }
     }
-    console.log(minCost);
+    console.log(-1);
 }
 solve();

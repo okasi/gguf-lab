@@ -1,117 +1,76 @@
-﻿import { readFileSync } from 'fs';
+﻿import fs from 'fs';
 
-// Binary heap implementation for priority queue
-class MinHeap<T> {
-  private heap: T[];
-  private compare: (a: T, b: T) => number;
+const input = fs.readFileSync(0, 'utf8').toString().split('\n').map(line => line.trim()).filter(Boolean);
+const [N, M] = input[0].split(' ').map(Number);
+const tasks = input[1].split(' ');
+const adj: Record<string, Set<string>> = {};
+const indegree: Record<string, number> = {};
+for (const task of tasks) {
+  adj[task] = new Set();
+  indegree[task] = 0;
+}
+for (let i = 2; i < 2 + M; i++) {
+  const [A, B] = input[i].split(' ');
+  adj[A].add(B);
+  indegree[B]++;
+}
 
-  constructor(compare: (a: T, b: T) => number) {
-    this.heap = [];
-    this.compare = compare;
+class MinHeap {
+  private data: string[] = [];
+
+  push(item: string): void {
+    this.data.push(item);
+    this.bubbleUp(this.data.length - 1);
   }
 
-  push(item: T): void {
-    this.heap.push(item);
-    this.bubbleUp(this.heap.length - 1);
-  }
-
-  pop(): T | undefined {
-    if (this.heap.length === 0) return undefined;
-    const top = this.heap[0];
-    const last = this.heap.pop()!;
-    if (this.heap.length > 0) {
-      this.heap[0] = last;
-      this.bubbleDown(0);
-    }
+  pop(): string | undefined {
+    if (this.data.length === 0) return undefined;
+    if (this.data.length === 1) return this.data.pop();
+    const top = this.data[0];
+    this.data[0] = this.data.pop()!;
+    this.bubbleDown(0);
     return top;
   }
 
-  peek(): T | undefined {
-    return this.heap[0];
-  }
-
-  get length(): number {
-    return this.heap.length;
-  }
-
-  private bubbleUp(index: number): void {
-    while (index > 0) {
-      const parentIndex = Math.floor((index - 1) / 2);
-      if (this.compare(this.heap[index], this.heap[parentIndex]) >= 0) break;
-      [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-      index = parentIndex;
+  private bubbleUp(idx: number): void {
+    while (idx > 0) {
+      const parentIdx = ((idx + 1) >> 1) - 1;
+      if (this.data[parentIdx] <= this.data[idx]) break;
+      [this.data[parentIdx], this.data[idx]] = [this.data[idx], this.data[parentIdx]];
+      idx = parentIdx;
     }
   }
 
-  private bubbleDown(index: number): void {
+  private bubbleDown(idx: number): void {
     while (true) {
-      let smallest = index;
-      const left = 2 * index + 1;
-      const right = 2 * index + 2;
-
-      if (left < this.heap.length && this.compare(this.heap[left], this.heap[smallest]) < 0) {
-        smallest = left;
-      }
-      if (right < this.heap.length && this.compare(this.heap[right], this.heap[smallest]) < 0) {
-        smallest = right;
-      }
-      if (smallest === index) break;
-      [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
-      index = smallest;
+      let min = idx;
+      const l = (idx << 1) + 1, r = (idx << 1) + 2;
+      if (l < this.data.length && this.data[l] < this.data[min]) min = l;
+      if (r < this.data.length && this.data[r] < this.data[min]) min = r;
+      if (min === idx) break;
+      [this.data[idx], this.data[min]] = [this.data[min], this.data[idx]];
+      idx = min;
     }
   }
 }
 
-// Parse input
-const input = readFileSync(0, 'utf8').trim().split('\n');
-const [N, M] = input[0].split(' ').map(Number);
-const tasks = input[1].split(' ');
-const edges: [string, string][] = [];
-
-for (let i = 2; i < 2 + M; i++) {
-  const [A, B] = input[i].split(' ');
-  edges.push([A, B]);
-}
-
-// Build adjacency list and in-degree count
-const adjacencyList: Map<string, string[]> = new Map();
-const inDegree: Map<string, number> = new Map();
-
+const heap = new MinHeap();
 for (const task of tasks) {
-  adjacencyList.set(task, []);
-  inDegree.set(task, 0);
+  if (indegree[task] === 0) heap.push(task);
 }
 
-for (const [A, B] of edges) {
-  adjacencyList.get(A)!.push(B);
-  inDegree.set(B, inDegree.get(B)! + 1);
-}
-
-// Initialize priority queue with tasks having no dependencies
-const pq = new MinHeap<string>((a, b) => a.localeCompare(b));
-for (const task of tasks) {
-  if (inDegree.get(task) === 0) {
-    pq.push(task);
+const result: string[] = [];
+while (heap.pop()) {
+  const cur = heap.pop()!;
+  result.push(cur);
+  for (const next of adj[cur]) {
+    indegree[next]--;
+    if (indegree[next] === 0) heap.push(next);
   }
 }
 
-// Perform topological sort
-const order: string[] = [];
-while (pq.length > 0) {
-  const current = pq.pop()!;
-  order.push(current);
-
-  for (const neighbor of adjacencyList.get(current)!) {
-    inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
-    if (inDegree.get(neighbor) === 0) {
-      pq.push(neighbor);
-    }
-  }
-}
-
-// Output result
-if (order.length !== N) {
+if (result.length !== N) {
   console.log('IMPOSSIBLE');
 } else {
-  console.log(order.join(' '));
+  console.log(result.join(' '));
 }

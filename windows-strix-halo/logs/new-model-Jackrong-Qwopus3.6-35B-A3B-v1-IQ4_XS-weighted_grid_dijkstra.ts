@@ -1,112 +1,96 @@
-﻿import * as fs from "fs";
+﻿import fs from "fs";
 
-class MinHeap {
-  private data: { cost: number; r: number; c: number }[] = [];
-
-  push(item: { cost: number; r: number; c: number }) {
-    this.data.push(item);
-    this.bubbleUp(this.data.length - 1);
-  }
-
-  pop(): { cost: number; r: number; c: number } | null {
-    if (this.data.length === 0) return null;
-    const top = this.data[0];
-    const last = this.data.pop();
-    if (this.data.length > 0) {
-      this.data[0] = last;
-      this.bubbleDown(0);
+function solve(): void {
+    const input: string = fs.readFileSync(0, "utf8").trim();
+    const lines: string[] = input.split("\n");
+    const [HStr, WStr]: string[] = lines[0].split(" ");
+    const H: number = parseInt(HStr);
+    const W: number = parseInt(WStr);
+    const grid: string[] = [];
+    for (let i = 1; i <= H; i++) {
+        grid.push(lines[i]);
     }
-    return top;
-  }
 
-  get size(): number {
-    return this.data.length;
-  }
+    let startX: number = -1;
+    let startY: number = -1;
+    let endX: number = -1;
+    let endY: number = -1;
 
-  private bubbleUp(i: number) {
-    while (i > 0) {
-      const parent = Math.floor((i - 1) / 2);
-      if (this.data[parent].cost <= this.data[i].cost) break;
-      [this.data[parent], this.data[i]] = [this.data[i], this.data[parent]];
-      i = parent;
+    for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+            const ch: string = grid[y][x];
+            if (ch === 'S') {
+                startX = x;
+                startY = y;
+            } else if (ch === 'T') {
+                endX = x;
+                endY = y;
+            }
+        }
     }
-  }
 
-  private bubbleDown(i: number) {
-    const n = this.data.length;
-    while (true) {
-      let smallest = i;
-      const left = 2 * i + 1;
-      const right = 2 * i + 2;
+    const INF: number = Number.MAX_SAFE_INTEGER;
+    const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(INF));
+    dist[startY][startX] = 0;
 
-      if (left < n && this.data[left].cost < this.data[smallest].cost) smallest = left;
-      if (right < n && this.data[right].cost < this.data[smallest].cost) smallest = right;
+    const pq: { cost: number; x: number; y: number }[] = [];
+    const push: (cost: number, x: number, y: number) => void = (cost: number, x: number, y: number) => {
+        pq.push({ cost, x, y });
+    };
 
-      if (smallest === i) break;
-      [this.data[i], this.data[smallest]] = [this.data[smallest], this.data[i]];
-      i = smallest;
+    const pop: () => { cost: number; x: number; y: number } | undefined = () => {
+        if (pq.length === 0) return undefined;
+        let minIdx: number = 0;
+        for (let i = 1; i < pq.length; i++) {
+            if (pq[i].cost < pq[minIdx].cost) {
+                minIdx = i;
+            }
+        }
+        const item: { cost: number; x: number; y: number } = pq[minIdx];
+        pq[minIdx] = pq[pq.length - 1];
+        pq.pop();
+        return item;
+    };
+
+    push(0, startX, startY);
+
+    const dx: number[] = [0, 0, -1, 1];
+    const dy: number[] = [-1, 1, 0, 0];
+
+    while (pq.length > 0) {
+        const curr: { cost: number; x: number; y: number } | undefined = pop();
+        if (!curr) break;
+        const { cost, x, y } = curr;
+
+        if (cost > dist[y][x]) continue;
+        if (x === endX && y === endY) {
+            console.log(cost);
+            return;
+        }
+
+        for (let i = 0; i < 4; i++) {
+            const nx: number = x + dx[i];
+            const ny: number = y + dy[i];
+
+            if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+
+            const cell: string = grid[ny][nx];
+            if (cell === '#') continue;
+
+            let weight: number = 0;
+            if (cell >= '0' && cell <= '9') {
+                weight = parseInt(cell);
+            }
+
+            const newCost: number = cost + weight;
+            if (newCost < dist[ny][nx]) {
+                dist[ny][nx] = newCost;
+                push(newCost, nx, ny);
+            }
+        }
     }
-  }
+
+    console.log(-1);
 }
 
-function solve(): number {
-  const input = fs.readFileSync(0, "utf8").trim();
-  if (!input) return -1;
-
-  const lines = input.split("\n");
-  const [H, W] = lines[0].split(" ").map(Number);
-  const grid = lines.slice(1);
-
-  let startR = -1, startC = -1, targetR = -1, targetC = -1;
-
-  for (let r = 0; r < H; r++) {
-    for (let c = 0; c < W; c++) {
-      const ch = grid[r][c];
-      if (ch === "S") {
-        startR = r;
-        startC = c;
-      } else if (ch === "T") {
-        targetR = r;
-        targetC = c;
-      }
-    }
-  }
-
-  const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
-  dist[startR][startC] = 0;
-
-  const heap = new MinHeap();
-  heap.push({ cost: 0, r: startR, c: startC });
-
-  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-
-  while (heap.size > 0) {
-    const item = heap.pop();
-    if (!item) continue;
-    const { cost, r, c } = item;
-
-    if (cost > dist[r][c]) continue;
-    if (r === targetR && c === targetC) return cost;
-
-    for (const [dr, dc] of dirs) {
-      const nr = r + dr;
-      const nc = c + dc;
-
-      if (nr < 0 || nr >= H || nc < 0 || nc >= W) continue;
-      const nch = grid[nr][nc];
-      if (nch === "#") continue;
-
-      const nCost = nch === "S" || nch === "T" ? 0 : parseInt(nch, 10);
-      const newCost = cost + nCost;
-
-      if (newCost < dist[nr][nc]) {
-        dist[nr][nc] = newCost;
-        heap.push({ cost: newCost, r: nr, c: nc });
-      }
-    }
-  }
-
-  return -1;
-}
-
-console.log(solve());
+solve();

@@ -1,38 +1,36 @@
 ﻿const fs = require('fs');
 
 /**
- * A custom Priority Queue implementation optimized for this problem.
- * It prioritizes lexicographically smaller task names among those with an in-degree of 0.
+ * A custom Binary Heap implementation for the priority queue.
+ * This heap will store tasks that are ready to be processed, ordered lexicographically.
  */
 class PriorityQueue {
     constructor() {
+        // Store tasks as strings. The comparison logic ensures that the lexicographically
+        // smallest task name has the highest priority (is at the top).
         this.heap = [];
     }
 
-    size() {
-        return this.heap.length;
+    isEmpty() {
+        return this.heap.length === 0;
     }
 
-    enqueue(taskName: string): void {
-        this.heap.push(taskName);
+    insert(task) {
+        this.heap.push(task);
         this.bubbleUp(this.heap.length - 1);
     }
 
-    dequeue(): string | undefined {
-        if (this.size() === 0) {
-            return undefined;
-        }
-        if (this.size() === 1) {
-            return this.heap.pop();
-        }
+    extractMin() {
+        if (this.isEmpty()) return null;
+        if (this.heap.length === 1) return this.heap.pop();
 
-        const top = this.heap[0];
-        this.heap[0] = this.heap.pop()!;
+        const min = this.heap[0];
+        this.heap[0] = this.heap.pop();
         this.bubbleDown(0);
-        return top;
+        return min;
     }
 
-    bubbleUp(index: number): void {
+    bubbleUp(index) {
         while (index > 0) {
             let parentIndex = Math.floor((index - 1) / 2);
             if (this.heap[index] < this.heap[parentIndex]) {
@@ -44,8 +42,8 @@ class PriorityQueue {
         }
     }
 
-    bubbleDown(index: number): void {
-        const lastIndex = this.size() - 1;
+    bubbleDown(index) {
+        let lastIndex = this.heap.length - 1;
         while (true) {
             let leftChildIndex = 2 * index + 1;
             let rightChildIndex = 2 * index + 2;
@@ -71,57 +69,88 @@ class PriorityQueue {
 
 function solve() {
     const input = fs.readFileSync(0, "utf8").trim().split('\n');
-    if (input.length === 0 || input[0].length === 0) return;
 
-    const [N, M] = input[0].split(' ').map(Number);
-    const tasks = input[1].trim().split(/\s+/).filter(t => t.length > 0);
-    const N_tasks = tasks.length;
+    if (input.length === 0 || input[0].trim() === '') {
+        return;
+    }
 
-    if (N_tasks === 0) return;
+    let lineIndex = 0;
+    
+    // Read N and M
+    const [N, M] = input[lineIndex++].trim().split(/\s+/).map(Number);
 
-    const adj = Array(N_tasks).fill(0).map(() => []);
-    const inDegree = Array(N_tasks).fill(0);
+    // Read task names
+    const taskNames = input[lineIndex++].trim().split(/\s+/).filter(s => s.length > 0);
+    
+    // Map task names to indices for easier graph representation if needed, 
+    // but since we are using names directly in the PQ, we can work with names.
+    const taskSet = new Set(taskNames);
 
+    // Adjacency list to store dependencies (A -> B means A must precede B)
+    // Adj[A] = [B, C, ...]
+    const adj = new Map();
+    for (const task of taskNames) {
+        adj.set(task, []);
+    }
+
+    // In-degree map: task -> count of prerequisites
+    const inDegree = new Map();
+    for (const task of taskNames) {
+        inDegree.set(task, 0);
+    }
+
+    // Read M dependencies
     for (let i = 0; i < M; i++) {
-        const line = input[2 + i];
-        if (!line) continue;
-        const [u, v] = line.trim().split(/\s+/);
-        if (u && v) {
-            const uIdx = parseInt(u);
-            const vIdx = parseInt(v);
-            adj[uIdx].push(vIdx);
-            inDegree[vIdx]++;
+        if (lineIndex >= input.length) break;
+        const line = input[lineIndex++].trim();
+        if (line.length === 0) continue;
+        
+        const [u, v] = line.split(/\s+/).filter(s => s.length > 0);
+        
+        if (taskSet.has(u) && taskSet.has(v)) {
+            // Dependency: u must come before v
+            adj.get(u).push(v);
+            inDegree.set(v, inDegree.get(v) + 1);
         }
     }
 
-    // 1. Initialize Priority Queue with tasks having in-degree 0
+    // Initialize Priority Queue with tasks having an in-degree of 0
     const pq = new PriorityQueue();
-    for (let i = 0; i < N_tasks; i++) {
-        if (inDegree[i] === 0) {
-            pq.enqueue(tasks[i]);
+    for (const task of taskNames) {
+        if (inDegree.get(task) === 0) {
+            pq.insert(task);
         }
     }
 
     const buildOrder: string[] = [];
-    let processedCount = 0;
 
-    // 2. Process using Kahn's Algorithm with PQ
-    while (pq.size() > 0) {
-        const uTask = pq.dequeue()!;
-        buildOrder.push(uTask);
-        processedCount++;
+    // Kahn's Algorithm modification using the Priority Queue
+    while (!pq.isEmpty()) {
+        const u = pq.extractMin();
+        buildOrder.push(u);
 
-        // Process neighbors
-        for (const vIdx of adj[tasks.indexOf(uTask)]) {
-            inDegree[vIdx]--;
-            if (inDegree[vIdx] === 0) {
-                pq.enqueue(tasks[vIdx]);
+        // Process neighbors of u
+        const neighbors = adj.get(u) || [];
+        
+        // Sort neighbors to ensure consistent processing if the requirement implies 
+        // that when multiple tasks are available, the *next* one chosen 
+        // among *newly available* tasks should follow the PQ logic.
+        // However, the requirement states: "When multiple tasks are available, choose the 
+        // lexicographically smallest task name." This applies to the set of tasks *ready* 
+        // at any point. The PQ naturally handles this.
+        
+        for (const v of neighbors) {
+            const newInDegree = inDegree.get(v) - 1;
+            inDegree.set(v, newInDegree);
+
+            if (newInDegree === 0) {
+                pq.insert(v);
             }
         }
     }
 
-    // 3. Check for cycles
-    if (processedCount !== N_tasks) {
+    // Check for cycles
+    if (buildOrder.length !== N) {
         console.log("IMPOSSIBLE");
     } else {
         console.log(buildOrder.join(' '));

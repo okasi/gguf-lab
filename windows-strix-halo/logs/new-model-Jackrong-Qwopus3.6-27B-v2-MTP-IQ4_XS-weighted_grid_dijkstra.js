@@ -1,59 +1,61 @@
 "use strict";
-class PriorityQueue {
-    constructor(compare) {
-        this.heap = [];
-        this.compare = compare;
-    }
-    push(item) {
-        this.heap.push(item);
-        this.bubbleUp(this.heap.length - 1);
-    }
-    pop() {
-        if (this.heap.length === 0)
-            return undefined;
-        if (this.heap.length === 1)
-            return this.heap.pop();
-        const top = this.heap[0];
-        this.heap[0] = this.heap.pop();
-        this.sinkDown(0);
-        return top;
-    }
-    bubbleUp(index) {
-        const element = this.heap[index];
-        while (index > 0) {
-            const parentIndex = (index - 1) >> 1;
-            const parent = this.heap[parentIndex];
-            if (this.compare(element, parent) >= 0)
-                break;
-            this.heap[index] = parent;
-            index = parentIndex;
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const input = (0, fs_1.readFileSync)(0, "utf8").trim();
+const lines = input.split(/\n/);
+const [H, W] = lines[0].split(" ").map(Number);
+const grid = [];
+for (let i = 0; i < H; i++) {
+    grid.push(lines[i + 1].split(""));
+}
+let startR = -1, startC = -1;
+let targetR = -1, targetC = -1;
+for (let r = 0; r < H; r++) {
+    for (let c = 0; c < W; c++) {
+        if (grid[r][c] === "S") {
+            startR = r;
+            startC = c;
         }
-        this.heap[index] = element;
-    }
-    sinkDown(index) {
-        const length = this.heap.length;
-        const element = this.heap[index];
-        while (true) {
-            const leftIndex = 2 * index + 1;
-            const rightIndex = 2 * index + 2;
-            let swapIndex = null;
-            if (leftIndex < length) {
-                swapIndex = leftIndex;
-                if (rightIndex < length && this.compare(this.heap[rightIndex], this.heap[leftIndex]) < 0) {
-                    swapIndex = rightIndex;
-                }
-                if (this.compare(element, this.heap[swapIndex]) <= 0)
-                    break;
-            }
-            else {
-                break;
-            }
-            this.heap[index] = this.heap[swapIndex];
-            index = swapIndex;
+        else if (grid[r][c] === "T") {
+            targetR = r;
+            targetC = c;
         }
-        this.heap[index] = element;
-    }
-    isEmpty() {
-        return this.heap.length === 0;
     }
 }
+const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
+dist[startR][startC] = 0;
+const dr = [-1, 1, 0, 0];
+const dc = [0, 0, -1, 1];
+const pq = []; // [cost, r, c]
+pq.push([0, startR, startC]);
+while (pq.length > 0) {
+    pq.sort((a, b) => a[0] - b[0]);
+    const [cost, r, c] = pq.shift();
+    if (cost > dist[r][c]) {
+        continue;
+    }
+    if (r === targetR && c === targetC) {
+        process.stdout.write(cost.toString() + "\n");
+        process.exit(0);
+    }
+    for (let d = 0; d < 4; d++) {
+        const nr = r + dr[d];
+        const nc = c + dc[d];
+        if (nr < 0 || nr >= H || nc < 0 || nc >= W)
+            continue;
+        const cell = grid[nr][nc];
+        if (cell === "#")
+            continue;
+        let moveCost = 0;
+        if (cell >= "0" && cell <= "9") {
+            moveCost = parseInt(cell, 10);
+        }
+        // S and T cost 0 to enter
+        const newDist = cost + moveCost;
+        if (newDist < dist[nr][nc]) {
+            dist[nr][nc] = newDist;
+            pq.push([newDist, nr, nc]);
+        }
+    }
+}
+process.stdout.write("-1\n");

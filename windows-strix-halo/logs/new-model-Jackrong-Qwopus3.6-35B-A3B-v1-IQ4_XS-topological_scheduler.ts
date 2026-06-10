@@ -1,127 +1,148 @@
 ﻿import * as fs from 'fs';
 
-class MinHeap {
-    private heap: string[] = [];
-    private size: number = 0;
+class MinHeap<T> {
+    private heap: T[] = [];
+    private compare: (a: T, b: T) => number;
 
-    private compare(a: string, b: string): number {
-        return a < b ? -1 : a > b ? 1 : 0;
+    constructor(compare: (a: T, b: T) => number) {
+        this.compare = compare;
     }
 
-    private swap(i: number, j: number): void {
-        const temp = this.heap[i];
-        this.heap[i] = this.heap[j];
-        this.heap[j] = temp;
-    }
-
-    private bubbleUp(index: number): void {
-        while (index > 0) {
-            const parentIndex = Math.floor((index - 1) / 2);
-            if (this.compare(this.heap[index], this.heap[parentIndex]) < 0) {
-                this.swap(index, parentIndex);
-                index = parentIndex;
-            } else {
-                break;
-            }
-        }
-    }
-
-    private bubbleDown(index: number): void {
-        while (index < this.size) {
-            const leftChild = 2 * index + 1;
-            const rightChild = 2 * index + 2;
-            let smallest = index;
-
-            if (leftChild < this.size && this.compare(this.heap[leftChild], this.heap[smallest]) < 0) {
-                smallest = leftChild;
-            }
-            if (rightChild < this.size && this.compare(this.heap[rightChild], this.heap[smallest]) < 0) {
-                smallest = rightChild;
-            }
-
-            if (smallest !== index) {
-                this.swap(index, smallest);
-                index = smallest;
-            } else {
-                break;
-            }
-        }
-    }
-
-    push(val: string): void {
-        this.heap[this.size] = val;
-        this.size++;
-        this.bubbleUp(this.size - 1);
-    }
-
-    pop(): string | undefined {
-        if (this.size === 0) return undefined;
-        const top = this.heap[0];
-        const last = this.heap[this.size - 1];
-        this.size--;
-        this.heap[this.size] = last;
-        this.bubbleDown(0);
-        return top;
+    get size(): number {
+        return this.heap.length;
     }
 
     isEmpty(): boolean {
-        return this.size === 0;
+        return this.heap.length === 0;
+    }
+
+    push(item: T): void {
+        this.heap.push(item);
+        this.bubbleUp(this.heap.length - 1);
+    }
+
+    pop(): T | undefined {
+        if (this.heap.length === 0) {
+            return undefined;
+        }
+        if (this.heap.length === 1) {
+            return this.heap.pop();
+        }
+        const top = this.heap[0];
+        this.heap[0] = this.heap.pop()!;
+        this.sinkDown(0);
+        return top;
+    }
+
+    peek(): T | undefined {
+        return this.heap[0];
+    }
+
+    private bubbleUp(index: number): void {
+        const item = this.heap[index];
+        while (index > 0) {
+            const parentIndex = Math.floor((index - 1) / 2);
+            const parent = this.heap[parentIndex];
+            if (this.compare(item, parent) >= 0) {
+                break;
+            }
+            this.heap[index] = parent;
+            index = parentIndex;
+        }
+        this.heap[index] = item;
+    }
+
+    private sinkDown(index: number): void {
+        const length = this.heap.length;
+        const item = this.heap[index];
+        while (true) {
+            const leftIndex = 2 * index + 1;
+            const rightIndex = 2 * index + 2;
+            let swapIndex: number | null = null;
+
+            if (leftIndex < length) {
+                const left = this.heap[leftIndex];
+                if (this.compare(item, left) > 0) {
+                    swapIndex = leftIndex;
+                }
+            }
+
+            if (rightIndex < length) {
+                const right = this.heap[rightIndex];
+                if (swapIndex === null || this.compare(right, this.heap[swapIndex]) < 0) {
+                    swapIndex = rightIndex;
+                }
+            }
+
+            if (swapIndex === null) {
+                break;
+            }
+
+            this.heap[index] = this.heap[swapIndex];
+            index = swapIndex;
+        }
+        this.heap[index] = item;
     }
 }
 
-const input = fs.readFileSync(0, "utf8");
-const lines = input.trim().split('\n');
-if (lines.length === 0) {
-    console.log("");
-    process.exit(0);
-}
+function solve(): void {
+    const input = fs.readFileSync(0, "utf8").trim();
+    const lines = input.split('\n');
+    
+    let lineIndex = 0;
+    const [N_str, M_str] = lines[lineIndex++].split(' ');
+    const N = parseInt(N_str, 10);
+    const M = parseInt(M_str, 10);
 
-const firstLine = lines[0].trim().split(/\s+/);
-const N = parseInt(firstLine[0], 10);
-const M = parseInt(firstLine[1], 10);
+    const tasks = lines[lineIndex++].split(' ');
+    
+    const inDegree: Map<string, number> = new Map();
+    const adjList: Map<string, string[]> = new Map();
 
-const secondLine = lines[1].trim().split(/\s+/);
-const tasks = secondLine.slice(0, N);
+    for (const task of tasks) {
+        inDegree.set(task, 0);
+        adjList.set(task, []);
+    }
 
-const adj = new Map<string, Set<string>>();
-const inDegree = new Map<string, number>();
-
-for (const task of tasks) {
-    adj.set(task, new Set());
-    inDegree.set(task, 0);
-}
-
-for (let i = 0; i < M; i++) {
-    const parts = lines[2 + i].trim().split(/\s+/);
-    const from = parts[0];
-    const to = parts[1];
-    if (adj.has(from) && adj.has(to)) {
-        adj.get(from)!.add(to);
+    for (let i = 0; i < M; i++) {
+        const parts = lines[lineIndex++].split(' ');
+        const from = parts[0];
+        const to = parts[1];
+        adjList.get(from)!.push(to);
         inDegree.set(to, inDegree.get(to)! + 1);
     }
-}
 
-const pq = new MinHeap();
-for (const task of tasks) {
-    if (inDegree.get(task)! === 0) {
-        pq.push(task);
-    }
-}
+    const pq = new MinHeap<string>((a, b) => a.localeCompare(b));
 
-const result: string[] = [];
-while (!pq.isEmpty()) {
-    const curr = pq.pop()!;
-    result.push(curr);
-    for (const next of adj.get(curr)!) {
-        inDegree.set(next, inDegree.get(next)! - 1);
-        if (inDegree.get(next)! === 0) {
-            pq.push(next);
+    for (const task of tasks) {
+        if (inDegree.get(task) === 0) {
+            pq.push(task);
         }
     }
+
+    const order: string[] = [];
+    let processedCount = 0;
+
+    while (!pq.isEmpty()) {
+        const current = pq.pop()!;
+        order.push(current);
+        processedCount++;
+
+        const neighbors = adjList.get(current)!;
+        for (const neighbor of neighbors) {
+            const deg = inDegree.get(neighbor)! - 1;
+            inDegree.set(neighbor, deg);
+            if (deg === 0) {
+                pq.push(neighbor);
+            }
+        }
+    }
+
+    if (processedCount !== N) {
+        console.log("IMPOSSIBLE");
+    } else {
+        console.log(order.join(' '));
+    }
 }
 
-if (result.length < N) {
-    console.log("IMPOSSIBLE");
-} else {
-    console.log(result.join(' '));
-}
+solve();

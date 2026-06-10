@@ -51,7 +51,7 @@ class PriorityQueue<T> {
 }
 
 function solve() {
-    const input = fs.readFileSync(0, "utf8").split(/\s+/);
+    const input = fs.readFileSync(0, 'utf8').split(/\s+/);
     if (input.length < 3) return;
 
     const H = parseInt(input[0]);
@@ -61,36 +61,36 @@ function solve() {
         grid.push(input[i + 2]);
     }
 
-    let startR = -1, startC = -1;
-    let targetR = -1, targetC = -1;
+    let startX = -1, startY = -1;
+    let targetX = -1, targetY = -1;
 
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
             if (grid[r][c] === 'S') {
-                startR = r;
-                startC = c;
+                startX = r;
+                startY = c;
             } else if (grid[r][c] === 'T') {
-                targetR = r;
-                targetC = c;
+                targetX = r;
+                targetY = c;
             }
         }
     }
 
-    const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
-    const pq = new PriorityQueue<{ r: number, c: number }>();
+    const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
+    const pq = new PriorityQueue<{ r: number; c: number }>();
 
-    dist[startR][startC] = 0;
-    pq.push({ r: startR, c: startC }, 0);
+    dist[startX][startY] = 0;
+    pq.push({ r: startX, c: startY }, 0);
 
     const dr = [-1, 1, 0, 0];
     const dc = [0, 0, -1, 1];
 
     while (pq.size() > 0) {
-        const { r, c } = pq.pop()!;
-        const d = dist[r][c];
+        const current = pq.pop()!;
+        const { r, c } = current;
 
-        if (r === targetR && c === targetC) {
-            console.log(d);
+        if (r === targetX && c === targetY) {
+            console.log(dist[r][c]);
             return;
         }
 
@@ -107,8 +107,8 @@ function solve() {
                     cost = parseInt(char);
                 }
 
-                if (dist[nr][nc] > d + cost) {
-                    dist[nr][nc] = d + cost;
+                if (dist[r][c] + cost < dist[nr][nc]) {
+                    dist[nr][nc] = dist[r][c] + cost;
                     pq.push({ r: nr, c: nc }, dist[nr][nc]);
                 }
             }

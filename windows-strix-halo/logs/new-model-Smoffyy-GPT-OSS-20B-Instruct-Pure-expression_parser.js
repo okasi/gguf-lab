@@ -35,88 +35,87 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 const input = fs.readFileSync(0, 'utf8').trim();
-let idx = 0;
-const len = input.length;
+let s = input;
+let index = 0;
 function skipSpaces() {
-    while (idx < len && input[idx] === ' ')
-        idx++;
+    while (index < s.length && s[index] === ' ') {
+        index++;
+    }
 }
 function parseNumber() {
     skipSpaces();
-    let start = idx;
-    while (idx < len && /[0-9]/.test(input[idx]))
-        idx++;
-    const numStr = input.slice(start, idx);
-    return Number(numStr);
+    let start = index;
+    while (index < s.length && s[index] >= '0' && s[index] <= '9') {
+        index++;
+    }
+    return Number(s.slice(start, index));
 }
-function parsePrimary() {
+function truncDiv(a, b) {
+    return Math.trunc(a / b);
+}
+function parseFactor() {
     skipSpaces();
-    if (input[idx] === '(') {
-        idx++; // consume '('
+    const ch = s[index];
+    if (ch === '(') {
+        index++; // skip '('
         const val = parseExpression();
         skipSpaces();
-        if (input[idx] === ')')
-            idx++; // consume ')'
+        if (s[index] !== ')') {
+            throw new Error('Expected )');
+        }
+        index++; // skip ')'
         return val;
+    }
+    else if (ch === '+' || ch === '-') {
+        index++; // skip unary operator
+        const val = parseFactor();
+        return ch === '+' ? val : -val;
     }
     else {
         return parseNumber();
     }
 }
-function parseUnary() {
-    skipSpaces();
-    let sign = 1;
-    while (input[idx] === '+' || input[idx] === '-') {
-        if (input[idx] === '-')
-            sign *= -1;
-        idx++;
-        skipSpaces();
-    }
-    const val = parsePrimary();
-    return sign * val;
-}
-function parseFactor() {
-    return parseUnary();
-}
 function parseTerm() {
-    let val = parseFactor();
+    let left = parseFactor();
     while (true) {
         skipSpaces();
-        if (input[idx] === '*') {
-            idx++;
+        if (index < s.length && (s[index] === '*' || s[index] === '/')) {
+            const op = s[index];
+            index++;
             const right = parseFactor();
-            val = val * right;
-        }
-        else if (input[idx] === '/') {
-            idx++;
-            const right = parseFactor();
-            val = Math.trunc(val / right);
+            if (op === '*') {
+                left *= right;
+            }
+            else {
+                left = truncDiv(left, right);
+            }
         }
         else {
             break;
         }
     }
-    return val;
+    return left;
 }
 function parseExpression() {
-    let val = parseTerm();
+    let left = parseTerm();
     while (true) {
         skipSpaces();
-        if (input[idx] === '+') {
-            idx++;
+        if (index < s.length && (s[index] === '+' || s[index] === '-')) {
+            const op = s[index];
+            index++;
             const right = parseTerm();
-            val = val + right;
-        }
-        else if (input[idx] === '-') {
-            idx++;
-            const right = parseTerm();
-            val = val - right;
+            if (op === '+') {
+                left += right;
+            }
+            else {
+                left -= right;
+            }
         }
         else {
             break;
         }
     }
-    return val;
+    return left;
 }
 const result = parseExpression();
 console.log(result.toString());

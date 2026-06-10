@@ -36,10 +36,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class Node {
     constructor(key, value) {
-        this.key = key;
-        this.value = value;
         this.prev = null;
         this.next = null;
+        this.key = key;
+        this.value = value;
     }
 }
 class LRUCache {
@@ -58,61 +58,58 @@ class LRUCache {
             node.next.prev = node.prev;
         else
             this.tail = node.prev;
-        node.next = null;
-        node.prev = null;
     }
-    setMostRecent(node) {
-        if (!this.head) {
-            this.head = this.tail = node;
-        }
-        else {
-            node.next = this.head;
+    setMRU(node) {
+        if (this.head === node)
+            return;
+        this.remove(node);
+        node.next = this.head;
+        node.prev = null;
+        if (this.head)
             this.head.prev = node;
-            this.head = node;
-            if (!this.tail)
-                this.tail = node;
-        }
+        this.head = node;
+        if (!this.tail)
+            this.tail = node;
     }
     put(key, value) {
         if (this.map.has(key)) {
             const node = this.map.get(key);
             node.value = value;
-            this.remove(node);
-            this.setMostRecent(node);
+            this.setMRU(node);
         }
         else {
             if (this.map.size >= this.capacity) {
-                if (this.tail) {
-                    this.map.delete(this.tail.key);
-                    this.remove(this.tail);
+                const lru = this.tail;
+                if (lru) {
+                    this.map.delete(lru.key);
+                    this.remove(lru);
                 }
             }
             const newNode = new Node(key, value);
             this.map.set(key, newNode);
-            this.setMostRecent(newNode);
+            this.setMRU(newNode);
         }
     }
     get(key) {
-        if (!this.map.has(key))
-            return -1;
         const node = this.map.get(key);
-        this.remove(node);
-        this.setMostRecent(node);
+        if (!node)
+            return null;
+        this.setMRU(node);
         return node.value;
     }
     del(key) {
-        if (this.map.has(key)) {
-            const node = this.map.get(key);
-            this.remove(node);
+        const node = this.map.get(key);
+        if (node) {
             this.map.delete(key);
+            this.remove(node);
         }
     }
     getKeys() {
         const keys = [];
-        let current = this.head;
-        while (current) {
-            keys.push(current.key);
-            current = current.next;
+        let curr = this.head;
+        while (curr) {
+            keys.push(curr.key);
+            curr = curr.next;
         }
         return keys;
     }
@@ -125,25 +122,26 @@ function solve() {
     const C = parseInt(input[ptr++]);
     const N = parseInt(input[ptr++]);
     const cache = new LRUCache(C);
-    const results = [];
+    const getResults = [];
     for (let i = 0; i < N; i++) {
         const op = input[ptr++];
         if (op === 'PUT') {
             const key = input[ptr++];
-            const val = parseInt(input[ptr++]);
-            cache.put(key, val);
+            const value = parseInt(input[ptr++]);
+            cache.put(key, value);
         }
         else if (op === 'GET') {
             const key = input[ptr++];
-            results.push(cache.get(key));
+            const val = cache.get(key);
+            getResults.push(val === null ? -1 : val);
         }
         else if (op === 'DEL') {
             const key = input[ptr++];
             cache.del(key);
         }
     }
-    process.stdout.write((results.length > 0 ? results.join(' ') : 'EMPTY') + '\n');
-    const keys = cache.getKeys();
-    process.stdout.write((keys.length > 0 ? keys.join(' ') : 'EMPTY') + '\n');
+    process.stdout.write((getResults.length > 0 ? getResults.join(' ') : 'EMPTY') + '\n');
+    const finalKeys = cache.getKeys();
+    process.stdout.write((finalKeys.length > 0 ? finalKeys.join(' ') : 'EMPTY') + '\n');
 }
 solve();

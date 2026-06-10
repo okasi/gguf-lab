@@ -35,194 +35,193 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 /**
- * Evaluates an arithmetic expression.
- * Supports +, -, *, /, and unary +/-, with parentheses.
- * Division truncates toward zero.
- * @param expression The arithmetic expression string.
- * @returns The result of the evaluation.
+ * Tokenizes the input arithmetic expression string.
+ * Handles numbers, operators, parentheses, and distinguishes between binary and unary signs.
+ * @param expression The input expression string.
+ * @returns An array of tokens.
  */
-function evaluate(expression) {
-    // Tokenization and Preprocessing
-    let tokens = [];
+function tokenize(expression) {
+    const tokens = [];
     let i = 0;
-    const len = expression.length;
-    // Insert spaces around operators and parentheses to simplify splitting,
-    // but handle existing spaces correctly.
-    let processedExpression = expression
-        .replace(/\(/g, " ( ")
-        .replace(/\)/g, " ) ")
-        .replace(/\*/g, " * ")
-        .replace(/\+/g, " + ")
-        .replace(/-/g, " - ");
-    // Clean up multiple spaces
-    while (processedExpression.includes("  ")) {
-        processedExpression = processedExpression.replace("  ", " ");
-    }
-    const parts = processedExpression.trim().split(/\s+/).filter(s => s.length > 0);
-    // Handle unary operators during tokenization/parsing phase
-    // We'll treat the initial tokens as strings and resolve unary operators during shunting-yard or direct evaluation.
-    let rawTokens = [];
-    for (let j = 0; j < parts.length; j++) {
-        const part = parts[j];
-        if (!isNaN(parseInt(part)) || part === '(' || part === ')' || part === '*' || part === '+' || part === '-') {
-            rawTokens.push(part);
+    const n = expression.length;
+    while (i < n) {
+        let char = expression[i];
+        if (/\s/.test(char)) {
+            i++;
+            continue;
         }
-        else if (part === '+' || part === '-') {
-            // Look ahead to determine if '+' or '-' is unary
-            const isUnary = j === 0 || rawTokens[rawTokens.length - 1] === '(' ||
-                (rawTokens[rawTokens.length - 1] === '+' || rawTokens[rawTokens.length - 1] === '-');
-            if (isUnary) {
-                // Replace unary + with 0 + or just treat it as a sign modification
-                // To simplify, we replace unary '-' with a special marker or prepend '0'
-                if (part === '-') {
-                    rawTokens.push('UNARY_MINUS');
+        if (/[0-9]/.test(char)) {
+            let numStr = '';
+            while (i < n && /[0-9]/.test(expression[i])) {
+                numStr += expression[i];
+                i++;
+            }
+            tokens.push({ type: 'NUMBER', value: parseInt(numStr, 10) });
+            continue;
+        }
+        if (char === '(') {
+            tokens.push({ type: 'LPAREN' });
+            i++;
+            continue;
+        }
+        if (char === ')') {
+            tokens.push({ type: 'RPAREN' });
+            i++;
+            continue;
+        }
+        if (char === '+' || char === '-') {
+            // Look ahead to determine if the sign is unary or binary
+            const isStart = i === 0 || expression[i - 1] === '(' || expression[i - 1] === ' ' || expression[i - 1] === '*';
+            if (isStart) {
+                // Unary sign: We treat unary + as identity (skip it) and unary - as a special indicator
+                // For simplicity in the Shunting Yard/RPN, we'll handle unary minus by pushing a '0' followed by the '-' operator
+                // but since the requirement implies standard arithmetic structure, we will inject a 0 for unary minus.
+                if (char === '-') {
+                    tokens.push({ type: 'NUMBER', value: 0 });
+                    tokens.push({ type: 'OPERATOR_MINUS' });
                 }
-                else if (part === '+') {
-                    // Unary + does nothing mathematically, can be skipped or treated as 0 +
-                    // For simplicity, we skip unary '+'
+                else if (char === '+') {
+                    // Unary plus is ignored (treated as 0 + X)
+                    i++;
+                    continue;
                 }
             }
             else {
-                rawTokens.push(part);
-            }
-        }
-    }
-    const operators = {
-        '+': 1,
-        '-': 1,
-        '*': 2,
-        '/': 2,
-        'UNARY_MINUS': 3, // Highest precedence
-    };
-    const precedence = (op) => operators[op] || 0;
-    const isOperator = (token) => operators[token] !== undefined;
-    // Convert string tokens to structured tokens
-    const structuredTokens = rawTokens.map(token => {
-        if (!isNaN(parseFloat(token)) && token.trim() !== '') {
-            return { type: 'number', value: token };
-        }
-        if (token === '(' || token === ')') {
-            return { type: 'paren', value: token };
-        }
-        if (isOperator(token)) {
-            return { type: 'operator', value: token };
-        }
-        // Should not happen if tokenization is perfect
-        throw new Error(`Unknown token: ${token}`);
-    });
-    const outputQueue = [];
-    const operatorStack = [];
-    for (const token of structuredTokens) {
-        if (token.type === 'number') {
-            outputQueue.push(token.value);
-        }
-        else if (token.type === 'operator') {
-            const op1 = token.value;
-            while (operatorStack.length > 0) {
-                const topToken = operatorStack[operatorStack.length - 1];
-                if (topToken === '(')
-                    break;
-                if (isOperator(topToken)) {
-                    const op2 = topToken;
-                    // Check precedence: op2 should have higher or equal precedence than op1
-                    // Unary minus always has highest precedence (3)
-                    if (precedence(op2) >= precedence(op1)) {
-                        outputQueue.push(operatorStack.pop());
-                    }
-                    else {
-                        break;
-                    }
+                // Binary sign
+                if (char === '+') {
+                    tokens.push({ type: 'OPERATOR_PLUS' });
                 }
                 else {
-                    break;
+                    tokens.push({ type: 'OPERATOR_MINUS' });
                 }
             }
-            operatorStack.push(op1);
+            i++;
+            continue;
         }
-        else if (token.type === 'paren') {
-            if (token.value === '(') {
-                operatorStack.push(token.value);
+        if (char === '*' || char === '/') {
+            if (char === '*') {
+                tokens.push({ type: 'OPERATOR_MULTIPLY' });
             }
-            else { // token.value === ')'
-                let foundMatch = false;
-                while (operatorStack.length > 0) {
-                    const top = operatorStack.pop();
-                    if (top === '(') {
-                        foundMatch = true;
-                        break;
-                    }
-                    outputQueue.push(top);
-                }
-                if (!foundMatch) {
-                    throw new Error("Mismatched parentheses.");
-                }
+            else { // '/'
+                tokens.push({ type: 'OPERATOR_DIVIDE' });
             }
+            i++;
+            continue;
+        }
+        // Should not happen based on problem constraints
+        throw new Error(`Unexpected character: ${char}`);
+    }
+    tokens.push({ type: 'EOF' });
+    return tokens;
+}
+// Operator precedence: Higher number means higher precedence
+const precedence = {
+    'OPERATOR_PLUS': 1,
+    'OPERATOR_MINUS': 1,
+    'OPERATOR_MULTIPLY': 2,
+    'OPERATOR_DIVIDE': 2,
+};
+// Shunting-yard implementation to convert infix to Reverse Polish Notation (RPN)
+function shuntingYard(tokens) {
+    const outputQueue = [];
+    const operatorStack = [];
+    for (const token of tokens.filter(t => t.type !== 'EOF')) {
+        switch (token.type) {
+            case 'NUMBER':
+                outputQueue.push(token);
+                break;
+            case 'LPAREN':
+                operatorStack.push(token);
+                break;
+            case 'RPAREN':
+                while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== 'LPAREN') {
+                    outputQueue.push(operatorStack.pop());
+                }
+                if (operatorStack.length === 0 || operatorStack[operatorStack.length - 1].type !== 'LPAREN') {
+                    throw new Error("Mismatched parentheses");
+                }
+                operatorStack.pop(); // Discard '('
+                break;
+            case 'OPERATOR_PLUS':
+            case 'OPERATOR_MINUS':
+            case 'OPERATOR_MULTIPLY':
+            case 'OPERATOR_DIVIDE':
+                const op1 = token;
+                while (operatorStack.length > 0 &&
+                    operatorStack[operatorStack.length - 1].type !== 'LPAREN' &&
+                    (precedence[operatorStack[operatorStack.length - 1].type] >= precedence[op1.type])) {
+                    outputQueue.push(operatorStack.pop());
+                }
+                operatorStack.push(op1);
+                break;
         }
     }
-    // Pop remaining operators
     while (operatorStack.length > 0) {
         const op = operatorStack.pop();
-        if (op === '(' || op === ')') {
-            throw new Error("Mismatched parentheses remaining.");
+        if (op.type === 'LPAREN' || op.type === 'RPAREN') {
+            throw new Error("Mismatched parentheses remaining");
         }
         outputQueue.push(op);
     }
-    // --- Reverse Polish Notation (RPN) Evaluation ---
+    return outputQueue;
+}
+// Evaluates the RPN expression
+function evaluateRPN(rpnTokens) {
     const stack = [];
-    for (const token of outputQueue) {
-        if (!isNaN(parseFloat(token))) {
-            stack.push(parseFloat(token));
+    for (const token of rpnTokens) {
+        if (token.type === 'NUMBER') {
+            stack.push(token.value);
         }
-        else {
-            const operator = token;
-            if (operator === 'UNARY_MINUS') {
-                const operand = stack.pop();
-                if (operand === undefined)
-                    throw new Error("Syntax error: Unary minus requires an operand.");
-                stack.push(-operand);
+        else if (token.type === 'OPERATOR_PLUS' || token.type === 'OPERATOR_MINUS' || token.type === 'OPERATOR_MULTIPLY' || token.type === 'OPERATOR_DIVIDE') {
+            if (stack.length < 2) {
+                throw new Error("Invalid RPN expression: insufficient operands");
             }
-            else {
-                const rhs = stack.pop();
-                const lhs = stack.pop();
-                if (lhs === undefined || rhs === undefined) {
-                    throw new Error(`Syntax error: Binary operator ${operator} requires two operands.`);
-                }
-                let result;
-                switch (operator) {
-                    case '+':
-                        result = lhs + rhs;
-                        break;
-                    case '-':
-                        result = lhs - rhs;
-                        break;
-                    case '*':
-                        result = lhs * rhs;
-                        break;
-                    case '/':
-                        // Truncates toward zero (like Math.trunc)
-                        result = Math.trunc(lhs / rhs);
-                        break;
-                    default:
-                        throw new Error(`Unknown operator: ${operator}`);
-                }
-                stack.push(result);
+            const b = stack.pop();
+            const a = stack.pop();
+            let result;
+            switch (token.type) {
+                case 'OPERATOR_PLUS':
+                    result = a + b;
+                    break;
+                case 'OPERATOR_MINUS':
+                    result = a - b;
+                    break;
+                case 'OPERATOR_MULTIPLY':
+                    result = a * b;
+                    break;
+                case 'OPERATOR_DIVIDE':
+                    // Truncate toward zero for division
+                    result = Math.trunc(a / b);
+                    break;
+                default:
+                    throw new Error("Unknown operator");
             }
+            stack.push(result);
         }
     }
     if (stack.length !== 1) {
-        throw new Error("Evaluation error: Invalid expression structure.");
+        throw new Error("Invalid RPN expression: too many operands left");
     }
-    return Math.trunc(stack[0]);
+    return stack[0];
 }
-// Main execution block
-try {
-    const input = fs.readFileSync(0, "utf8").trim();
-    if (input.length > 0) {
-        const result = evaluate(input);
+function solve() {
+    try {
+        // Read all input from stdin
+        const input = fs.readFileSync(0, 'utf8').trim();
+        if (!input)
+            return;
+        // 1. Tokenize
+        const tokens = tokenize(input);
+        // 2. Convert to RPN
+        const rpn = shuntingYard(tokens);
+        // 3. Evaluate RPN
+        const result = evaluateRPN(rpn);
         console.log(result);
     }
+    catch (error) {
+        // In a strict contest environment, errors might need specific handling, 
+        // but for robust execution, we log if necessary.
+        // console.error(error);
+    }
 }
-catch (e) {
-    // In a competitive programming context, error handling might be omitted or simplified.
-    // console.error(e); 
-}
+solve();

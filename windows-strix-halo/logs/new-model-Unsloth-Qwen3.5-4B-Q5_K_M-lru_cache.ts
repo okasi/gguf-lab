@@ -1,64 +1,75 @@
 ﻿import fs from 'fs';
 
-    class Node {
-        key: string;
-        value: number;
-        prev: Node | null;
-        next: Node | null;
+function solve() {
+    const data = fs.readFileSync(0, "utf8");
+    const lines = data.trim().split('\n');
+    const [C, N] = lines[0].split(' ').map(Number);
+    
+    const getOps = [];
+    const keys = new Map<string, { val: number, order: number }>();
+    const lruOrder: number[] = [];
+    let lruIndex = 0;
 
-        constructor(key: string, value: number) {
-            this.key = key;
-            this.value = value;
-            this.prev = null;
-            this.next = null;
-        }
-    }
+    for (let i = 1; i <= N; i++) {
+        const parts = lines[i].trim().split(' ');
+        const op = parts[0];
+        const key = parts[1];
+        const val = parseInt(parts[2]) || 0;
 
-    function solve() {
-        const input = fs.readFileSync(0, 'utf8');
-        const lines = input.split('\n');
-        const linesData = lines.map(l => l.trim()).filter(l => l.length > 0);
-
-        if (linesData.length === 0) return;
-
-        const [C, N] = linesData[0].split(' ').map(Number);
-        
-        // Cache Map: key -> Node
-        const map = new Map<string, Node>();
-        // List pointers
-        let head: Node | null = null; // LRU end
-        let tail: Node | null = null; // MRU end
-        
-        // Wait, convention: Head is MRU or LRU?
-        // Let's say Tail is MRU (Most Recently Used), Head is LRU (Least Recently Used).
-        // Actually, usually Head is front. Let's make Tail MRU.
-        // If Tail is MRU, we want to add new items to Tail.
-        // If Head is LRU, we remove from Head when full.
-        
-        // Wait, let's standardize.
-        // MRU: Tail. LRU: Head.
-        // Add new -> add to Tail.
-        // Move used -> move to Tail.
-        // Evict -> remove from Head.
-        
-        const getMRU = () => tail;
-        const getLRU = () => head;
-
-        // Helper to add node to MRU end
-        const addToMRU = (node: Node) => {
-            if (tail === null) {
-                head = node;
-                tail = node;
-                node.prev = node; // Self loop if single? No, null/null is safer.
-                // Let's handle empty list case carefully.
-            } else if (tail === head) {
-                // Single node
-                tail = node;
-                node.next = tail; // Points to itself? No, distinct nodes.
-                tail.prev = node;
-                node.next = null; // Wait, circular? No.
-                // Correct logic for linked list:
-                // head <-> node <-> tail
+        if (op === 'GET') {
+            getOps.push(key);
+            if (keys.has(key)) {
+                const entry = keys.get(key)!;
+                entry.order++;
+                const idx = lruOrder.indexOf(entry.order);
+                if (idx > -1) {
+                    lruOrder.splice(idx, 1);
+                    lruOrder.push(entry.order);
+                }
+            }
+        } else if (op === 'PUT') {
+            if (keys.has(key)) {
+                const entry = keys.get(key)!;
+                entry.val = val;
+                entry.order++;
+                const idx = lruOrder.indexOf(entry.order);
+                if (idx > -1) {
+                    lruOrder.splice(idx, 1);
+                    lruOrder.push(entry.order);
+                }
+            } else {
+                if (keys.size >= C) {
+                    const lruVal = lruOrder.shift()!;
+                    const lruKey = lruOrder.indexOf(lruVal);
+                    lruOrder.splice(lruKey, 1);
+                    keys.delete(lruOrder[lruKey]);
+                }
+                keys.set(key, { val, order: lruOrder.length });
+                lruOrder.push(lruOrder.length);
+            }
+        } else if (op === 'DEL') {
+            if (keys.has(key)) {
+                const entry = keys.get(key)!;
+                const idx = lruOrder.indexOf(entry.order);
+                if (idx > -1) {
+                    lruOrder.splice(idx, 1);
+                }
+                keys.delete(key);
             }
         }
     }
+
+    const getResults = getOps.map(k => keys.has(k) ? keys.get(k)!.val : -1);
+    const sortedKeys = lruOrder.map(() => {
+        const key = keys.keys().next().value;
+        return key;
+    }).filter(() => keys.has(key));
+    
+    const result1 = getResults.length > 0 ? getResults.join(' ') : 'EMPTY';
+    const result2 = sortedKeys.length > 0 ? sortedKeys.join(' ') : 'EMPTY';
+
+    console.log(result1);
+    console.log(result2);
+}
+
+solve();

@@ -34,51 +34,145 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-function evaluateExpression(expr) {
-    const tokens = tokenize(expr);
-    const parser = new Parser(tokens);
-    return parser.parse();
+const input = fs.readFileSync(0, "utf8").trim();
+if (input === '') {
+    process.exit(0);
 }
-function tokenize(input) {
+let pos = 0;
+const str = input;
+function peek() {
+    if (pos >= str.length)
+        return undefined;
+    return str[pos];
+}
+function skipSpaces() {
+    while (pos < str.length && str[pos] === ' ') {
+        pos++;
+    }
+}
+function parseNumber() {
+    skipSpaces();
+    const start = pos;
+    while (pos < str.length && (str[pos] >= '0' && str[pos] <= '9')) {
+        pos++;
+    }
+    if (start === pos) {
+        throw new Error('Expected number');
+    }
+    const numStr = str.substring(start, pos);
+    const value = parseInt(numStr, 10);
+    if (isNaN(value)) {
+        throw new Error('Invalid number');
+    }
+    return { type: 'number', value };
+}
+function parseToken() {
+    skipSpaces();
+    const char = peek();
+    if (char === undefined) {
+        throw new Error('Unexpected end of input');
+    }
+    if (char >= '0' && char <= '9') {
+        return parseNumber();
+    }
+    if (char === '+' || char === '-' || char === '*' || char === '/') {
+        pos++;
+        return { type: 'op', value: char };
+    }
+    if (char === '(') {
+        pos++;
+        skipSpaces();
+        const expr = parseExpression();
+        skipSpaces();
+        const close = peek();
+        if (close !== ')') {
+            throw new Error('Expected closing parenthesis');
+        }
+        pos++;
+        return expr;
+    }
+    throw new Error(`Unexpected character: ${char}`);
+}
+function isUnaryOp(token, isStart) {
+    if (token.type !== 'op')
+        return false;
+    return token.value === '+' || token.value === '-';
+}
+// Grammar:
+// expression -> term (('+' | '-') term)*
+// term -> unary (('*' | '/') unary)*
+// unary -> ('+' | '-') unary | primary
+// primary -> '(' expression ')' | number
+function parseExpression() {
+    let left = parseTerm();
+    while (true) {
+        skipSpaces();
+        const char = peek();
+        if (char === '+' || char === '-') {
+            pos++;
+            const right = parseTerm();
+            left = { type: 'op', value: char };
+            // We need to handle binary ops. Let's refactor to return values.
+        }
+        else {
+            break;
+        }
+    }
+    // Actually, let's use a value-based approach for easier evaluation.
+    return left; // This is a bit messy. Let's rewrite with value computation.
+}
+function tokenize() {
     const tokens = [];
-    let i = 0;
-    while (i < input.length) {
-        const char = input[i];
-        if (char === ' ') {
-            i++;
-            continue;
-        }
+    pos = 0;
+    while (pos < str.length) {
+        skipSpaces();
+        if (pos >= str.length)
+            break;
+        const char = str[pos];
         if (char >= '0' && char <= '9') {
-            let numStr = '';
-            while (i < input.length && input[i] >= '0' && input[i] <= '9') {
-                numStr += input[i];
-                i++;
+            const start = pos;
+            while (pos < str.length && str[pos] >= '0' && str[pos] <= '9') {
+                pos++;
             }
-            tokens.push({ type: 'NUMBER', value: parseInt(numStr, 10) });
-        }
-        else if (char === '+') {
-            tokens.push({ type: 'PLUS', value: 0 });
-            i++;
-        }
-        else if (char === '-') {
-            tokens.push({ type: 'MINUS', value: 0 });
-            i++;
-        }
-        else if (char === '*') {
-            tokens.push({ type: 'MULTIPLY', value: 0 });
-            i++;
-        }
-        else if (char === '/') {
-            tokens.push({ type: 'DIVIDE', value: 0 });
-            i++;
+            const numStr = str.substring(start, pos);
+            const value = parseInt(numStr, 10);
+            tokens.push({ type: 'number', value, precedence: 0, associativity: 'left' });
         }
         else if (char === '(') {
-            tokens.push({ type: 'LPAREN', value: 0 });
-            i++;
+            tokens.push({ type: 'op', value: '(', precedence: 0, associativity: 'left' });
+            pos++;
         }
         else if (char === ')') {
-            tokens.push({ type: 'RPAREN', value: 0 });
-            i++;
+            tokens.push({ type: 'op', value: ')', precedence: 0, associativity: 'left' });
+            pos++;
+        }
+        else if (char === '+' || char === '-' || char === '*' || char === '/') {
+            const op = char;
+            let unary = false;
+            // Check if unary
+            if (op === '+' || op === '-') {
+                // It's unary if it's the first token, or after an opening parenthesis, or after another operator
+                const prev = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+                if (!prev || prev.value === '(' || prev.type === 'op') {
+                    unary = true;
+                }
+            }
+            let precedence = 0;
+            if (op === '*' || op === '/') {
+                precedence = 2;
+            }
+            else if (op === '+' || op === '-') {
+                precedence = 1;
+            }
+            const isRightAssociative = op === '+' || op === '-'; // Unary is right associative
+            tokens.push({
+                type: 'op',
+                value: op,
+                isUnary: unary,
+                precedence,
+                associativity: unary ? 'right' : 'left'
+            });
+            pos++;
         }
         else {
             throw new Error(`Unexpected character: ${char}`);
@@ -86,101 +180,106 @@ function tokenize(input) {
     }
     return tokens;
 }
-class Parser {
-    constructor(tokens) {
-        this.pos = 0;
-        this.tokens = tokens;
-    }
-    peek() {
-        return this.tokens[this.pos];
-    }
-    consume() {
-        const token = this.tokens[this.pos];
-        if (!token) {
-            throw new Error('Unexpected end of input');
+function shuntingYard(tokens) {
+    const output = [];
+    const operatorStack = [];
+    for (const token of tokens) {
+        if (token.type === 'number') {
+            output.push(token);
         }
-        this.pos++;
-        return token;
-    }
-    parse() {
-        const result = this.parseExpression();
-        if (this.pos < this.tokens.length) {
-            throw new Error('Unexpected token after expression');
-        }
-        return result;
-    }
-    // Lowest precedence: + and -
-    parseExpression() {
-        let left = this.parseTerm();
-        while (this.peek()?.type === 'PLUS' || this.peek()?.type === 'MINUS') {
-            const op = this.consume();
-            const right = this.parseTerm();
-            if (op.type === 'PLUS') {
-                left = left + right;
+        else if (token.type === 'op') {
+            if (token.value === '(') {
+                operatorStack.push(token);
             }
-            else {
-                left = left - right;
-            }
-        }
-        return left;
-    }
-    // Medium precedence: * and /
-    parseTerm() {
-        let left = this.parseUnary();
-        while (this.peek()?.type === 'MULTIPLY' || this.peek()?.type === 'DIVIDE') {
-            const op = this.consume();
-            const right = this.parseUnary();
-            if (op.type === 'MULTIPLY') {
-                left = left * right;
-            }
-            else {
-                // Division truncates toward zero
-                if (right === 0) {
-                    throw new Error('Division by zero');
+            else if (token.value === ')') {
+                while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].value !== '(') {
+                    output.push(operatorStack.pop());
                 }
-                left = Math.trunc(left / right);
-            }
-        }
-        return left;
-    }
-    // Highest precedence: unary +/- and primary expressions
-    parseUnary() {
-        if (this.peek()?.type === 'PLUS' || this.peek()?.type === 'MINUS') {
-            const op = this.consume();
-            const value = this.parseUnary();
-            if (op.type === 'MINUS') {
-                return -value;
+                if (operatorStack.length === 0) {
+                    throw new Error('Mismatched parentheses');
+                }
+                operatorStack.pop(); // Remove '('
             }
             else {
-                return value;
+                // Operator
+                while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].value !== '(') {
+                    const top = operatorStack[operatorStack.length - 1];
+                    if (top.type === 'op' &&
+                        ((top.isUnary && token.isUnary && top.associativity === 'right') ||
+                            (!top.isUnary && !token.isUnary && top.precedence >= token.precedence)) ||
+                        (!top.isUnary && token.isUnary && top.precedence >= token.precedence)) {
+                        output.push(operatorStack.pop());
+                    }
+                    else {
+                        break;
+                    }
+                }
+                operatorStack.push(token);
             }
         }
-        return this.parsePrimary();
     }
-    // Primary: numbers and parenthesized expressions
-    parsePrimary() {
-        const token = this.peek();
-        if (!token) {
-            throw new Error('Unexpected end of input');
+    while (operatorStack.length > 0) {
+        const top = operatorStack.pop();
+        if (top.value === '(' || top.value === ')') {
+            throw new Error('Mismatched parentheses');
         }
-        if (token.type === 'NUMBER') {
-            this.consume();
-            return token.value;
-        }
-        else if (token.type === 'LPAREN') {
-            this.consume(); // consume '('
-            const result = this.parseExpression();
-            const close = this.consume();
-            if (close.type !== 'RPAREN') {
-                throw new Error('Expected closing parenthesis');
-            }
-            return result;
-        }
-        else {
-            throw new Error(`Unexpected token: ${token.type}`);
-        }
+        output.push(top);
     }
+    return output;
 }
-const input = fs.readFileSync(0, 'utf8').trim();
-const result = evaluateExpression(input);
+function evaluateRPN(rpn) {
+    const stack = [];
+    for (const token of rpn) {
+        if (token.type === 'number') {
+            stack.push(token.value);
+        }
+        else if (token.type === 'op' && typeof token.value === 'string') {
+            if (token.isUnary) {
+                if (stack.length < 1) {
+                    throw new Error('Insufficient operands for unary operator');
+                }
+                const operand = stack.pop();
+                if (token.value === '+') {
+                    stack.push(operand);
+                }
+                else if (token.value === '-') {
+                    stack.push(-operand);
+                }
+            }
+            else {
+                if (stack.length < 2) {
+                    throw new Error('Insufficient operands for binary operator');
+                }
+                const b = stack.pop();
+                const a = stack.pop();
+                switch (token.value) {
+                    case '+':
+                        stack.push(a + b);
+                        break;
+                    case '-':
+                        stack.push(a - b);
+                        break;
+                    case '*':
+                        stack.push(a * b);
+                        break;
+                    case '/':
+                        if (b === 0) {
+                            throw new Error('Division by zero');
+                        }
+                        // Truncate toward zero
+                        const result = a / b;
+                        stack.push(result < 0 ? Math.ceil(result) : Math.floor(result));
+                        break;
+                }
+            }
+        }
+    }
+    if (stack.length !== 1) {
+        throw new Error('Invalid expression');
+    }
+    return stack[0];
+}
+const tokens = tokenize();
+const rpn = shuntingYard(tokens);
+const result = evaluateRPN(rpn);
 console.log(result);

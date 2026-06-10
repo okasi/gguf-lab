@@ -19,9 +19,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
+. (Join-Path $Root "ModelDraft.ps1")
 $RepoRoot = Split-Path $Root -Parent
 $LogDir = Join-Path $Root "logs"
-$DefaultServer = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+$DefaultServer = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
+if (-not (Test-Path -LiteralPath $DefaultServer)) {
+    $DefaultServer = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+}
 $Adapter = Join-Path $RepoRoot "lan-adapter.js"
 $Watchdog = Join-Path $Root "Watch-LAN-Parent.ps1"
 
@@ -157,6 +161,7 @@ function Build-LlamaArgs {
     $minP = Get-ModelValue -ModelConfig $ModelConfig -Key "MinP" -Default "0.0"
     $repeatPenalty = Get-ModelValue -ModelConfig $ModelConfig -Key "RepeatPenalty" -Default "1.0"
     $imageMinTokens = Get-ModelValue -ModelConfig $ModelConfig -Key "ImageMinTokens" -Default "256"
+    $flashAttn = Get-FlashAttnValue -Model $ModelConfig
 
     $args = @(
         "--model", $ModelConfig.Model,
@@ -166,7 +171,7 @@ function Build-LlamaArgs {
         "--ctx-size", $ctxSize,
         "-np", "$Parallel",
         "-ngl", "99",
-        "--flash-attn", "on",
+        "--flash-attn", $flashAttn,
         "--cache-type-k", "q8_0",
         "--cache-type-v", "q8_0",
         "--temp", $temp,
@@ -186,11 +191,7 @@ function Build-LlamaArgs {
         $args += @("--mmproj", $ModelConfig.Mmproj)
     }
     if ($ModelConfig.ContainsKey("Mtp") -and $ModelConfig.Mtp) {
-        if ($DisableMtp) {
-            $args += @("--spec-type", "none")
-        } else {
-            $args += @("--spec-type", "draft-mtp", "--spec-draft-n-min", "1", "--spec-draft-n-max", "2")
-        }
+        $args = Add-SpeculativeServerArgs -Model $ModelConfig -ServerArgs $args -DisableMtp:$DisableMtp
     }
     if ($ModelConfig.ContainsKey("GptOss") -and $ModelConfig.GptOss) {
         $args += @("--jinja")

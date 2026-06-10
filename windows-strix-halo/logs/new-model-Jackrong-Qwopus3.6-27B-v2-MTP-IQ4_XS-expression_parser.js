@@ -1,128 +1,202 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __importStar(require("fs"));
-class Parser {
-    constructor(input) {
-        this.tokens = [];
-        this.pos = 0;
-        this.tokenize(input);
-    }
-    tokenize(input) {
-        for (let i = 0; i < input.length; i++) {
-            const ch = input[i];
-            if (ch === ' ')
+const fs_1 = __importDefault(require("fs"));
+function evaluate(expression) {
+    // Use a shunting-yard algorithm with explicit handling of unary operators.
+    // We first tokenise the input into numbers, operators, and parentheses.
+    const tokens = [];
+    let i = 0;
+    const len = expression.length;
+    while (i < len) {
+        const ch = expression[i];
+        if (ch === ' ') {
+            i++;
+            continue;
+        }
+        if (ch === '(' || ch === ')') {
+            tokens.push({ type: 'paren', char });
+            i++;
+            continue;
+        }
+        if (ch === '-' || ch === '+') {
+            // Determine if this is unary or binary.
+            // It's unary if it's the first token, or if the previous non-space token was an operator or '('.
+            const prevToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+            const isUnary = prevToken === null ||
+                prevToken.type === 'op' ||
+                (prevToken.type === 'paren' && prevToken.char === '(');
+            if (isUnary) {
+                // Unary + or -. We'll treat unary - as a special operator.
+                tokens.push({ type: 'op', char });
+                i++;
                 continue;
-            if (ch >= '0' && ch <= '9') {
-                let num = '';
-                while (i < input.length && input[i] >= '0' && input[i] <= '9') {
-                    num += input[i];
-                    i++;
+            }
+            else {
+                // Binary + or -
+                tokens.push({ type: 'op', char });
+                i++;
+                continue;
+            }
+        }
+        if (ch === '*' || ch === '/') {
+            tokens.push({ type: 'op', char });
+            i++;
+            continue;
+        }
+        if (ch >= '0' && ch <= '9') {
+            let num = 0;
+            while (i < len && expression[i] >= '0' && expression[i] <= '9') {
+                num = num * 10 + (expression.charCodeAt(i) - 48);
+                i++;
+            }
+            tokens.push({ type: 'number', value: num });
+            continue;
+        }
+        throw new Error(`Unexpected character: ${ch}`);
+    }
+    // Now we have tokens. We need to distinguish unary operators from binary ones during parsing.
+    // Let's refine the token list to mark unary vs binary.
+    const refinedTokens = [];
+    for (let t = 0; t < tokens.length; t++) {
+        const token = tokens[t];
+        if (token.type === 'number' || token.type === 'paren') {
+            refinedTokens.push(token);
+        }
+        else if (token.type === 'op') {
+            // Determine if this operator is unary or binary.
+            // An operator is unary if it's at the start, or preceded by '(' or another operator.
+            const prevToken = refinedTokens.length > 0 ? refinedTokens[refinedTokens.length - 1] : null;
+            const isUnary = prevToken === null ||
+                prevToken.type === 'op' ||
+                (prevToken.type === 'paren' && prevToken.char === '(');
+            if (isUnary) {
+                refinedTokens.push({ type: 'op', char: token.char + 'u' }); // Mark as unary
+            }
+            else {
+                refinedTokens.push(token);
+            }
+        }
+    }
+    // Define precedence and associativity.
+    // Unary operators have the highest precedence.
+    // * and / have higher precedence than + and -.
+    function precedence(token) {
+        if (token.type !== 'op')
+            return -1;
+        const c = token.char;
+        if (c === 'u+' || c === 'u-')
+            return 3; // Unary
+        if (c === '*' || c === '/')
+            return 2; // Multiplicative
+        if (c === '+' || c === '-')
+            return 1; // Additive
+        return 0;
+    }
+    // Associativity for binary operators.
+    // Unary operators are right-associative, but we handle them differently.
+    function isLeftAssociative(token) {
+        if (token.type !== 'op')
+            return false;
+        const c = token.char;
+        if (c === 'u+' || c === 'u-')
+            return false; // Right-associative
+        return true; // All binary operators are left-associative
+    }
+    // Shunting-yard algorithm
+    const outputQueue = [];
+    const opStack = [];
+    for (const token of refinedTokens) {
+        if (token.type === 'number') {
+            outputQueue.push(token);
+        }
+        else if (token.type === 'op') {
+            while (opStack.length > 0) {
+                const top = opStack[opStack.length - 1];
+                if (top.type === 'paren' && top.char === '(')
+                    break;
+                const tPrec = precedence(top);
+                const cPrec = precedence(token);
+                if ((tPrec > cPrec) ||
+                    (tPrec === cPrec && isLeftAssociative(token))) {
+                    outputQueue.push(opStack.pop());
                 }
-                this.tokens.push(num);
-                i--; // will be incremented by the for loop
+                else {
+                    break;
+                }
             }
-            else {
-                this.tokens.push(ch);
+            opStack.push(token);
+        }
+        else if (token.type === 'paren') {
+            if (token.char === '(') {
+                opStack.push(token);
+            }
+            else if (token.char === ')') {
+                while (opStack.length > 0) {
+                    const top = opStack.pop();
+                    if (top.type === 'paren' && top.char === '(')
+                        break;
+                    outputQueue.push(top);
+                }
+                if (opStack.length === 0) {
+                    throw new Error('Mismatched parentheses');
+                }
             }
         }
     }
-    peek() {
-        return this.pos < this.tokens.length ? this.tokens[this.pos] : undefined;
-    }
-    consume() {
-        return this.tokens[this.pos++];
-    }
-    parseExpr() {
-        let result = this.parseTerm();
-        while (this.peek() === '+' || this.peek() === '-') {
-            const op = this.consume();
-            const rhs = this.parseTerm();
-            if (op === '+') {
-                result += rhs;
-            }
-            else {
-                result -= rhs;
-            }
+    while (opStack.length > 0) {
+        const top = opStack.pop();
+        if (top.type === 'paren') {
+            throw new Error('Mismatched parentheses');
         }
-        return result;
+        outputQueue.push(top);
     }
-    parseTerm() {
-        let result = this.parseFactor();
-        while (this.peek() === '*' || this.peek() === '/') {
-            const op = this.consume();
-            const rhs = this.parseFactor();
-            if (op === '*') {
-                result *= rhs;
+    // Evaluate the RPN (Reverse Polish Notation) queue
+    const valueStack = [];
+    for (const token of outputQueue) {
+        if (token.type === 'number') {
+            valueStack.push(token.value);
+        }
+        else if (token.type === 'op') {
+            const c = token.char;
+            if (c === 'u-') {
+                const a = valueStack.pop();
+                valueStack.push(-a);
             }
-            else {
+            else if (c === 'u+') {
+                const a = valueStack.pop();
+                valueStack.push(+a);
+            }
+            else if (c === '+') {
+                const b = valueStack.pop();
+                const a = valueStack.pop();
+                valueStack.push(a + b);
+            }
+            else if (c === '-') {
+                const b = valueStack.pop();
+                const a = valueStack.pop();
+                valueStack.push(a - b);
+            }
+            else if (c === '*') {
+                const b = valueStack.pop();
+                const a = valueStack.pop();
+                valueStack.push(a * b);
+            }
+            else if (c === '/') {
+                const b = valueStack.pop();
+                const a = valueStack.pop();
                 // Division truncates toward zero
-                result = Math.trunc(result / rhs);
+                const result = Math.trunc(a / b);
+                valueStack.push(result);
             }
         }
-        return result;
     }
-    parseFactor() {
-        if (this.peek() === '+' || this.peek() === '-') {
-            const op = this.consume();
-            const val = this.parseFactor();
-            if (op === '+') {
-                return val;
-            }
-            else {
-                return -val;
-            }
-        }
-        return this.parsePrimary();
+    if (valueStack.length !== 1) {
+        throw new Error('Invalid expression');
     }
-    parsePrimary() {
-        const tok = this.peek();
-        if (tok === '(') {
-            this.consume(); // consume '('
-            const result = this.parseExpr();
-            this.consume(); // consume ')'
-            return result;
-        }
-        // It must be a number
-        const num = this.consume();
-        return parseInt(num, 10);
-    }
-    evaluate() {
-        return this.parseExpr();
-    }
+    return valueStack[0];
 }
-const input = fs.readFileSync(0, 'utf8').trim();
-const parser = new Parser(input);
-console.log(parser.evaluate());
+const input = fs_1.default.readFileSync(0, 'utf8').trim();
+console.log(evaluate(input));

@@ -1,11 +1,18 @@
-﻿import * as fs from "fs";
+﻿import * as fs from 'fs';
+import { PriorityQueue } from './PriorityQueue';
 
-/**
- * A simple Min-Priority Queue implemented using an array representation of a Binary Heap.
- * Stores strings and prioritizes lexicographically smaller strings.
- */
-class PriorityQueue<T extends string> {
-    private heap: T[] = [];
+class PriorityQueue<T> {
+    private heap: { value: T, priority: number }[] = [];
+    private comparator: (a: T, b: T) => number;
+
+    constructor(comparator: (a: T, b: T) => number) {
+        this.comparator = (a, b) => {
+            // For lexicographically smallest task name, the priority should be the task name itself,
+            // and the comparison should prioritize smaller strings.
+            // Here, we treat the task name as the priority.
+            return a.toString().localeCompare(b.toString());
+        };
+    }
 
     size(): number {
         return this.heap.length;
@@ -15,160 +22,124 @@ class PriorityQueue<T extends string> {
         return this.heap.length === 0;
     }
 
-    private getParentIndex(i: number): number {
-        return Math.floor((i - 1) / 2);
+    peek(): T | undefined {
+        return this.heap.length > 0 ? this.heap[0].value : undefined;
     }
 
-    private getLeftChildIndex(i: number): number {
-        return 2 * i + 1;
-    }
-
-    private getRightChildIndex(i: number): number {
-        return 2 * i + 2;
-    }
-
-    private swap(i: number, j: number): void {
-        [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];
-    }
-
-    // Comparison function: lexicographically smaller has higher priority
-    private compare(a: T, b: T): boolean {
-        return a < b;
-    }
-
-    enqueue(element: T): void {
+    enqueue(value: T, priority: number): void {
+        const element = { value, priority };
         this.heap.push(element);
         this.bubbleUp(this.heap.length - 1);
     }
 
     dequeue(): T | undefined {
         if (this.isEmpty()) return undefined;
-        if (this.heap.length === 1) return this.heap.pop() as T;
+        if (this.heap.length === 1) return this.heap.pop()!.value;
 
-        const min = this.heap[0];
-        this.heap[0] = this.heap.pop() as T;
-        this.bubbleDown(0);
+        const min = this.heap[0].value;
+        this.heap[0] = this.heap.pop()!;
+        this.sinkDown(0);
         return min;
     }
 
     private bubbleUp(index: number): void {
-        let currentIndex = index;
-        while (currentIndex > 0) {
-            const parentIndex = this.getParentIndex(currentIndex);
-            if (this.compare(this.heap[currentIndex], this.heap[parentIndex])) {
-                this.swap(currentIndex, parentIndex);
-                currentIndex = parentIndex;
+        while (index > 0) {
+            let parentIndex = Math.floor((index - 1) / 2);
+            if (this.compare(this.heap[index], this.heap[parentIndex]) < 0) {
+                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                index = parentIndex;
             } else {
                 break;
             }
         }
     }
 
-    private bubbleDown(index: number): void {
-        let currentIndex = index;
+    private sinkDown(index: number): void {
         const lastIndex = this.heap.length - 1;
-
         while (true) {
-            const left = this.getLeftChildIndex(currentIndex);
-            const right = this.getRightChildIndex(currentIndex);
-            let smallest = currentIndex;
+            let leftChildIndex = 2 * index + 1;
+            let rightChildIndex = 2 * index + 2;
+            let smallest = index;
 
-            // Check left child
-            if (left <= lastIndex && this.compare(this.heap[left], this.heap[smallest])) {
-                smallest = left;
+            if (leftChildIndex <= lastIndex && this.compare(this.heap[leftChildIndex], this.heap[smallest]) < 0) {
+                smallest = leftChildIndex;
+            }
+            if (rightChildIndex <= lastIndex && this.compare(this.heap[rightChildIndex], this.heap[smallest]) < 0) {
+                smallest = rightChildIndex;
             }
 
-            // Check right child
-            if (right <= lastIndex && this.compare(this.heap[right], this.heap[smallest])) {
-                smallest = right;
-            }
-
-            if (smallest !== currentIndex) {
-                this.swap(currentIndex, smallest);
-                currentIndex = smallest;
+            if (smallest !== index) {
+                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+                index = smallest;
             } else {
                 break;
             }
         }
+    }
+
+    // Custom comparison logic based on task name lexicographical order
+    private compare(a: { value: string, priority: number }, b: { value: string, priority: number }): number {
+        return a.value.localeCompare(b.value);
     }
 }
 
-function solve(): void {
-    // Read all input from stdin
-    const input = fs.readFileSync(0, "utf8").trim().split("\n");
-
-    if (input.length < 2) {
+function solve() {
+    const input = fs.readFileSync(0, "utf8").trim().split('\n');
+    if (input.length === 0 || input[0] === "") {
         return;
     }
 
-    // Parse N and M
-    const [n, m] = input[0].trim().split(/\s+/).map(Number);
-
-    // Parse task names
+    const [N, M] = input[0].trim().split(/\s+/).map(Number);
     const taskNames = input[1].trim().split(/\s+/);
+    const adj = new Map<string, string[]>();
+    const inDegree = new Map<string, number>();
 
-    if (taskNames.length !== n) {
-        // Handle case where N might be inconsistent with actual input
-        // For robustness, we proceed with min(N, taskNames.length) but assume consistency per problem statement
+    for (const name of taskNames) {
+        adj.set(name, []);
+        inDegree.set(name, 0);
     }
 
-    // 1. Initialize Graph and In-degrees
-    const adj: Record<string, string[]> = {};
-    const inDegree: Record<string, number> = {};
-
-    for (const task of taskNames) {
-        adj[task] = [];
-        inDegree[task] = 0;
-    }
-
-    // 2. Build Graph and calculate In-degrees
-    for (let i = 2; i < 2 + m; i++) {
+    for (let i = 2; i < 2 + M; i++) {
         const line = input[i].trim();
         if (!line) continue;
-        const parts = line.split(/\s+/);
-        if (parts.length < 2) continue;
-
-        const [u, v] = parts; // u must be completed before v (u -> v)
-
-        if (adj[u] && adj[v]) {
-            adj[u].push(v);
-            inDegree[v]++;
+        const [A, B] = line.split(/\s+/);
+        if (adj.has(A) && adj.has(B)) {
+            adj.get(A)!.push(B);
+            inDegree.set(B, (inDegree.get(B) || 0) + 1);
         }
     }
 
-    // 3. Initialize Priority Queue with tasks having in-degree 0
-    const pq = new PriorityQueue<string>();
+    // Use PriorityQueue to ensure lexicographically smallest task is chosen when multiple are ready
+    // The PriorityQueue implementation above is adapted to handle string comparison for ordering.
+    const pq = new PriorityQueue<{ value: string, priority: number }>(null); // The comparator inside PQ handles the logic
 
-    for (const task of taskNames) {
-        if (inDegree[task] === 0) {
-            pq.enqueue(task);
+    for (const name of taskNames) {
+        if (inDegree.get(name) === 0) {
+            // Priority is irrelevant for the internal heap structure since we override comparison, 
+            // but we pass a dummy value.
+            pq.enqueue({ value: name, priority: name.charCodeAt(0) }, 0);
         }
     }
 
-    // 4. Topological Sort using PQ (Kahn's algorithm variant)
     const buildOrder: string[] = [];
-
     while (!pq.isEmpty()) {
-        // Dequeue the lexicographically smallest available task
         const currentTask = pq.dequeue()!;
-        buildOrder.push(currentTask);
+        const taskName = currentTask.value;
+        buildOrder.push(taskName);
 
-        // Process neighbors
-        for (const neighbor of adj[currentTask]) {
-            inDegree[neighbor]--;
-            
-            // If in-degree drops to 0, add it to the PQ
-            if (inDegree[neighbor] === 0) {
-                pq.enqueue(neighbor);
+        const neighbors = adj.get(taskName) || [];
+        for (const neighbor of neighbors) {
+            inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
+            if (inDegree.get(neighbor) === 0) {
+                pq.enqueue({ value: neighbor, priority: neighbor.charCodeAt(0) }, 0);
             }
         }
     }
 
-    // 5. Output Result
-    if (buildOrder.length === n) {
-        console.log(buildOrder.join(" "));
-    } else {
+    if (buildOrder.length !== N) {
         console.log("IMPOSSIBLE");
+    } else {
+        console.log(buildOrder.join(" "));
     }
 }
 

@@ -4,121 +4,100 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
-class MinHeap {
-    constructor() {
-        this.data = [];
-    }
-    push(item) {
-        this.data.push(item);
-        this.bubbleUp(this.data.length - 1);
-    }
-    pop() {
-        if (this.data.length === 0)
-            return undefined;
-        if (this.data.length === 1)
-            return this.data.pop();
-        const item = this.data[0];
-        const end = this.data.pop();
-        if (this.data.length > 0) {
-            this.data[0] = end;
-            this.bubbleDown(0);
-        }
-        return item;
-    }
-    isEmpty() {
-        return this.data.length === 0;
-    }
-    bubbleUp(index) {
-        while (index > 0) {
-            const parent = Math.floor((index - 1) / 2);
-            if (this.data[index] < this.data[parent]) {
-                [this.data[index], this.data[parent]] = [this.data[parent], this.data[index]];
-                index = parent;
-            }
-            else {
-                break;
-            }
-        }
-    }
-    bubbleDown(index) {
-        const length = this.data.length;
-        while (2 * index + 1 < length) {
-            let leftChild = 2 * index + 1;
-            let rightChild = 2 * index + 2;
-            let smallest = index;
-            if (leftChild < length && this.data[leftChild] < this.data[smallest]) {
-                smallest = leftChild;
-            }
-            if (rightChild < length && this.data[rightChild] < this.data[smallest]) {
-                smallest = rightChild;
-            }
-            if (smallest !== index) {
-                [this.data[index], this.data[smallest]] = [this.data[smallest], this.data[index]];
-                index = smallest;
-            }
-            else {
-                break;
-            }
-        }
-    }
-}
-function main() {
+function topologicalSort() {
     const input = fs_1.default.readFileSync(0, "utf8");
-    const lines = input.split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2)
-        return;
-    const [N, M] = lines[0].split(/\s+/).map(Number);
-    const taskNames = lines[1].split(/\s+/);
-    const adj = new Map();
-    const inDegree = new Map();
-    const allTasks = new Set();
-    for (const task of taskNames) {
-        allTasks.add(task);
-        adj.set(task, []);
-        inDegree.set(task, 0);
-    }
-    for (let i = 2; i < lines.length; i++) {
-        const parts = lines[i].split(/\s+/);
-        if (parts.length < 2)
-            continue;
-        const u = parts[0];
-        const v = parts[1];
-        if (!adj.has(u)) {
-            adj.set(u, []);
-            inDegree.set(u, 0);
-        }
-        if (!inDegree.has(v)) {
-            inDegree.set(v, 0);
-        }
-        adj.get(u).push(v);
-        inDegree.set(v, inDegree.get(v) + 1);
-    }
-    const heap = new MinHeap();
-    for (const [task, degree] of inDegree) {
-        if (degree === 0) {
-            heap.push(task);
-        }
-    }
-    const result = [];
-    while (!heap.isEmpty()) {
-        const task = heap.pop();
-        if (!task)
-            break;
-        result.push(task);
-        const neighbors = adj.get(task) || [];
-        for (const neighbor of neighbors) {
-            const currentDegree = inDegree.get(neighbor);
-            inDegree.set(neighbor, currentDegree - 1);
-            if (inDegree.get(neighbor) === 0) {
-                heap.push(neighbor);
+    const lines = input.trim().split("\n");
+    const [nLine, namesLine, edgesLines] = lines;
+    const [N, M] = nLine.split(/\s+/).map(Number);
+    const names = namesLine.trim().split(/\s+/);
+    const taskToIdx = new Map();
+    names.forEach((name, idx) => taskToIdx.set(name, idx));
+    const inDegree = new Array(N).fill(0);
+    const adj = Array.from({ length: N }, () => []);
+    const edgeCount = new Array(N).fill(0);
+    edgesLines.forEach((line) => {
+        if (!line.trim())
+            return;
+        const parts = line.trim().split(/\s+/);
+        const u = taskToIdx.get(parts[0]);
+        const v = taskToIdx.get(parts[1]);
+        if (u === undefined || v === undefined)
+            return;
+        adj[u].push(v);
+        edgeCount[v]++;
+    });
+    const heap = [];
+    const compare = (a, b) => {
+        return a.name.localeCompare(b.name);
+    };
+    function pushHeap(node) {
+        heap.push(node);
+        let i = heap.length - 1;
+        while (i > 0) {
+            const p = Math.floor((i - 1) / 2);
+            if (compare(heap[p], heap[i]) > 0) {
+                [heap[p], heap[i]] = [heap[i], heap[p]];
+                i = p;
+            }
+            else {
+                break;
             }
         }
     }
-    if (result.length === taskNames.length) {
-        console.log(result.join(' '));
+    function popHeap() {
+        if (heap.length === 0)
+            return undefined;
+        const result = heap[0];
+        heap[0] = heap[heap.length - 1];
+        heap.pop();
+        let i = 0;
+        const len = heap.length;
+        while (true) {
+            let left = 2 * i + 1;
+            let right = 2 * i + 2;
+            let smallest = i;
+            if (left < len && compare(heap[left], heap[smallest]) < 0) {
+                smallest = left;
+            }
+            if (right < len && compare(heap[right], heap[smallest]) < 0) {
+                smallest = right;
+            }
+            if (smallest !== i) {
+                [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
+                i = smallest;
+            }
+            else {
+                break;
+            }
+        }
+        return result;
     }
-    else {
-        console.log('IMPOSSIBLE');
+    const available = [];
+    for (let i = 0; i < N; i++) {
+        if (inDegree[i] === 0) {
+            available.push({ idx: i, name: names[i] });
+        }
     }
+    available.forEach((node) => pushHeap(node));
+    const result = [];
+    const visited = new Array(N).fill(false);
+    while (available.length > 0) {
+        const current = popHeap();
+        if (current === undefined)
+            break;
+        visited[current.idx] = true;
+        result.push(current.name);
+        for (const neighborIdx of adj[current.idx]) {
+            inDegree[neighborIdx]--;
+            if (inDegree[neighborIdx] === 0) {
+                available.push({ idx: neighborIdx, name: names[neighborIdx] });
+                pushHeap(available[available.length - 1]);
+            }
+        }
+    }
+    if (result.length !== N) {
+        return "IMPOSSIBLE";
+    }
+    return result.join(" ");
 }
-main();
+console.log(topologicalSort());

@@ -1,85 +1,46 @@
-﻿import * as fs from 'fs';
+﻿import fs from "fs";
 
-interface Node {
+interface LRUCacheNode {
     key: string;
     value: number;
-    prev: Node | null;
-    next: Node | null;
+    prev: LRUCacheNode | null;
+    next: LRUCacheNode | null;
+}
+
+function createNode(key: string, value: number): LRUCacheNode {
+    return { key, value, prev: null, next: null };
 }
 
 class LRUCache {
     private capacity: number;
-    private map: Map<string, Node>;
-    private head: Node;
-    private tail: Node;
+    private map: Map<string, LRUCacheNode>;
+    private head: LRUCacheNode;
+    private tail: LRUCacheNode;
     private size: number;
 
     constructor(capacity: number) {
         this.capacity = capacity;
-        this.map = new Map<string, Node>();
-        // Dummy head and tail
-        this.head = { key: '', value: 0, prev: null, next: null };
-        this.tail = { key: '', value: 0, prev: null, next: null };
+        this.map = new Map();
+        this.head = createNode("", 0);
+        this.tail = createNode("", 0);
         this.head.next = this.tail;
         this.tail.prev = this.head;
         this.size = 0;
     }
 
-    private addToHead(node: Node): void {
-        node.prev = this.head;
-        node.next = this.head.next;
-        this.head.next.prev = node;
+    private removeFromList(node: LRUCacheNode): void {
+        const prev = node.prev!;
+        const next = node.next!;
+        prev.next = next;
+        next.prev = prev;
+    }
+
+    private addToFront(node: LRUCacheNode): void {
+        const oldFirst = this.head.next!;
         this.head.next = node;
-    }
-
-    private removeNode(node: Node): void {
-        const prev = node.prev;
-        const next = node.next;
-        if (prev && next) {
-            prev.next = next;
-            next.prev = prev;
-        }
-        node.prev = null;
-        node.next = null;
-    }
-
-    private moveToHead(node: Node): void {
-        this.removeNode(node);
-        this.addToHead(node);
-    }
-
-    private popTail(): Node {
-        const res = this.tail.prev;
-        if (res) {
-            this.removeNode(res);
-        }
-        return res!;
-    }
-
-    put(key: string, value: number): void {
-        const existing = this.map.get(key);
-        if (existing) {
-            existing.value = value;
-            this.moveToHead(existing);
-            return;
-        }
-
-        const newNode: Node = {
-            key,
-            value,
-            prev: null,
-            next: null
-        };
-
-        this.addToHead(newNode);
-        this.map.set(key, newNode);
-        this.size++;
-
-        if (this.size > this.capacity) {
-            const tail = this.popTail();
-            this.map.delete(tail.key);
-            this.size--;
-        }
+        node.prev = this.head;
+        node.next = oldFirst;
+        oldFirst.prev = node;
     }
 
     get(key: string): number {
@@ -87,22 +48,51 @@ class LRUCache {
         if (!node) {
             return -1;
         }
-        this.moveToHead(node);
+        this.moveToFront(node);
         return node.value;
     }
 
-    del(key: string): boolean {
-        const node = this.map.get(key);
-        if (!node) {
-            return false;
+    put(key: string, value: number): void {
+        const existing = this.map.get(key);
+        if (existing) {
+            existing.value = value;
+            this.moveToFront(existing);
+            return;
         }
-        this.removeNode(node);
-        this.map.delete(key);
-        this.size--;
-        return true;
+        if (this.size >= this.capacity) {
+            this.evictLRU();
+        }
+        const node = createNode(key, value);
+        this.map.set(key, node);
+        this.addToFront(node);
+        this.size++;
     }
 
-    getKeysInOrder(): string[] {
+    delete(key: string): void {
+        const node = this.map.get(key);
+        if (node) {
+            this.removeFromList(node);
+            this.map.delete(key);
+            this.size--;
+        }
+    }
+
+    private moveToFront(node: LRUCacheNode): void {
+        this.removeFromList(node);
+        this.addToFront(node);
+    }
+
+    private evictLRU(): void {
+        const lru = this.tail.prev!;
+        if (lru === this.head) {
+            return;
+        }
+        this.removeFromList(lru);
+        this.map.delete(lru.key);
+        this.size--;
+    }
+
+    getKeys(): string[] {
         const result: string[] = [];
         let current = this.head.next;
         while (current && current !== this.tail) {
@@ -114,46 +104,54 @@ class LRUCache {
 }
 
 function main(): void {
-    const input = fs.readFileSync(0, 'utf8');
-    const lines = input.trim().split('\n');
-    if (lines.length === 0) return;
+    const input = fs.readFileSync(0, "utf8").trim();
+    if (!input) {
+        console.log("EMPTY");
+        console.log("EMPTY");
+        return;
+    }
 
+    const lines = input.split("\n");
     const firstLine = lines[0].trim().split(/\s+/);
-    const capacity = parseInt(firstLine[0], 10);
-    const n = parseInt(firstLine[1], 10);
+    const C = parseInt(firstLine[0], 10);
+    const N = parseInt(firstLine[1], 10);
 
-    const cache = new LRUCache(capacity);
-    const getResults: string[] = [];
+    const cache = new LRUCache(C);
+    const getResults: number[] = [];
 
-    for (let i = 1; i <= n; i++) {
-        const line = lines[i].trim().split(/\s+/);
-        if (line.length === 0) continue;
+    for (let i = 1; i <= N && i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
 
-        const operation = line[0];
-        switch (operation) {
-            case 'PUT':
-                const putKey = line[1];
-                const putValue = parseInt(line[2], 10);
-                cache.put(putKey, putValue);
-                break;
-            case 'GET':
-                const getKey = line[1];
-                const getResult = cache.get(getKey);
-                getResults.push(getResult.toString());
-                break;
-            case 'DEL':
-                const delKey = line[1];
-                cache.del(delKey);
-                break;
+        const parts = line.split(/\s+/);
+        const op = parts[0].toUpperCase();
+
+        if (op === "PUT" && parts.length >= 3) {
+            const key = parts[1];
+            const value = parseInt(parts[2], 10);
+            cache.put(key, value);
+        } else if (op === "GET" && parts.length >= 2) {
+            const key = parts[1];
+            const result = cache.get(key);
+            getResults.push(result);
+        } else if (op === "DEL" && parts.length >= 2) {
+            const key = parts[1];
+            cache.delete(key);
         }
     }
 
-    const getOutput = getResults.length > 0 ? getResults.join(' ') : 'EMPTY';
-    const remainingKeys = cache.getKeysInOrder();
-    const keysOutput = remainingKeys.length > 0 ? remainingKeys.join(' ') : 'EMPTY';
+    if (getResults.length === 0) {
+        console.log("EMPTY");
+    } else {
+        console.log(getResults.join(" "));
+    }
 
-    console.log(getOutput);
-    console.log(keysOutput);
+    const remainingKeys = cache.getKeys();
+    if (remainingKeys.length === 0) {
+        console.log("EMPTY");
+    } else {
+        console.log(remainingKeys.join(" "));
+    }
 }
 
 main();
