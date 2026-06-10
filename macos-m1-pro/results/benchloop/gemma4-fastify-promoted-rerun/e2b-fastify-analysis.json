@@ -1,0 +1,382 @@
+{
+  "source": "results/benchloop/gemma4-fastify-promoted-rerun/run-json/gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized.run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+  "overall_score": 67.12132490636704,
+  "quality_score": 67.24833333333333,
+  "speed_score": 77.64,
+  "reliability_score": 58.42696629213483,
+  "suite_scores": {
+    "agent": 90.62,
+    "coding": 14.58,
+    "dataextract": 79.4,
+    "instructfollow": 65.56,
+    "reasonmath": 53.33,
+    "speed": 77.64,
+    "toolcall": 100.0
+  },
+  "total_failures_or_partials": 48,
+  "failure_classes": {
+    "tool_partial_batch": 2,
+    "coding_semantic": 3,
+    "format_cleanup": 8,
+    "semantic_extraction": 11,
+    "format_or_instruction": 8,
+    "semantic_math": 6,
+    "answer_line": 1,
+    "speed_measurement": 9
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 2
+    },
+    "coding": {
+      "coding_semantic": 3,
+      "format_cleanup": 8
+    },
+    "dataextract": {
+      "semantic_extraction": 11
+    },
+    "instructfollow": {
+      "format_or_instruction": 8
+    },
+    "reasonmath": {
+      "semantic_math": 6,
+      "answer_line": 1
+    },
+    "speed": {
+      "speed_measurement": 9
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "My total portfolio value is $3948.20."
+      },
+      {
+        "suite": "agent",
+        "task_id": "agent-07-stocks-compare",
+        "score": 50.0,
+        "error": "",
+        "output": ""
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-65q3_j1o/task.py\", line 31, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "import csv\nfrom io import StringIO\n\ndef parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (with the first row as headers) into a list of dictionaries.\n\n    Handles quoted fields containing commas, newlines within fields (if qu"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-fibonacci-memo",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-3ghbk4bz/task.py\", line 41, in <module>\n    assert fib(0) == 0\n           ^^^^^^^^^^^\nAssertionError",
+        "output": "def fib(n: int) -> int:\n    \"\"\"\n    Returns the nth Fibonacci number using memoization.\n\n    Args:\n        n: The index of the Fibonacci number to return (n >= 0).\n\n    Returns:\n        The nth Fibonacci number.\n    \"\"\"\n    # Dictionary to "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-rdgup8hp/task.py\", line 23, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "class Node:\n    \"\"\"\n    Represents a node in the Doubly Linked List.\n    Stores the key and value, and pointers to the previous and next nodes.\n    \"\"\"\n    def __init__(self, key: str, value: int):\n        self.key = key\n        self.value "
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: expected an indented block after 'elif' statement on line 7 (line 7)",
+        "output": "def binary_search(arr, target):\n    left, right = 0, len(arr) # right is initially len(arr), which is an invalid index if used directly later.\n    while left < right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n        "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 22) (line 22)",
+        "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary based on the following rules:\n    1. 'name': Must be a string and non-empty.\n    2. 'email': Must be a string and contain '@'.\n    3. 'age': Mu"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 0.0,
+        "error": "SyntaxError: expected an indented block after 'if' statement on line 25 (line 25)",
+        "output": "import functools\nimport time\nfrom typing import Callable, Type, Any\n\ndef retry(max_attempts: int = 3, delay: float = 1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to max_attempts times.\n\n    Args:\n        max_attempt"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-deduplicate-preserve-order",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 31) (line 31)",
+        "output": "def dedupe(lst: list) -> list:\n    \"\"\"\n    Removes duplicate elements from a list while preserving the order of first occurrence.\n\n    Args:\n        lst: The input list potentially containing duplicates.\n\n    Returns:\n        A new list wit"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-add-error-handling",
+        "score": 0.0,
+        "error": "SyntaxError: expected an indented block after 'except' statement on line 19 (line 20)",
+        "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Retrieves a nested value from a dictionary or list.\n\n    Returns None if any key is missing or if an invalid index is encountered.\n\n    Args:\n        data (dict or list): The data structure to t"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated triple-quoted string literal (detected at line 26) (line 23)",
+        "output": "from collections import deque\nimport time\n\nclass RateLimiter:\n    def __init__(self, max_calls: int, window_seconds: float):\n        \"\"\"\n        Initializes the RateLimiter.\n\n        Args:\n            max_calls: The maximum number of calls "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-async-to-sync-refactor",
+        "score": 0.0,
+        "error": "SyntaxError: invalid syntax (line 21)",
+        "output": "def process_pipeline_sync(data: list[int]) -> int:\n    \"\"\"\n    Processes the input data through a synchronous pipeline:\n    1. Multiply every element by 2.\n    2. Keep only elements greater than 4.\n    3. Return the sum of the remaining ele"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 22) (line 22)",
+        "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries with keys 'timestamp', 'level', 'message'.\n    Skips malformed lines.\n\n    "
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71.0,
+        "error": "meeting_name: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"sprint planning??\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 79.0,
+        "error": "charging_type: mismatch | product_name: mismatch | recommendation: mismatch",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_typ"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 80.0,
+        "error": "medication_dose: mismatch | medication_duration: expected string | referral: expected null",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next week"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 80.0,
+        "error": "date: mismatch | room: mismatch",
+        "output": "{\"requester_name\":\"Alice Wong\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas room\",\"date\":\"March 28, 2:00 PM–3:30 PM\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":true,\"needs_whiteboard\":true,\"needs"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 70.0,
+        "error": "cuisine_type: mismatch | neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"omakase\",\"neighborhood\":\"Nob Hill neighborhood\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-11",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"destination\":\"Lake Tahoe\",\"budget_per_person\":450,\"start_date\":\"April 11\",\"end_date\":\"April 13\",\"num_rooms\":6,\"hotel_name\":\"Mountain View Lodge\",\"total_attendees\":\"null\"}"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee offers a rich, aromatic experience perfect for starting the day.\nIts complex flavors and comforting warmth make it a beloved global beverage.\nDoes the perfect cup truly exist for everyone?"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50.0,
+        "error": "reverse_alpha_order",
+        "output": "* tulip\n* zebra\n* mango\n* lemon\n* cedar\n* apricot"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-05",
+        "score": 66.7,
+        "error": "at_least_one_under_1kg",
+        "output": "Elephant - 4000 kg\nHorse - 500 kg\nDog - 20 kg\nCat - 4.5 kg\nRabbit - 2 kg"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks new worlds beyond our home. We send ships to far, dark voids to find life. These grand trips push our minds to great heights. Space crafts fly past red dust to see new sights. Such bold steps show our drive to reach distant s"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over the lazy dog. Such simple sentences make my daily tasks much easier. This response meets all the specific length requirements perfectly now."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE HEAVY RAIN FALLS DOWN AND WASHES THE STREETS CLEAN!\nWE WATCH THE RAIN DROP AND HOPES FOR SUNLIGHT!\nIt is snowing lightly tonight."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Osaka,Malaga,Berlin,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-01",
+        "score": 0.0,
+        "error": "expected 35.98, got 33.6",
+        "output": "Here is the step-by-step calculation:\n\n1.  **Calculate the total tip amount:**\n    *   Tip is 20% of the pre-tax food total.\n    *   Tip = $84.00 \\times 0.20$\n    *   Tip = $16.80$\n\n2.  **Calculate the total bill (food + tip):**\n    *   Tot"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the five positions be $P_1, P_2, P_3, P_4, P_5$. The colors are {R, B, G, Y, W}.\n\n1. **Green house is in the middle (position 3).**\n   $P_3 = G$\n   Current arrangement: ($\\_$, $\\_$, G, $\\_$, $\\_$)\n\n2. **The yellow house is not next to t"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "Here is the step-by-step calculation to determine if 4 meetings can be scheduled.\n\n**1. Calculate the total time required for 4 meetings:**\n*   Duration of 4 meetings: $4 \\text{ meetings} \\times 45 \\text{ minutes/meeting} = 180 \\text{ minut"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Here is the step-by-step solution:\n\n1.  **Determine the rates:**\n    *   Rate of Faucet A ($R_A$): Fills the tub in 12 minutes. Rate is $\\frac{1}{12}$ tub/minute.\n    *   Rate of Faucet B ($R_B$): Fills the tub in 18 minutes. Rate is $\\frac"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got $5721.42; interest expected 718.96, got $721.42",
+        "output": "Here is the step-by-step calculation:\n\n**Part 1: Calculate the future value (A)**\n\nThe compound interest formula is $A = P(1 + r/n)^{nt}$, where:\n* $P$ = Principal amount = $\\$5,000$\n* $r$ = Annual interest rate (decimal) = $4.5\\% = 0.045$\n"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe digits must satisfy the following conditions:\n1. All 4 digits must be different: $d_i \\neq d_j$ for $i \\neq j$.\n2. The PIN must start with a non-zero digit: $d_1 \\in \\{1, 2, \\dots"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C_i$ be the event that the car is behind Door $i$, for $i \\in \\{1, 2, 3, 4\\}$. Initially, $P(C_i) = 1/4$ for all $i$. You pick Door 1.\n\nThe host knows the location of the car and opens two goat doors from $\\{2, 3, 4\\}$ leaving one door"
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 70.18,
+        "error": "",
+        "output": "Hello, how are you today?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 76.84,
+        "error": "",
+        "output": "HTTP is the foundational protocol for communication on the World Wide Web, enabling clients to request resources from web servers and servers to respond with the requested data."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 76.22,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"example_source\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 79.24,
+        "error": "",
+        "output": "A database index is a special lookup structure that improves the speed of data retrieval operations on a database table. Think of it like the index in a textbook: instead of reading the entire book to find a specific topic, you can quickly "
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 79.23,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves Performance:** By storing frequently accessed data in faster memory (like a cache), applications can retrieve information much quicker than by que"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 79.27,
+        "error": "",
+        "output": "Threads and processes are fundamental concepts in operating systems that relate to how a computer manages and executes multiple tasks simultaneously. The key difference lies in their **level of isolation and resource sharing.**\n\nHere is a d"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 79.43,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nThis guide follows a systematic approach to quickly diagnose and resolve issues when an API integration fails.\n\n---\n\n### 1. Verify the Basics (The \"Can it talk?\" Check)\n\nBefore diving"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 79.28,
+        "error": "",
+        "output": "Choosing between **REST (Representational State Transfer)** and **GraphQL** for a startup backend is a classic architectural decision. Each approach has distinct advantages and disadvantages that will impact your development speed, scalabil"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization.",
+    "Enable missing batch-call synthesis.",
+    "Enable answer-line canonicalization."
+  ]
+}

@@ -2,7 +2,20 @@
 
 Benchmarks run locally on Windows with llama.cpp Vulkan. New benchmark results should be added to this README when they are run.
 
-Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/).
+Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
+
+The Gemma 4 optimized Fastify BenchLoop harness (`gemma4_benchloop_harness_fastify/proxy.mjs`) and promoted policy (`configs/gemma4_qat_q4_optimized_policy.json`) are shared at the repo root.
+
+## macOS M1 Pro (Metal)
+
+Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full tables: [`macos-m1-pro/README.md`](macos-m1-pro/README.md) and [`macos-m1-pro/results/benchloop/gemma4-12b-qat-full-summary.md`](macos-m1-pro/results/benchloop/gemma4-12b-qat-full-summary.md).
+
+| config | overall | gen tok/s | runtime |
+|---|---:|---:|---:|
+| No MTP f16 (`-c 4096`) | 77.8 | 15.70 | 1477s |
+| No MTP KV Q8 (`-c 0`) | 76.9 | 14.12 | 1735s |
+| **Unsloth MTP nmax2 f16** | **78.9** | **21.65** | **957s** |
+| Unsloth MTP nmax2 KV Q8 | 76.9 | 15.83 | 1723s |
 
 ## Hardware
 

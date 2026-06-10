@@ -1,0 +1,347 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-15/gemma-4-E2B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-harness-iter15",
+  "overall_score": 69.94556928838952,
+  "quality_score": 72.35333333333334,
+  "speed_score": 70.7,
+  "reliability_score": 64.04494382022472,
+  "suite_scores": {
+    "agent": 100.0,
+    "coding": 41.67,
+    "dataextract": 78.0,
+    "instructfollow": 67.78,
+    "reasonmath": 46.67,
+    "speed": 70.7,
+    "toolcall": 100.0
+  },
+  "total_failures_or_partials": 43,
+  "failure_classes": {
+    "coding_semantic": 8,
+    "format_cleanup": 1,
+    "semantic_extraction": 10,
+    "format_or_instruction": 7,
+    "semantic_math": 6,
+    "answer_line": 2,
+    "speed_measurement": 9
+  },
+  "failure_classes_by_suite": {
+    "coding": {
+      "coding_semantic": 8,
+      "format_cleanup": 1
+    },
+    "dataextract": {
+      "semantic_extraction": 10
+    },
+    "instructfollow": {
+      "format_or_instruction": 7
+    },
+    "reasonmath": {
+      "semantic_math": 6,
+      "answer_line": 2
+    },
+    "speed": {
+      "speed_measurement": 9
+    }
+  },
+  "examples": {
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-x1o5ld6n/task.py\", line 29, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dictionaries.\n    Handles quoted fields containing commas inside them.\n\n    Args:\n        text: A string containing the CSV data.\n\n   "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-fibonacci-memo",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zq32x8xg/task.py\", line 36, in <module>\n    assert fib(0) == 0\n           ^^^^^^^^^^^\nAssertionError",
+        "output": "def fib(n: int) -> int:\n    \"\"\"\n    Returns the nth Fibonacci number using memoization.\n\n    The Fibonacci sequence is defined as:\n    fib(0) = 0\n    fib(1) = 1\n    fib(n) = fib(n-1) + fib(n-2) for n > 1\n\n    Args:\n        n: The index of t"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-wvbnjfyd/task.py\", line 28, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary against specific requirements.\n    \n    Required fields:\n    - 'name': str, non-empty\n    - 'email': str, must contain '@'\n    - 'age': int, be"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-9x4ubrkg/task.py\", line 37, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import functools\nimport time\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to a specified number of times.\n\n    Args:\n        max_attempts (int): The maximum number of times to try th"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-add-error-handling",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zwmuo5c6/task.py\", line 18, in <module>\n    assert get_nested_value(data, [\"user\", \"profile\", \"name\"]) == \"Alice\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Safely retrieves a nested value from a dictionary-like object using a sequence of keys.\n    \n    Returns the value if successful, otherwise returns None.\n\n    Args:\n        data: The dictionary "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-rflfqppo/task.py\", line 16, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    An implementation of an LRU Cache using OrderedDict.\n    When capacity is reached, it evicts the Least Recently Used item.\n    \"\"\"\n    def __init__(self, capacity: int):\n     "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-2qzgtjtq/task.py\", line 30, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^\nAttributeError: 'RateLimiter' object has no attribute 'allow'",
+        "output": "import time\nfrom collections import deque\n\nclass RateLimiter:\n    \"\"\"\n    A rate limiter that uses a sliding window approach to control the rate \n    at which calls are allowed.\n\n    Parameters:\n        max_calls: The maximum number of call"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6h07fkz9/task.py\", line 39, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: '[YYYY-MM-DD HH:MM:SS] LEVEL: message'\n    into a list of dicts.\n\n    Args:\n        text: The string containing the log data.\n\n    Returns:\n    "
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: closing parenthesis ')' does not match opening parenthesis '[' (line 3)",
+        "output": "The bug in the provided binary search function lies in the initialization of the `right` boundary and how the loop condition and boundary updates are handled, particularly when the target is the last element.\n\nIn a standard binary search im"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71.0,
+        "error": "note: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"sprint planning\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops,we're gonna do live estimation this time. the retro from las"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4.0,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_t"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 73.0,
+        "error": "medication_dose: mismatch | medication_duration: expected string | medication_name: mismatch | referral: expected null",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"is taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next w"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 50.0,
+        "error": "date: mismatch | needs_catering: expected boolean | needs_projector: expected boolean | needs_whiteboard: expected boolean | requester_name: mismatch",
+        "output": "{\"requester_name\":\"Alice\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas\",\"date\":\"March 28, 2:00 PM\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":\"True\",\"needs_whiteboard\":\"True\",\"needs_catering\":\"Fa"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 80.0,
+        "error": "neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"Sushi\",\"neighborhood\":\"Nob Hill neighborhood\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-12",
+        "score": 79.0,
+        "error": "complaint: mismatch | product_name: mismatch | rating: mismatch",
+        "output": "{\"product_name\":\"ZenBook Pro 15 laptop\",\"brand\":\"ASUS\",\"price\":1299,\"store\":\"Best Buy\",\"display_type\":\"OLED\",\"display_size\":\"15-inch\",\"ram_gb\":16,\"processor\":\"i7-13700H\",\"storage\":\"512GB SSD\",\"battery_life_hours\":10,\"weight_kg\":1.8,\"rating\""
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee is a vibrant beverage with a rich history spanning centuries and diverse global origins.\nIts aromatic qualities offer a stimulating and comforting experience for many people throughout the day.\nCan one truly appreciate the complex fl"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50.0,
+        "error": "reverse_alpha_order",
+        "output": "* tulip\n* zebra\n* mango\n* lemon\n* apricot\n* cedar"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks new worlds far beyond our home. We send brave ships to explore deep space and find life elsewhere. This quest drives science and gives us grand ideas. Rovers travel on red dust to learn more about rock. Each step takes us clo"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "I understand the constraints for this request perfectly."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE RAIN FALLS HEAVILY AND WASHES THE STREETS CLEAN! THIS CONTINUES WITH RAIN EVERY DAY! THE RAIN IS VERY COLD!"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Osaka,Malaga,Accra,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-03",
+        "score": 0.0,
+        "error": "missing new_original_price; missing saved_money",
+        "output": "Here is the step-by-step calculation:\n\n1.  **Original Price:** $80\n\n2.  **Sale Price:**\n    *   Discount = 25% of $80 = $0.25 \\times 80 = $20$\n    *   Sale Price = Original Price - Discount = $80 - $20 = $60$\n\n3.  **New Original Price (Pric"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be 1, 2, 3, 4, 5 from left to right.\nThe colors are R, B, G, Y, W.\n\nFrom Clue 2:\n- Position 3 is Green (G).\nOrder: \\_, \\_, G, \\_, \\_\n\nFrom Clue 4:\n- White (W) is at position 1 or 5.\n\nFrom Clue 3:\n- Yellow (Y) is not next t"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "Here is the schedule analysis:\n\n1.  **Total available time:** 9:00 AM to 1:00 PM = 4 hours (240 minutes).\n2.  **Fixed lunch break:** 12:00 PM to 12:30 PM (30 minutes).\n3.  **Available working time:** 240 minutes - 30 minutes = 210 minutes.\n"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Here is the step-by-step solution to the problem:\n\n1.  **Determine the rates:**\n    *   Rate of Faucet A ($R_A$): Fills the tub in 12 minutes, so $R_A = \\frac{1}{12}$ tub/minute.\n    *   Rate of Faucet B ($R_B$): Fills the tub in 18 minutes"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.45; interest expected 718.96, got 721.45",
+        "output": "Here is the step-by-step calculation:\n\n**1. Identify the variables:**\n*   Principal ($P$): $\\$5,000$\n*   Annual interest rate ($r$): $4.5\\% = 0.045$\n*   Number of times compounded per year ($n$): $12$ (monthly)\n*   Time in years ($t$): $3$\n"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be $d_1 d_2 d_3 d_4$. The constraints are:\n1. All digits must be different: $d_i \\neq d_j$ for $i \\neq j$.\n2. The PIN must start with a non-zero digit: $d_1 \\in \\{1, 2, 3, 4, 5, 6, 7, 8, 9\\}$.\n3. The digits must be in st"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C$ be the event that the car is behind Door 1, $D_i$ be the event that the car is behind Door $i$ ($i \\in \\{1, 2, 3, 4\\}$).\nInitially, $P(D_i) = 1/4$ for all $i$. You pick Door 1.\n\nThe host knows where the car is. The host must open ex"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-07",
+        "score": 0.0,
+        "error": "missing ANSWER line; expected 48.0, got 360.0",
+        "output": "Here is the step-by-step solution:\n\n1.  **Calculate the distance from City A to City B ($D$).**\n    *   Speed from A to B ($v_{AB}$) = $60 \\text{ km/h}$\n    *   Time from A to B ($t_{AB}$) = $3 \\text{ hours}$\n    *   Distance formula: $D = "
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 62.53,
+        "error": "",
+        "output": "Hello, how are you doing today?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 70.06,
+        "error": "",
+        "output": "HTTP, the foundation of data communication for the World Wide Web, is a protocol that defines how messages are formatted and transmitted between web servers and clients."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 69.28,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"generated\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 72.0,
+        "error": "",
+        "output": "A database index is a special lookup structure, much like the index in the back of a book, that helps the database locate data quickly without having to scan every single row. Instead of searching the entire table sequentially for a specifi"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 71.9,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves Performance:** By storing frequently accessed data closer to the user (on a CDN or server cache), caching avoids the need to repeatedly fetch data"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 72.15,
+        "error": "",
+        "output": "Threads and processes are both fundamental concepts in operating systems used for achieving **concurrency** (the ability to handle multiple tasks seemingly at the same time) and **parallelism** (the ability to execute multiple tasks at the "
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 72.58,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nThis guide follows a systematic approach: **Understand, Isolate, Test, Fix.**\n\n### Phase 1: Understand (Where is it failing?)\n\n1. **Analyze the Error Message:** Read the response code"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 73.23,
+        "error": "",
+        "output": "Choosing between **REST** and **GraphQL** for a startup backend is a critical architectural decision that impacts development speed, performance, maintenance costs, and scalability.\n\nThere is no single \"best\" answer; the right choice depend"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable answer-line canonicalization.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization."
+  ]
+}

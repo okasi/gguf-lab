@@ -1,0 +1,230 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-06-06T22:48:55.731898+00:00",
+  "model": {
+    "model_id": "gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+    "family": "",
+    "parameter_count": "",
+    "quantization": ""
+  },
+  "machine": {
+    "machine_id": "remote:127.0.0.1",
+    "cpu": "",
+    "gpu": "Apple M1 Pro",
+    "gpu_memory_gb": 25.0,
+    "system_memory_gb": 0.0,
+    "os": "remote",
+    "backend": "ollama",
+    "is_remote": true,
+    "remote_host": "127.0.0.1",
+    "endpoint": "http://127.0.0.1:8092",
+    "hardware_label": "Apple M1 Pro 32GB unified memory"
+  },
+  "provider": "openai_compat",
+  "harness": "raw",
+  "harness_version": "v1",
+  "total_runtime_sec": 66.61491487501189,
+  "overall_score": 17.916666666666668,
+  "quality_score": 25.0,
+  "speed_score": 0.0,
+  "reliability_score": 16.666666666666664,
+  "value_score": 2.083333333333333,
+  "speed_metrics": {
+    "ttft_ms": 0.0,
+    "prompt_eval_tok_per_sec": 0.0,
+    "generation_tok_per_sec": 0.0,
+    "total_latency_ms": 0.0
+  },
+  "suites": {
+    "coding": {
+      "suite": "coding",
+      "score": 25.0,
+      "task_count": 12,
+      "pass_count": 2,
+      "fail_count": 10,
+      "median_latency_ms": 4981.3656879996415,
+      "tasks": [
+        {
+          "task_id": "coding-csv-parser",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 4655.059375014389,
+          "tokens_generated": 256,
+          "tokens_prompt": 53,
+          "error": "SyntaxError: unterminated string literal (detected at line 3) (line 3)",
+          "output": "To handle quoted fields with commas inside them, the most robust approach is to iterate through the text and keep track of whether we are currently inside a quoted field.\n\nHere is a Python implementation using the `csv` module's principles, implemented manually for clarity, or by leveraging a helper to manage the state.\n\n```python\ndef parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dictionaries.\n    Handles quoted fields with commas inside th",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-fibonacci-memo",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 4752.696499985177,
+          "tokens_generated": 256,
+          "tokens_prompt": 46,
+          "error": "",
+          "output": "def fib(n: int) -> int:\n    \"\"\"\n    Returns the nth Fibonacci number using memoization.\n    fib(0) = 0, fib(1) = 1.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"Input must be a non-negative integer\")\n\n    # Dictionary to store computed Fibonacci numbers (memoization table)\n    memo = {0: 0, 1: 1}\n\n    def fib_recursive(k):\n        if k in memo:\n            return memo[k]\n        \n        # Recursive step: F(k) = F(k-1) + F(k-2)\n        result = fib_recursive(k - 1) + fib_recursive(k - 2)\n    ",
+          "metadata": {
+            "stdout": "fib(0) = 0\nfib(1) = 1\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-flatten-nested",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 5057.889291987522,
+          "tokens_generated": 256,
+          "tokens_prompt": 66,
+          "error": "SyntaxError: invalid syntax (line 1)",
+          "output": "Here are two common ways to implement the `flatten` function in Python: a recursive approach and an iterative approach using a stack.\n\n### 1. Recursive Approach (Cleanest)\n\nThis approach uses recursion to handle nested lists by calling itself whenever it encounters a sublist.\n\n```python\ndef flatten(lst: list) -> list:\n    \"\"\"\n    Flattens an arbitrarily nested list using recursion.\n\n    Example: flatten([1, [2, [3, 4], 5]]) returns [1, 2, 3, 4, 5]\n    \"\"\"\n    flat_list = []\n    for element in ls",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-bug-fix-off-by-one",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 4904.8420840117615,
+          "tokens_generated": 256,
+          "tokens_prompt": 114,
+          "error": "SyntaxError: unterminated string literal (detected at line 1) (line 1)",
+          "output": "The provided `binary_search` function has a common bug when dealing with the upper bound of the search space. Specifically, in this implementation, when `left` and `right` are set to `0` and `len(arr)`, the loop condition `while left < right` can lead to an incorrect result or infinite loop depending on the target's position, especially with how `left = mid` and `right = mid` are updated.\n\nThe standard implementation of binary search for finding an **existing** element in a sorted array usually ",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-json-validator",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 5227.007916982984,
+          "tokens_generated": 256,
+          "tokens_prompt": 94,
+          "error": "SyntaxError: invalid syntax (line 1)",
+          "output": "```python\ndef validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary.\n    \n    Required fields:\n    - 'name': str, non-empty.\n    - 'email': str, must contain '@'.\n    - 'age': int, must be between 0 and 150 (inclusive).\n    \n    Returns:\n    (True, []) if valid, or (False, ['list of error messages']) if invalid.\n    \"\"\"\n    errors = []\n\n    # 1. Validate 'name'\n    if 'name' not in data or not isinstance(data['name'], str) or not data['name'].strip():\n     ",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-retry-decorator",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 5177.887166995788,
+          "tokens_generated": 256,
+          "tokens_prompt": 60,
+          "error": "SyntaxError: invalid syntax (line 1)",
+          "output": "Here is the implementation of the `retry` decorator in Python, complete with explanations and an example of how to use it.\n\n### Python Implementation\n\n```python\nimport functools\nimport time\nimport logging\n\n# Set up basic logging for better visibility into retries\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function a specified number of times upon exception.\n\n    Args:\n  ",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-deduplicate-preserve-order",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 5314.446583011886,
+          "tokens_generated": 256,
+          "tokens_prompt": 39,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-rohmi_5l/task.py\", line 28, in <module>\n    deduped_list2\nNameError: name 'deduped_list2' is not defined. Did you mean: 'deduped_list1'?",
+          "output": "def dedupe(lst: list) -> list:\n    \"\"\"\n    Removes duplicates from a list while preserving the order of first occurrence.\n\n    Args:\n        lst: The input list (can contain any hashable elements).\n\n    Returns:\n        A new list with duplicate elements removed, preserving the original order.\n    \"\"\"\n    seen = set()\n    result = []\n    \n    for item in lst:\n        if item not in seen:\n            seen.add(item)\n            result.append(item)\n            \n    return result\n\n# Example Usage:\nl",
+          "metadata": {
+            "stdout": "Original List 1: [1, 2, 2, 3, 4, 1, 5, 3]\nDeduplicated List 1: [1, 2, 3, 4, 5]\n",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-rohmi_5l/task.py\", line 28, in <module>\n    deduped_list2\nNameError: name 'deduped_list2' is not defined. Did you mean: 'deduped_list1'?\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-add-error-handling",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 5118.430833012098,
+          "tokens_generated": 256,
+          "tokens_prompt": 69,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-o30_qou8/task.py\", line 17, in <module>\n    assert get_nested_value(data, [\"user\", \"profile\", \"name\"]) == \"Alice\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+          "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Safely retrieves a nested value from a dictionary or list structure.\n\n    Returns None if data is not indexable, if a key is missing, or if\n    any intermediate step fails.\n    \"\"\"\n    result = data\n    for key in keys:\n        try:\n            result = result[key]\n        except (TypeError, KeyError):\n            return None  # Return None",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-o30_qou8/task.py\", line 17, in <module>\n    assert get_nested_value(data, [\"user\", \"profile\", \"name\"]) == \"Alice\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-lru-cache",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 4639.9776250182185,
+          "tokens_generated": 256,
+          "tokens_prompt": 81,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-9p4ws0of/task.py\", line 24, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+          "output": "class Node:\n    \"\"\"\n    A node in the Doubly Linked List for the LRU cache.\n    \"\"\"\n    def __init__(self, key=None, value=None):\n        self.key = key\n        self.value = value\n        self.prev = None\n        self.next = None\n\nclass LRUCache:\n    \"\"\"\n    Implements an LRU Cache with O(1) time complexity for both get and put operations.\n    \"\"\"\n    def __init__(self, capacity: int):\n        if capacity <= 0:\n            raise ValueError(\"Capacity must be a positive integer.\")\n            \n   ",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-9p4ws0of/task.py\", line 24, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-rate-limiter",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 4390.213541017147,
+          "tokens_generated": 256,
+          "tokens_prompt": 68,
+          "error": "SyntaxError: unterminated triple-quoted string literal (detected at line 31) (line 28)",
+          "output": "Here is a robust implementation of a `RateLimiter` class using a **sliding window** approach.\n\nThis implementation uses a `collections.deque` to efficiently store the timestamps of the recent calls.\n\n```python\nimport time\nfrom collections import deque\nfrom typing import Deque\n\nclass RateLimiter:\n    \"\"\"\n    Implements a rate limiter using a sliding window algorithm.\n    \"\"\"\n    def __init__(self, max_calls: int, window_seconds: float):\n        if max_calls <= 0:\n            raise ValueError(\"max",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-async-to-sync-refactor",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 12692.860874987673,
+          "tokens_generated": 750,
+          "tokens_prompt": 216,
+          "error": "",
+          "output": "def process_pipeline_sync(data: list[int]) -> int:\n    \"\"\"\n    Executes the pipeline synchronously to produce the final result.\n    \n    The pipeline steps are:\n    1. step1: Double every element in the input list.\n    2. step2: Keep only elements greater than 4 from the result of step1.\n    3. step3: Sum the elements from the result of step2.\n    \"\"\"\n    \n    # Step 1: step1(data, step1_done) -> [x * 2 for x in data]\n    step1_result = [x * 2 for x in data]\n    \n    # Step 2: step2(step1_result",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-parse-log-entries",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 4389.122958993539,
+          "tokens_generated": 256,
+          "tokens_prompt": 85,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-xltc228a/task.py\", line 38, in <module>\n    result = parse_logs(logs)\n             ^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-xltc228a/task.py\", line 31, in parse_logs\n    match = log\n            ^^^\nNameError: name 'log' is not defined. Did you mean: 'logs'?",
+          "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries.\n\n    Args:\n        text: A string containing the log entries, potentially with multiple lines.\n\n    Returns:\n        A list of dictionaries, each representing a successfully parsed log line.\n    \"\"\"\n    parsed_logs = []\n    \n    # Regular expression to capture the parts:\n    # 1. Timestamp: Matches everything between the first '[' a",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-xltc228a/task.py\", line 38, in <module>\n    result = parse_logs(logs)\n             ^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-xltc228a/task.py\", line 31, in parse_logs\n    match = log\n            ^^^\nNameError: name 'log' is not defined. Did you mean: 'logs'?\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        }
+      ]
+    }
+  }
+}

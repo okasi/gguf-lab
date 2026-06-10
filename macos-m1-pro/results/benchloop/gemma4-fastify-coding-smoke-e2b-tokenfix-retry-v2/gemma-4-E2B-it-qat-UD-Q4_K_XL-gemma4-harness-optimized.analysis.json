@@ -1,0 +1,80 @@
+{
+  "source": "results/benchloop/gemma4-fastify-coding-smoke-e2b-tokenfix-retry-v2/run-json/gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized.run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+  "overall_score": 36.772666666666666,
+  "quality_score": 47.92,
+  "speed_score": 0.0,
+  "reliability_score": 41.66666666666667,
+  "suite_scores": {
+    "coding": 47.92
+  },
+  "total_failures_or_partials": 7,
+  "failure_classes": {
+    "coding_semantic": 3,
+    "format_cleanup": 4
+  },
+  "failure_classes_by_suite": {
+    "coding": {
+      "coding_semantic": 3,
+      "format_cleanup": 4
+    }
+  },
+  "examples": {
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6rqknxjb/task.py\", line 23, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dictionaries.\n    Handles quoted fields with commas inside them.\n\n    Args:\n        text: A string containing the CSV data.\n\n    Retur"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-flatten-nested",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-s_8gtemg/task.py\", line 23, in <module>\n    assert flatten([1, [2, [3, 4], 5]]) == [1, 2, 3, 4, 5]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def flatten(lst: list) -> list:\n    \"\"\"\n    Flattens an arbitrarily nested list using an iterative approach.\n    \"\"\"\n    flat_list = []\n    stack = list(lst)  # Initialize the stack with the elements of the input list\n    \n    while stack:\n"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-q_yceanz/task.py\", line 33, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries. Skips malformed lines.\n    \"\"\"\n    parsed_logs = []\n    \n    # Regex to ca"
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 29) (line 29)",
+        "output": "```python\ndef validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields:\n    - 'name': str, non-empty\n    - 'email': str, must contain '@'\n    - 'age': int, 0-150\n\n    Args:\n        d"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 1) (line 1)",
+        "output": "To create a retry decorator in Python, you can use the `functools.wraps` decorator to preserve the original function's metadata and implement the logic within a wrapper function.\n\nHere is the complete implementation of the `retry` decorator"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 0.0,
+        "error": "SyntaxError: invalid syntax (line 1)",
+        "output": "This is a classic data structure problem that is best solved using a combination of a **Hash Map (Dictionary)** for fast lookups and a **Doubly Linked List** to maintain the order of usage (for $O(1)$ eviction).\n\nHere is the complete Python"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated triple-quoted string literal (detected at line 28) (line 27)",
+        "output": "To implement a rate limiter that checks for the number of calls within a sliding time window, a `collections.deque` is a very efficient choice. It allows us to store timestamps of recent calls and quickly remove (pop) old ones when checking"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable fence/reasoning stripping, Python extraction, and content normalization."
+  ]
+}

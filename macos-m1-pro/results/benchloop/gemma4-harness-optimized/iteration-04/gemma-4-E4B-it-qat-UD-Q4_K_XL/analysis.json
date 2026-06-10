@@ -1,0 +1,347 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-04/gemma-4-E4B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E4B-it-qat-UD-Q4_K_XL-harness-iter04",
+  "overall_score": 72.93227808988765,
+  "quality_score": 77.605,
+  "speed_score": 61.36,
+  "reliability_score": 71.91011235955057,
+  "suite_scores": {
+    "agent": 96.88,
+    "coding": 54.17,
+    "dataextract": 89.58,
+    "instructfollow": 70.0,
+    "reasonmath": 60.0,
+    "speed": 61.36,
+    "toolcall": 95.0
+  },
+  "total_failures_or_partials": 40,
+  "failure_classes": {
+    "tool_partial_batch": 1,
+    "coding_semantic": 6,
+    "format_cleanup": 1,
+    "semantic_extraction": 9,
+    "format_or_instruction": 7,
+    "semantic_math": 5,
+    "answer_line": 1,
+    "speed_measurement": 9,
+    "tool_missing": 1
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 1
+    },
+    "coding": {
+      "coding_semantic": 6,
+      "format_cleanup": 1
+    },
+    "dataextract": {
+      "semantic_extraction": 9
+    },
+    "instructfollow": {
+      "format_or_instruction": 7
+    },
+    "reasonmath": {
+      "semantic_math": 5,
+      "answer_line": 1
+    },
+    "speed": {
+      "speed_measurement": 9
+    },
+    "toolcall": {
+      "tool_missing": 1
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "The total portfolio value is **$3,948**."
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-3qz906t2/task.py\", line 47, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "import csv\nfrom io import StringIO\nfrom typing import List, Dict\n\ndef parse_csv(text: str) -> List[Dict[str, str]]:\n    \"\"\"\n    Parses CSV text into a list of dictionaries.\n\n    The first row is expected to be the headers. Handles quoted fi"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6r25bufx/task.py\", line 31, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary against specific requirements.\n\n    Required fields:\n    - 'name' (str, non-empty)\n    - 'email' (str, must contain '@')\n    - 'age' (int, 0-15"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-mktz01h_/task.py\", line 29, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import time\nimport functools\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to max_attempts times, \n    waiting delay seconds between attempts.\n    \n    If all attempts fail, the last "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-rs68sk8k/task.py\", line 28, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "class Node:\n    \"\"\"\n    A node for the doubly linked list.\n    \"\"\"\n    def __init__(self, key, value):\n        self.key = key\n        self.value = value\n        self.prev = None\n        self.next = None\n\nclass LRUCache:\n    \"\"\"\n    Least Re"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-1_84ghtd/task.py\", line 33, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^\nAttributeError: 'RateLimiter' object has no attribute 'allow'",
+        "output": "import time\nfrom collections import deque\nfrom typing import Deque\n\nclass RateLimiter:\n    \"\"\"\n    A RateLimiter that enforces a maximum number of calls within a \n    sliding time window.\n    \"\"\"\n    def __init__(self, max_calls: int, windo"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-n_m7jto_/task.py\", line 25, in <module>\n    result = parse_logs(logs)\n             ^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-n_m7jto_/task.py\", line 18, in parse_logs\n    match\nNameError: name 'match' is not defined",
+        "output": "import re\nfrom typing import List, Dict\n\ndef parse_logs(text: str) -> List[Dict[str, str]]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries. Skips malformed lines.\n    \"\"\"\n   "
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: invalid syntax (line 1)",
+        "output": "The bug in the provided `binary_search` function lies in the initialization of the `right` pointer and the logic for updating `left` and `right` within the loop.\n\n1.  **Initialization:** The `right` pointer should be initialized to `len(arr"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"meeting_name\":\"sprint planning\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_typ"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 87.0,
+        "error": "",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next week"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 80.0,
+        "error": "neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"Sushi\",\"neighborhood\":\"Nob Hill\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":null}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-12",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"product_name\":\"ZenBook Pro 15\",\"brand\":\"ASUS\",\"price\":1299,\"store\":\"Best Buy\",\"display_type\":\"OLED\",\"display_size\":\"15-inch\",\"ram_gb\":16,\"processor\":\"i7-13700H\",\"storage\":\"512GB SSD\",\"battery_life_hours\":10,\"weight_kg\":1.8,\"rating\":0.8,\"o"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-13",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"invoice_number\":\"INV-2026-0847\",\"vendor_name\":\"CloudTech Solutions, LLC\",\"vendor_address\":\"123 Innovation Way, Seattle, WA 98101\",\"vendor_tax_id\":\"91-7654321\",\"client_name\":\"Meridian Corp\",\"client_po\":\"MC-2026-445\",\"invoice_date\":\"March 1"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee offers a rich and invigorating aroma to start the day.\nIts complex flavors come from beans sourced globally.\nWhat is your favorite way to enjoy a cup of coffee?"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50.0,
+        "error": "reverse_alpha_order",
+        "output": "* zebra\n* tulip\n* mango\n* lemon\n* apricot\n* cedar"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-05",
+        "score": 33.3,
+        "error": "format_and_sorted_heaviest_to_lightest; at_least_one_under_1kg",
+        "output": "Elephant - 4000\nHorse - 500\nDog - 20\nRabbit - 2\nMouse - 0.03"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks vast new worlds beyond our small blue home. We send craft to probe the void and learn much more about our own place. Each flight brings data from the cold dark. This quest for more drives our brave souls toward distant bright"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over the lazy dog.\nGreen trees grow tall reaching for the bright sun.\nHappy little birds sing sweet songs every morning."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Accra,Malaga,Osaka,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be 1, 2, 3, 4, 5. The colors are R, B, G, Y, W.\n\n1. G is at position 3:\n   \\_ \\_ G \\_ \\_\n\n2. Yellow (Y) is not next to Green (G):\n   Y cannot be at position 2 or 4.\n   Possible positions for Y: 1 or 5.\n\n3. White (W) is at "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "1. Calculate the time required for one meeting slot:\n   Meeting duration = 45 minutes\n   Buffer duration = 15 minutes\n   Total slot duration = $45 + 15 = 60$ minutes (1 hour)\n\n2. Determine the total available time window:\n   Start time = 9:"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Let $V$ be the volume of the bathtub.\nThe rate of Faucet A ($R_A$) is $\\frac{V}{12}$ per minute.\nThe rate of Faucet B ($R_B$) is $\\frac{V}{18}$ per minute.\nThe rate of the Drain ($R_D$) is $\\frac{V}{36}$ per minute.\n\nWhen both faucets are o"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.08; interest expected 718.96, got 721.08",
+        "output": "The compound interest formula is:\n$A = P \\left(1 + \\frac{r}{n}\\right)^{nt}$\n\nWhere:\n* $P = \\text{Principal amount} = \\$5,000$\n* $r = \\text{Annual interest rate (decimal)} = 0.045$\n* $n = \\text{Number of times interest is compounded per year"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\n\nConstraints:\n1. $d_i \\in \\{0, 1, \\dots, 9\\}$ for $i=1, 2, 3, 4$.\n2. $d_1 \\neq 0$.\n3. All 4 digits must be different (implied by constraint 4).\n4. Strictly increasing order: $d_1 < d_"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C$ be the location of the car, $C \\in \\{1, 2, 3, 4\\}$. Initially, $P(C=i) = 1/4$ for all $i$.\nYou picked Door 1.\n\nThe host opens exactly 2 goat doors from $\\{2, 3, 4\\}$. The remaining door is the alternative choice, Door 2.\n\nThe possib"
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 53.3,
+        "error": "",
+        "output": "Hello, how are you?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 61.17,
+        "error": "",
+        "output": "HTTP (Hypertext Transfer Protocol) is the underlying set of rules that governs how data is requested and transferred between web clients (like browsers) and web servers over the internet."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 60.17,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"response\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 62.93,
+        "error": "",
+        "output": "A database index is a special data structure that significantly speeds up data retrieval operations on a database table. It works much like the index at the back of a book: instead of reading every single page (or every row in the table) to"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 62.62,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves Performance:** By storing frequently requested data (like images, API responses, or static assets) closer to the user or in memory, the applicatio"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 62.85,
+        "error": "",
+        "output": "The concepts of threads and processes are fundamental to modern operating systems and concurrent programming. While both are mechanisms for managing how programs run simultaneously, they differ significantly in terms of **isolation, resourc"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 63.08,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nThis guide outlines a systematic approach to diagnose and resolve API integration failures.\n\n### Phase 1: Triage & Verification (Is it me or the API?)\n\n1. **Check Documentation:** Ver"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 63.05,
+        "error": "",
+        "output": "Choosing between REST and GraphQL is one of the most fundamental architectural decisions for a startup building a backend. Both are incredibly powerful, but they optimize for different developer experiences and technical trade-offs.\n\nHere i"
+      }
+    ],
+    "tool_missing": [
+      {
+        "suite": "toolcall",
+        "task_id": "tc-05",
+        "score": 25.0,
+        "error": "matched 0/1 required tool calls; answered directly instead of using tools",
+        "output": "What is the full date of \"next Monday\"?"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable missing batch-call synthesis.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization.",
+    "Enable answer-line canonicalization.",
+    "Enable tool-call synthesis for obvious tool-use prompts."
+  ]
+}

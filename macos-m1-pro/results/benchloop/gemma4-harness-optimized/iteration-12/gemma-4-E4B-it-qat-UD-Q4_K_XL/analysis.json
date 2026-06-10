@@ -1,0 +1,342 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-12/gemma-4-E4B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E4B-it-qat-UD-Q4_K_XL-harness-iter12",
+  "overall_score": 71.48248033707866,
+  "quality_score": 75.925,
+  "speed_score": 61.54,
+  "reliability_score": 69.66292134831461,
+  "suite_scores": {
+    "agent": 96.88,
+    "coding": 50.0,
+    "dataextract": 85.0,
+    "instructfollow": 66.67,
+    "reasonmath": 57.0,
+    "speed": 61.54,
+    "toolcall": 100.0
+  },
+  "total_failures_or_partials": 42,
+  "failure_classes": {
+    "tool_partial_batch": 1,
+    "coding_semantic": 8,
+    "semantic_extraction": 10,
+    "format_or_instruction": 7,
+    "semantic_math": 6,
+    "answer_line": 1,
+    "speed_measurement": 9
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 1
+    },
+    "coding": {
+      "coding_semantic": 8
+    },
+    "dataextract": {
+      "semantic_extraction": 10
+    },
+    "instructfollow": {
+      "format_or_instruction": 7
+    },
+    "reasonmath": {
+      "semantic_math": 6,
+      "answer_line": 1
+    },
+    "speed": {
+      "speed_measurement": 9
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "The total value of your portfolio is **$3,948**."
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-w5y98oj5/task.py\", line 31, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "import csv\nimport io\nfrom typing import List, Dict\n\ndef parse_csv(text: str) -> List[Dict]:\n    \"\"\"\n    Parses CSV text into a list of dictionaries.\n\n    Assumes the first row contains the headers. It correctly handles \n    quoted fields th"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-fibonacci-memo",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-58apmsc8/task.py\", line 42, in <module>\n    assert fib(10) == 55\n           ^^^^^^^^^^^^^\nAssertionError",
+        "output": "def fib(n: int, memo: dict = None) -> int:\n    \"\"\"\n    Calculates the nth Fibonacci number using memoization.\n\n    The sequence is defined as:\n    fib(0) = 0\n    fib(1) = 1\n    fib(n) = fib(n-1) + fib(n-2) for n > 1\n\n    Args:\n        n: Th"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 25.0,
+        "error": "Timed out after 10s",
+        "output": "def binary_search(arr, target):\n    left, right = 0, len(arr) - 1  # 'right' should be the index of the last element\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zj1sevcd/task.py\", line 29, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields and validation rules:\n    - 'name' (str, non-empty)\n    - 'email' (str, must contain '@')\n    - 'age' (int, 0-150)\n\n    R"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-ljft7s2z/task.py\", line 38, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import time\nimport functools\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function call on exception.\n\n    Args:\n        max_attempts (int): The maximum number of times to retry the function.\n        delay ("
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-78mfy03b/task.py\", line 21, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    A Least Recently Used (LRU) Cache implementation.\n    \"\"\"\n    def __init__(self, capacity: int):\n        \"\"\"\n        Initializes the LRU Cache with a specified capacity.\n\n    "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-gjnfpo_a/task.py\", line 27, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^\nAttributeError: 'RateLimiter' object has no attribute 'allow'",
+        "output": "from collections import deque\nimport time\n\nclass RateLimiter:\n    \"\"\"\n    A sliding window rate limiter that allows a maximum number of calls \n    within a specified time window.\n    \"\"\"\n\n    def __init__(self, max_calls: int, window_second"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-js3iuozx/task.py\", line 29, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\nfrom typing import List, Dict\n\ndef parse_logs(text: str) -> List[Dict[str, str]]:\n    \"\"\"\n    Parses log lines in the format: '[YYYY-MM-DD HH:MM:SS] LEVEL: message'\n    into a list of dicts with keys 'timestamp', 'level', and 'mes"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"meeting_name\":\"sprint planning\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4.0,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_t"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 87.0,
+        "error": "",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"is taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next w"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 90.0,
+        "error": "",
+        "output": "{\"requester_name\":\"Alice\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas\",\"date\":\"March 28\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":true,\"needs_whiteboard\":true,\"needs_catering\":false}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 80.0,
+        "error": "neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"Sushi\",\"neighborhood\":\"Nob Hill\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":null}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-12",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"product_name\":\"ZenBook Pro 15\",\"brand\":\"ASUS\",\"price\":1299,\"store\":\"Best Buy\",\"display_type\":\"OLED\",\"display_size\":\"15-inch\",\"ram_gb\":16,\"processor\":\"i7-13700H\",\"storage\":\"512GB SSD\",\"battery_life_hours\":10,\"weight_kg\":1.8,\"rating\":0.8,\"o"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee offers a rich aroma that awakens the senses.\nIts complex flavors range from bright and acidic to deep and earthy.\nCan this beloved beverage truly power your entire day?"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-05",
+        "score": 33.3,
+        "error": "format_and_sorted_heaviest_to_lightest; at_least_one_under_1kg",
+        "output": "Elephant - 4000\nHorse - 500\nDog - 20\nCat - 4.5\nMouse - 0.03"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. Apple\n2. Banana\n3. Cherry\n4. Grape\n5. Mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks the great vastness beyond our blue sphere. We launch probes to learn much about the cold void. Missions test limits as we reach new, far worlds. Hope guides our steps as we gaze upon bright distant stars."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over lazy dogs.\nSunlight warms the green fields gently now.\nA beautiful song echoes through the quiet woods."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE HEAVY RAIN FALLING ON THE CITY STREET IS QUITE INTENSE! WE HOPE THIS RAIN CLEARS UP SO WE CAN PLAY AGAIN! Snow can be beautiful when it blankets the ground."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Accra, Malaga, Osaka, Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be 1, 2, 3, 4, 5. The colors are R, B, G, Y, W.\n\n1. $R$ is immediately left of $B$: $(R, B)$ pair.\n2. $G$ is in position 3: $P_3 = G$.\n3. $Y$ is not next to $G$: $P_2 \\neq Y$ and $P_4 \\neq Y$.\n4. $W$ is at an end: $P_1 = W"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 55.0,
+        "error": "missing max_meetings",
+        "output": "1. Calculate the time required for one meeting block:\n   Meeting duration + Buffer = $45 \\text{ min} + 15 \\text{ min} = 60 \\text{ minutes} (1 \\text{ hour})$\n\n2. Calculate the total time available:\n   Start time: 9:00 AM\n   End time: 1:00 PM"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Let $V$ be the volume of the bathtub.\n\nRate of Faucet A ($R_A$):\n$$R_A = \\frac{V}{12} \\text{ per minute}$$\n\nRate of Faucet B ($R_B$):\n$$R_B = \\frac{V}{18} \\text{ per minute}$$\n\nRate of Drain ($R_D$):\n$$R_D = \\frac{V}{36} \\text{ per minute}$"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-12",
+        "score": 0.0,
+        "error": "person expected son, got son or daughter",
+        "output": "Let $S$ be the speaker.\nLet $P$ be the man in the photograph.\n\nThe speaker says: \"Brothers and sisters I have none.\" This means the speaker is an only child.\n\nThe statement is: \"That man's father is my father's son.\"\n\n1. **\"My father's son\""
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.05; interest expected 718.96, got 721.05",
+        "output": "The future value (A) of an investment compounded $n$ times per year is calculated using the formula:\n$$A = P \\left(1 + \\frac{r}{n}\\right)^{nt}$$\nWhere:\n*   $P$ = Principal amount = \\$5,000\n*   $r$ = Annual interest rate (decimal) = 0.045\n* "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe digits must satisfy the following conditions:\n1. $d_1, d_2, d_3, d_4 \\in \\{0, 1, 2, \\ldots, 9\\}$\n2. All 4 digits must be different (This is guaranteed by condition 3).\n3. The PIN "
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C_i$ be the event that the car is behind Door $i$, for $i \\in \\{1, 2, 3, 4\\}$.\nWe assume $P(C_i) = 1/4$ for all $i$.\nYou initially pick Door 1.\n\nThe host opens 2 doors from $\\{2, 3, 4\\}$, which must be goats. The host opens Door 3 and "
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 55.11,
+        "error": "",
+        "output": "Hello there, how are you?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 60.57,
+        "error": "",
+        "output": "HTTP is the application layer protocol that enables communication between web clients (like web browsers) and web servers, defining how messages are formatted and transmitted."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 60.29,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"AI Model\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 62.93,
+        "error": "",
+        "output": "A database index is a special lookup structure that significantly speeds up data retrieval operations. Think of it like the index at the back of a textbook: instead of reading every page (a full table scan) to find a specific topic, you loo"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 62.86,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Improved Speed and User Experience (Reduced Latency):** By storing frequently accessed data closer to the user (or on the server itself), caching prevents the need to re-fetch"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 62.78,
+        "error": "",
+        "output": "The difference between **processes** and **threads** is one of the most fundamental concepts in computer science and operating systems. While both are units of execution, they differ significantly in how they are structured, how they share "
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 63.01,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nThis guide follows a systematic approach to quickly isolate the point of failure in your API integration.\n\n---\n\n### Phase 1: Verification & Isolation (The Basics)\n\n**1. Check External"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 63.14,
+        "error": "",
+        "output": "Choosing between REST and GraphQL for a startup backend is a critical architectural decision that impacts development speed, performance, and long-term scalability.\n\nThere is no single \"better\" answer; the right choice depends heavily on yo"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable missing batch-call synthesis.",
+    "Enable answer-line canonicalization."
+  ]
+}

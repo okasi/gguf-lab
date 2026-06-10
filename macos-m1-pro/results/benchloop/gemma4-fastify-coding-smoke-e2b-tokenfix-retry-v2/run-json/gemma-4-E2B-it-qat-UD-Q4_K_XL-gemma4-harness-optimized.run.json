@@ -1,0 +1,234 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-06-06T22:53:52.291013+00:00",
+  "model": {
+    "model_id": "gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+    "family": "",
+    "parameter_count": "",
+    "quantization": ""
+  },
+  "machine": {
+    "machine_id": "remote:127.0.0.1",
+    "cpu": "",
+    "gpu": "Apple M1 Pro",
+    "gpu_memory_gb": 25.0,
+    "system_memory_gb": 0.0,
+    "os": "remote",
+    "backend": "ollama",
+    "is_remote": true,
+    "remote_host": "127.0.0.1",
+    "endpoint": "http://127.0.0.1:8092",
+    "hardware_label": "Apple M1 Pro 32GB unified memory"
+  },
+  "provider": "openai_compat",
+  "harness": "raw",
+  "harness_version": "v1",
+  "total_runtime_sec": 106.96063462499296,
+  "overall_score": 36.772666666666666,
+  "quality_score": 47.92,
+  "speed_score": 0.0,
+  "reliability_score": 41.66666666666667,
+  "value_score": 9.983333333333336,
+  "speed_metrics": {
+    "ttft_ms": 0.0,
+    "prompt_eval_tok_per_sec": 0.0,
+    "generation_tok_per_sec": 0.0,
+    "total_latency_ms": 0.0
+  },
+  "suites": {
+    "coding": {
+      "suite": "coding",
+      "score": 47.92,
+      "task_count": 12,
+      "pass_count": 5,
+      "fail_count": 7,
+      "median_latency_ms": 6800.052478996804,
+      "tasks": [
+        {
+          "task_id": "coding-csv-parser",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 4438.150208996376,
+          "tokens_generated": 256,
+          "tokens_prompt": 53,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6rqknxjb/task.py\", line 23, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+          "output": "def parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dictionaries.\n    Handles quoted fields with commas inside them.\n\n    Args:\n        text: A string containing the CSV data.\n\n    Returns:\n        A list of dictionaries, where each dictionary represents a row.\n        Returns an empty list if the input is empty.\n    \"\"\"\n    if not text.strip():\n        return []",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6rqknxjb/task.py\", line 23, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-fibonacci-memo",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 4448.630166007206,
+          "tokens_generated": 256,
+          "tokens_prompt": 46,
+          "error": "",
+          "output": "def fib(n: int) -> int:\n    \"\"\"\n    Returns the nth Fibonacci number using memoization.\n\n    Args:\n        n: The index of the Fibonacci number to return (non-negative integer).\n\n    Returns:\n        The nth Fibonacci number.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"Input must be a non-negative integer.\")\n    \n    # Initialize the memoization table (dictionary or list)\n    memo = {}\n\n    def fib_helper(k: int) -> int:\n        \"\"\"Recursive helper function with memoization.\"\"\"\n        # Bas",
+          "metadata": {
+            "stdout": "0\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-flatten-nested",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 4489.220834017033,
+          "tokens_generated": 256,
+          "tokens_prompt": 66,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-s_8gtemg/task.py\", line 23, in <module>\n    assert flatten([1, [2, [3, 4], 5]]) == [1, 2, 3, 4, 5]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+          "output": "def flatten(lst: list) -> list:\n    \"\"\"\n    Flattens an arbitrarily nested list using an iterative approach.\n    \"\"\"\n    flat_list = []\n    stack = list(lst)  # Initialize the stack with the elements of the input list\n    \n    while stack:\n        # Pop the top element from the stack\n        element = stack.pop()\n        \n        if isinstance(element, list):\n            # If the element is a list, add its contents to the stack in reverse order\n            # so they are processed in the original",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-s_8gtemg/task.py\", line 23, in <module>\n    assert flatten([1, [2, [3, 4], 5]]) == [1, 2, 3, 4, 5]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-bug-fix-off-by-one",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 9108.815916988533,
+          "tokens_generated": 256,
+          "tokens_prompt": 114,
+          "error": "",
+          "output": "def binary_search(arr, target):\n    left = 0\n    right = len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            # Target must be in the right half\n            left = mid + 1\n        else:\n            # Target must be in the left half\n            right = mid - 1\n    return -1",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-json-validator",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 13957.812999986345,
+          "tokens_generated": 256,
+          "tokens_prompt": 94,
+          "error": "SyntaxError: unterminated string literal (detected at line 29) (line 29)",
+          "output": "```python\ndef validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields:\n    - 'name': str, non-empty\n    - 'email': str, must contain '@'\n    - 'age': int, 0-150\n\n    Args:\n        data: A dictionary containing user information.\n\n    Returns:\n        A tuple (is_valid, error_messages).\n        Returns (True, []) if valid, or (False, ['list of error messages']) otherwise.\n    \"\"\"\n    errors = []\n\n    # 1. Validate 'name'\n    if 'name' not ",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-retry-decorator",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 13672.293500014348,
+          "tokens_generated": 256,
+          "tokens_prompt": 60,
+          "error": "SyntaxError: unterminated string literal (detected at line 1) (line 1)",
+          "output": "To create a retry decorator in Python, you can use the `functools.wraps` decorator to preserve the original function's metadata and implement the logic within a wrapper function.\n\nHere is the complete implementation of the `retry` decorator:\n\n```python\nimport functools\nimport time\nimport logging\n\n# Configure basic logging for better visibility into the retries\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-deduplicate-preserve-order",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 4491.289041005075,
+          "tokens_generated": 256,
+          "tokens_prompt": 39,
+          "error": "",
+          "output": "def dedupe(lst: list) -> list:\n    \"\"\"\n    Removes duplicates from a list while preserving the order of first occurrence.\n\n    Args:\n        lst: The input list which may contain duplicates.\n\n    Returns:\n        A new list with duplicates removed, keeping only the first occurrence \n        of each element in the order they appear in the original list.\n    \"\"\"\n    seen = set()\n    result = []\n    for item in lst:\n        # If the item has not been seen before, it's the first occurrence.\n        ",
+          "metadata": {
+            "stdout": "Original List 1: [1, 2, 2, 3, 1, 4, 5, 3]\nDeduplicated List 1: [1, 2, 3, 4, 5]\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-add-error-handling",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 4437.333292007679,
+          "tokens_generated": 256,
+          "tokens_prompt": 69,
+          "error": "",
+          "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Retrieves a nested value from a dictionary or list using a list of keys/indices.\n    \n    Returns None if any key or index in the path does not exist or if a \n    type mismatch occurs (e.g., trying to index a non-container).\n\n    Args:\n        data: The nested data structure (dict or list).\n        keys: A list of keys or indices defining the path to the value.\n\n    Returns:\n        The nested value found, or None if an error occurs.\n    \"\"\"\n    resu",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-lru-cache",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 13817.096290993504,
+          "tokens_generated": 256,
+          "tokens_prompt": 81,
+          "error": "SyntaxError: invalid syntax (line 1)",
+          "output": "This is a classic data structure problem that is best solved using a combination of a **Hash Map (Dictionary)** for fast lookups and a **Doubly Linked List** to maintain the order of usage (for $O(1)$ eviction).\n\nHere is the complete Python implementation:\n\n```python\nclass Node:\n    \"\"\"\n    A node in the Doubly Linked List. Stores the key and value.\n    \"\"\"\n    def __init__(self, key: str, val: int):\n        self.key = key\n        self.val = val\n        self.prev = None\n        self.next = None\n",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-rate-limiter",
+          "suite": "coding",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 13588.097250001738,
+          "tokens_generated": 256,
+          "tokens_prompt": 68,
+          "error": "SyntaxError: unterminated triple-quoted string literal (detected at line 28) (line 27)",
+          "output": "To implement a rate limiter that checks for the number of calls within a sliding time window, a `collections.deque` is a very efficient choice. It allows us to store timestamps of recent calls and quickly remove (pop) old ones when checking the limit.\n\nHere is the complete Python implementation:\n\n```python\nimport time\nfrom collections import deque\n\nclass RateLimiter:\n    def __init__(self, max_calls: int, window_seconds: float):\n        \"\"\"\n        Initializes the RateLimiter.\n        \n        A",
+          "metadata": {
+            "evaluation_status": "syntax_error"
+          }
+        },
+        {
+          "task_id": "coding-async-to-sync-refactor",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 15709.193457994843,
+          "tokens_generated": 909,
+          "tokens_prompt": 216,
+          "error": "",
+          "output": "def process_pipeline_sync(data: list[int]) -> int:\n    \"\"\"\n    Processes the data through the three steps synchronously to produce the final result.\n\n    The original pipeline logic is:\n    1. step1: [x * 2 for x in data]\n    2. step2: [x for x in step1_result if x > 4]\n    3. step3: sum(step2_result)\n\n    Args:\n        data: The input list of integers.\n\n    Returns:\n        The sum of the elements remaining after filtering in step2.\n    \"\"\"\n    \n    # Step 1: step1(data, ...)\n    # Applies tran",
+          "metadata": {
+            "stdout": "24\n20\n20\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-parse-log-entries",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 4486.146417009877,
+          "tokens_generated": 256,
+          "tokens_prompt": 85,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-q_yceanz/task.py\", line 33, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+          "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries. Skips malformed lines.\n    \"\"\"\n    parsed_logs = []\n    \n    # Regex to capture the three groups:\n    # Group 1: The timestamp inside the brackets\n    # Group 2: The level (text between ']' and ':', trimmed)\n    # Group 3: The message (everything after 'level: ' until the end)\n    log_pattern = re.compile(r'^\\[(.*?)\\]\\s+(.*?):\\s+(.*",
+          "metadata": {
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-q_yceanz/task.py\", line 33, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        }
+      ]
+    }
+  }
+}

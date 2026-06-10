@@ -1,0 +1,361 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-05/gemma-4-E2B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-harness-iter05",
+  "overall_score": 70.05750374531836,
+  "quality_score": 72.97666666666667,
+  "speed_score": 70.95,
+  "reliability_score": 62.92134831460674,
+  "suite_scores": {
+    "agent": 96.88,
+    "coding": 54.17,
+    "dataextract": 77.37,
+    "instructfollow": 61.11,
+    "reasonmath": 53.33,
+    "speed": 70.95,
+    "toolcall": 95.0
+  },
+  "total_failures_or_partials": 45,
+  "failure_classes": {
+    "tool_partial_batch": 1,
+    "format_cleanup": 1,
+    "coding_semantic": 6,
+    "semantic_extraction": 11,
+    "format_or_instruction": 9,
+    "semantic_math": 5,
+    "answer_line": 2,
+    "speed_measurement": 9,
+    "tool_missing": 1
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 1
+    },
+    "coding": {
+      "format_cleanup": 1,
+      "coding_semantic": 6
+    },
+    "dataextract": {
+      "semantic_extraction": 11
+    },
+    "instructfollow": {
+      "format_or_instruction": 9
+    },
+    "reasonmath": {
+      "semantic_math": 5,
+      "answer_line": 2
+    },
+    "speed": {
+      "speed_measurement": 9
+    },
+    "toolcall": {
+      "tool_missing": 1
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "The current price of AAPL is $188.43 per share.\nThe current price of MSFT is $412.65 per share.\n\n**Calculate the value for each holding:**\n*   **AAPL Value:** $10 \\text{ shares} \\times \\$188.43/\\text{share} = \\$1,884.30$\n*   **MSFT Value:**"
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 10) (line 10)",
+        "output": "The bug in the provided `binary_search` function is related to how the search space is narrowed, specifically when updating `left` and `right`. In a standard binary search, the `right` boundary should typically be an index that is exclusive"
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-_tc1gzbj/task.py\", line 33, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "from typing import Dict, Tuple, List\n\ndef validate_user(data: Dict) -> Tuple[bool, List[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields:\n    - 'name': str, non-empty\n    - 'email': str, must contain '@'\n    - 'age': int"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-dz6i92z0/task.py\", line 31, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import time\nfrom functools import wraps\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to max_attempts times.\n    Waits 'delay' seconds between attempts. If all attempts fail, raises \n"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-add-error-handling",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-pwdmpx8r/task.py\", line 19, in <module>\n    assert get_nested_value(data, [\"user\", \"profile\", \"name\"]) == \"Alice\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Retrieves a nested value from a dictionary or list structure.\n\n    Returns the nested value if successful, or None if any key is missing \n    or the structure is invalid.\n\n    Args:\n        data"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-t_eds23i/task.py\", line 21, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "class Node:\n    \"\"\"Represents a node in the Doubly Linked List.\"\"\"\n    def __init__(self, key: str, value: int):\n        self.key = key\n        self.value = value\n        self.prev = None\n        self.next = None\n\nclass LRUCache:\n    \"\"\"\n  "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-c2kua5o8/task.py\", line 30, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "from collections import deque\nimport time\n\nclass RateLimiter:\n    def __init__(self, max_calls: int, window_seconds: float):\n        self.max_calls = max_calls\n        self.window_seconds = window_seconds\n        # Deque to store the timest"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-ze4s4fx2/task.py\", line 29, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\nfrom typing import List, Dict\n\ndef parse_logs(text: str) -> List[Dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dicts with keys 'timestamp' (str), 'level' (str), 'message"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71.0,
+        "error": "meeting_name: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"sprint planning??\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 79.0,
+        "error": "charging_type: mismatch | product_name: mismatch | recommendation: mismatch",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4.0,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_t"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 87.0,
+        "error": "",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"is taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next w"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 50.0,
+        "error": "date: mismatch | needs_catering: expected boolean | needs_projector: expected boolean | needs_whiteboard: expected boolean | room: mismatch",
+        "output": "{\"requester_name\":\"Alice Wong\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas room\",\"date\":\"March 28, 2:00 PM–3:30 PM\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":\"True\",\"needs_whiteboard\":\"True\",\"n"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 70.0,
+        "error": "cuisine_type: mismatch | neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"sushi\",\"neighborhood\":\"Nob Hill neighborhood\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-11",
+        "score": 86.0,
+        "error": "",
+        "output": "{\"destination\":\"Lake Tahoe\",\"budget_per_person\":450,\"start_date\":\"April 11\",\"end_date\":\"April 13\",\"num_rooms\":\"6\",\"hotel_name\":\"Mountain View Lodge\",\"total_attendees\":null}"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-02",
+        "score": 50.0,
+        "error": "word_counts_3_4_3",
+        "output": "Vast blue water.\nDeep secrets unfold there.\nWaves crash loudly now."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee is a popular caffeinated beverage enjoyed worldwide for its stimulating effects and rich aroma.\nBrewing the perfect cup involves careful selection of beans, water temperature, and grinding technique to achieve optimal flavor.\nDoes th"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50.0,
+        "error": "reverse_alpha_order",
+        "output": "* tulip\n* zebra\n* mango\n* lemon\n* cedar\n* apricot"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-07",
+        "score": 50.0,
+        "error": "tagged_translations",
+        "output": "[EN] My cat likes naps.\n[FR] Je veux discuter.\n[ES] Este gato es lindo."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks new worlds far beyond our home planet.  These vast trips push our minds to great new heights of thought and skill.  We study deep space to find life and learn new things about our place.  Each new probe sends us closer to the"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The sun shines brightly upon the green tall fields today.\nBirds are singing sweet melodies in the morning air now.\nWe enjoy this beautiful peaceful moment very much."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE HEAVY RAIN FALLS DOWN ON THE CITY STREETS! WE MUST PREPARE FOR THE RAIN SO THAT NO ONE IS OVERWHELMED! IT IS A COLD DAY, AND THE RAIN HAS GONE."
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be 1, 2, 3, 4, 5 from left to right.\nColors: R, B, G, Y, W.\n\nClue 2: The green house (G) is in the middle (position 3).\nOrder: \\_, \\_, G, \\_, \\_\n\nClue 1: The red house (R) is immediately to the left of the blue house (B). "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "Here is the step-by-step scheduling analysis:\n\n1.  **Total available time:** From 9:00 AM to 1:00 PM is 4 hours, or $4 \\times 60 = 240$ minutes.\n2.  **Meeting duration:** 45 minutes.\n3.  **Buffer duration:** 15 minutes between meetings.\n4. "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Let $R_A$, $R_B$, and $R_D$ be the rates at which the tub is filled or emptied by Faucet A, Faucet B, and the drain, respectively. The rate is the reciprocal of the time taken to complete the task (filling/emptying) alone.\n\n1.  **Rate of Fa"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.06; interest expected 718.96, got 721.06",
+        "output": "Here is the step-by-step calculation:\n\n**1. Identify the given values:**\n*   Principal amount ($P$): $\\$5,000$\n*   Annual interest rate ($r$): $4.5\\% = 0.045$\n*   Number of times interest is compounded per year ($n$): $12$ (monthly)\n*   Tim"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe constraints are:\n1. $d_1, d_2, d_3, d_4$ are distinct digits from $\\{0, 1, \\ldots, 9\\}$.\n2. $d_1 \\neq 0$.\n3. $d_1 < d_2 < d_3 < d_4$.\n\nSince the digits must be in strictly increas"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C$ be the event that the car is behind a specific door. Since you picked Door 1, the car is behind Door 1 or one of the doors $\\{2, 3, 4\\}$.\nInitially, $P(\\text{Car is behind Door } i) = 1/4$ for $i=1, 2, 3, 4$.\n\nWe are given that the "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-07",
+        "score": 0.0,
+        "error": "missing ANSWER line; expected 48.0, got 720.0",
+        "output": "Here is the step-by-step solution:\n\n1.  **Calculate the distance from City A to City B ($d$):**\n    *   Formula: Distance = Speed $\\times$ Time\n    *   Speed (A to B) = $60 \\text{ km/h}$\n    *   Time (A to B) = $3 \\text{ hours}$\n    *   $d "
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 65.94,
+        "error": "",
+        "output": "Hello, I hope you are well."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 68.36,
+        "error": "",
+        "output": "HTTP is the fundamental protocol used for transferring data over the World Wide Web, enabling communication between web servers and clients."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 69.96,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"example_source\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 72.08,
+        "error": "",
+        "output": "A database index is a special lookup table that improves the speed of data retrieval operations on a database. Think of it like the index in a textbook: instead of reading every page to find a specific topic, you look up the topic in the in"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 72.17,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves User Experience:** Caching stores frequently accessed data closer to the user (e.g., in a CDN or browser), allowing the application to serve conte"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 71.95,
+        "error": "",
+        "output": "The difference between threads and processes is fundamental to understanding how modern computer programs achieve **concurrency** and **parallelism**. While both are mechanisms for executing parts of a program simultaneously, they differ si"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 73.11,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nDebugging an API integration requires a systematic approach to isolate the point of failure. Follow these steps:\n\n**1. Verify Prerequisites (The Basics):**\n\n* **Authentication:** Doub"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 72.7,
+        "error": "",
+        "output": "Choosing the right API architecture (REST vs. GraphQL) is a critical early decision for a startup backend. Each has distinct trade-offs in terms of development speed, scalability, and long-term maintenance.\n\nHere is a detailed breakdown of "
+      }
+    ],
+    "tool_missing": [
+      {
+        "suite": "toolcall",
+        "task_id": "tc-05",
+        "score": 25.0,
+        "error": "matched 0/1 required tool calls; answered directly instead of using tools",
+        "output": "What is the date for next Monday?"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable answer-line canonicalization.",
+    "Enable missing batch-call synthesis.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization.",
+    "Enable tool-call synthesis for obvious tool-use prompts."
+  ]
+}

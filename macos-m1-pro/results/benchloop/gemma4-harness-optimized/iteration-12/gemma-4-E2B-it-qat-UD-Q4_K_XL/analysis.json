@@ -1,0 +1,382 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-12/gemma-4-E2B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-harness-iter12",
+  "overall_score": 67.85705711610487,
+  "quality_score": 70.47166666666666,
+  "speed_score": 71.05,
+  "reliability_score": 59.55056179775281,
+  "suite_scores": {
+    "agent": 93.75,
+    "coding": 47.92,
+    "dataextract": 83.38,
+    "instructfollow": 64.45,
+    "reasonmath": 33.33,
+    "speed": 71.05,
+    "toolcall": 100.0
+  },
+  "total_failures_or_partials": 47,
+  "failure_classes": {
+    "tool_partial_batch": 2,
+    "coding_semantic": 7,
+    "format_cleanup": 1,
+    "semantic_extraction": 10,
+    "format_or_instruction": 8,
+    "semantic_math": 8,
+    "answer_line": 2,
+    "speed_measurement": 9
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 2
+    },
+    "coding": {
+      "coding_semantic": 7,
+      "format_cleanup": 1
+    },
+    "dataextract": {
+      "semantic_extraction": 10
+    },
+    "instructfollow": {
+      "format_or_instruction": 8
+    },
+    "reasonmath": {
+      "semantic_math": 8,
+      "answer_line": 2
+    },
+    "speed": {
+      "speed_measurement": 9
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "The current price for AAPL is $188.43 per share, and the current price for MSFT is $412.65 per share.\n\nYour total portfolio value is calculated as follows:\n\n*   **AAPL Value:** 10 shares * $188.43/share = $1,884.30\n*   **MSFT Value:** 5 sha"
+      },
+      {
+        "suite": "agent",
+        "task_id": "agent-05-refuse-unknown-tool",
+        "score": 75.0,
+        "error": "",
+        "output": "I can only use the tools I have been given, which are for weather and stock prices. I do not have access to a tool that can provide the population of a city."
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-jgx0_ma5/task.py\", line 34, in <module>\n    assert parse_csv(sample) == expected\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "import csv\nfrom io import StringIO\nfrom typing import List, Dict\n\ndef parse_csv(text: str) -> List[Dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dictionaries.\n\n    Handles quoted fields, including commas inside qu"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-2m_5o00b/task.py\", line 29, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary for required fields and data types/formats.\n\n    Required fields:\n    - 'name': str, non-empty.\n    - 'email': str, must contain '@'.\n    - 'ag"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-vnvhutms/task.py\", line 31, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import time\nfrom functools import wraps\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to max_attempts times,\n    waiting a specified delay between attempts.\n    \n    Args:\n        max"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-add-error-handling",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-gqa125s9/task.py\", line 19, in <module>\n    assert get_nested_value(data, [\"user\", \"profile\", \"name\"]) == \"Alice\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Retrieves a nested value from a dictionary or list using a sequence of keys.\n\n    Returns the found value, or None if any key is missing or an unexpected\n    type is encountered.\n\n    Args:\n    "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-6zuf0hh_/task.py\", line 21, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    An LRU Cache implementation using a hash map and an ordered dictionary.\n    \"\"\"\n    def __init__(self, capacity: int):\n        \"\"\"\n        Initializes the LRU Cache with a giv"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-qk_d913c/task.py\", line 28, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^\nAttributeError: 'RateLimiter' object has no attribute 'allow'",
+        "output": "from collections import deque\n\nclass RateLimiter:\n    \"\"\"\n    Implements a rate limiter using a sliding window approach.\n\n    Args:\n        max_calls: The maximum number of allowed calls within the window.\n        window_seconds: The durati"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-cjyn_udm/task.py\", line 33, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\nfrom typing import List, Dict\n\ndef parse_logs(text: str) -> List[Dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dicts with keys 'timestamp', 'level', 'message'.\n    Skips"
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated string literal (detected at line 8) (line 8)",
+        "output": "The bug in the provided function lies in the initialization of the `right` boundary and the update logic within the `while` loop, specifically how it interacts with the array indexing.\n\nThe current initialization is `left, right = 0, len(ar"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71.0,
+        "error": "note: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"sprint planning\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\\nthe retro from la"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 71.0,
+        "error": "bluetooth_version: mismatch | charging_type: mismatch | product_name: mismatch | recommendation: mismatch",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4.0,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"Bluetooth 5.3\",\""
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 80.0,
+        "error": "medication_dose: mismatch | medication_duration: expected string | referral: expected null",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 71.0,
+        "error": "location: mismatch | note: mismatch | role: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer, NYC office\",\"location\":\"NYC office, Chicago\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"is taking over the Acme rebrand from Sarah. He'll be on-s"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 70.0,
+        "error": "date: mismatch | requester_name: mismatch | room: mismatch",
+        "output": "{\"requester_name\":\"Alice\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas room\",\"date\":\"March 28, 2:00 PM–3:30 PM\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":true,\"needs_whiteboard\":true,\"needs_cate"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 70.0,
+        "error": "cuisine_type: mismatch | neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"sushi\",\"neighborhood\":\"Nob Hill\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":null}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-12",
+        "score": 79.0,
+        "error": "complaint: mismatch | product_name: mismatch | rating: mismatch",
+        "output": "{\"product_name\":\"ZenBook Pro 15 laptop\",\"brand\":\"ASUS\",\"price\":1299,\"store\":\"Best Buy\",\"display_type\":\"OLED\",\"display_size\":\"15-inch\",\"ram_gb\":16,\"processor\":\"i7-13700H\",\"storage\":\"512GB SSD\",\"battery_life_hours\":10,\"weight_kg\":1.8,\"rating\""
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-02",
+        "score": 50.0,
+        "error": "word_counts_3_4_3",
+        "output": "Vast blue water calls.\nDeep currents move slowly now.\nSalt air tastes fresh."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee is a beverage made from roasted coffee beans that provides a stimulating and energizing effect. Its complex flavors range from smooth and nutty to bright and acidic, depending on the brewing method and bean origin. Many people enjoy "
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50.0,
+        "error": "reverse_alpha_order",
+        "output": "* tulip\n* zebra\n* mango\n* lemon\n* apricot\n* cedar"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks new worlds far from home. Brave men and women fly past moon and sun to find life. We send small craft to probe deep space and learn much more. This grand quest will push our limits and change how we see the vast dark stars. W"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over the lazy dog now.\nBright sunlight warms the flowers in the beautiful garden today.\nThese simple words fulfill your exact request perfectly well."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE RAIN FALLS HEAVILY UPON THE ROOF! THIS CONTINUES TO HAIL ALL DAY! IT IS A WONDERFUL SIGHT TO SEE THE RAIN AND THE SNOW TOGETHER!"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Osaka,Accra,Malaga,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-03",
+        "score": 0.0,
+        "error": "missing new_original_price; missing saved_money",
+        "output": "Here is the step-by-step calculation:\n\n1.  **Calculate the sale price:**\n    *   Original price = $\\$80$\n    *   Discount = $25\\%$ of $\\$80 = 0.25 \\times 80 = \\$20$\n    *   Sale price = $\\$80 - \\$20 = \\$60$\n\n2.  **Calculate the new original"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be numbered 1, 2, 3, 4, 5 from left to right. The colors are Red (R), Blue (B), Green (G), Yellow (Y), White (W).\n\nWe have 5 positions: \\_ \\_ \\_ \\_ \\_\n\n**Clue 2:** The green house is in the middle (position 3).\n\\_ \\_ G \\_ "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "Here is the step-by-step calculation:\n\n1.  **Total available time:** From 9:00 AM to 1:00 PM is 4 hours, or $4 \\times 60 = 240$ minutes.\n2.  **Fixed break:** Lunch from 12:00 PM to 12:30 PM is 30 minutes.\n3.  **Available working time:** $24"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "To solve this, we first determine the filling rate of each faucet and the draining rate of the tub. Assume the volume of the tub is $V$.\n\n1.  **Rate of Faucet A ($R_A$):** Faucet A fills the tub in 12 minutes.\n    $$R_A = \\frac{V}{12} \\text"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-11",
+        "score": 0.0,
+        "error": "missing day",
+        "output": "Let $A(d)$ be the area covered by lily pads on day $d$.\nThe area doubles every day, so $A(d) = A(d-1) \\times 2$.\nThis is an exponential growth model: $A(d) = A(0) \\cdot 2^d$, where $A(0)$ is the initial area (or we can use $A(n) = A_{\\text{"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.08; interest expected 718.96, got 721.08",
+        "output": "Here are the steps to calculate the future value and total interest:\n\n**Given:**\n* Principal amount ($P$): $5,000$\n* Annual interest rate ($r$): $4.5\\% = 0.045$\n* Number of times interest is compounded per year ($n$): $12$ (monthly)\n* Time "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-14",
+        "score": 0.0,
+        "error": "missing temp_f; missing time_min",
+        "output": "**Step 1: Convert the required temperature from Celsius to Fahrenheit.**\nThe regular oven temperature is $180^\\circ\\text{C}$.\nConversion formula: $F = (C \\times \\frac{9}{5}) + 32$\n$$F_{\\text{regular}} = (180 \\times \\frac{9}{5}) + 32$$\n$$F_{"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe constraints are:\n1. All digits must be different: $d_i \\neq d_j$ for $i \\neq j$.\n2. The PIN must start with a non-zero digit: $d_1 \\in \\{1, 2, 3, 4, 5, 6, 7, 8, 9\\}$.\n3. The digit"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C$ be the event that the car is behind Door 1 (your chosen door).\nLet $C_i$ be the event that the car is behind Door $i$, for $i \\in \\{1, 2, 3, 4\\}$.\nInitially, $P(C_i) = 1/4$ for all $i$.\nYou pick Door 1.\n\nThe host knows where the car"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-07",
+        "score": 0.0,
+        "error": "missing ANSWER line; expected 48.0, got None",
+        "output": "Here is the step-by-step solution:\n\n1.  **Calculate the distance from City A to City B ($D$):**\n    *   Speed ($\\text{A} \\to \\text{B}$) = $60 \\text{ km/h}$\n    *   Time ($\\text{A} \\to \\text{B}$) = $3 \\text{ hours}$\n    *   Distance $D = \\te"
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 63.77,
+        "error": "",
+        "output": "Hello, how are you today?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 70.18,
+        "error": "",
+        "output": "HTTP (Hypertext Transfer Protocol) is the foundational protocol that defines how messages are formatted and transmitted over the web for retrieving and transferring hypermedia documents between web servers and browsers."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 70.05,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"example\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 72.53,
+        "error": "",
+        "output": "A database index functions much like the index at the back of a book. Instead of forcing the database system to scan every single row in a large table to find a specific record, an index creates a separate, ordered data structure that holds"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 72.5,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves Performance:** Caching stores frequently accessed data (like website pages, database query results, or API responses) in faster storage layers, su"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 72.46,
+        "error": "",
+        "output": "Threads and processes are both fundamental concepts in computing used for **concurrency** (handling multiple tasks seemingly at the same time) and **parallelism** (executing tasks truly simultaneously).\n\nWhile they are related, they are fun"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 72.58,
+        "error": "",
+        "output": "## 🛠️ Concise Guide to Debugging a Failing API Integration\n\nDebugging an API integration involves a systematic, layered approach. Follow these steps for efficient troubleshooting:\n\n---\n\n### Phase 1: Verify the Basics (The \"Is it Broken?\" Ch"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 72.39,
+        "error": "",
+        "output": "Choosing between **REST** and **GraphQL** for a startup backend is a crucial decision that impacts development speed, scalability, frontend flexibility, and long-term maintainability.\n\nHere is a detailed breakdown of the tradeoffs between t"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable missing batch-call synthesis.",
+    "Enable answer-line canonicalization.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization."
+  ]
+}

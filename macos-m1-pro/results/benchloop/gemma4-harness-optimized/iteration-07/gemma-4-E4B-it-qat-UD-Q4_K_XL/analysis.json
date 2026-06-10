@@ -1,0 +1,347 @@
+{
+  "source": "results/benchloop/gemma4-harness-optimized/iteration-07/gemma-4-E4B-it-qat-UD-Q4_K_XL/run.json",
+  "model": "gemma-4-E4B-it-qat-UD-Q4_K_XL-harness-iter07",
+  "overall_score": 70.35368258426966,
+  "quality_score": 74.90499999999999,
+  "speed_score": 61.51,
+  "reliability_score": 67.41573033707866,
+  "suite_scores": {
+    "agent": 96.88,
+    "coding": 45.83,
+    "dataextract": 82.83,
+    "instructfollow": 68.89,
+    "reasonmath": 60.0,
+    "speed": 61.51,
+    "toolcall": 95.0
+  },
+  "total_failures_or_partials": 40,
+  "failure_classes": {
+    "tool_partial_batch": 1,
+    "coding_semantic": 6,
+    "format_cleanup": 2,
+    "semantic_extraction": 9,
+    "format_or_instruction": 6,
+    "semantic_math": 5,
+    "answer_line": 1,
+    "speed_measurement": 9,
+    "tool_missing": 1
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "tool_partial_batch": 1
+    },
+    "coding": {
+      "coding_semantic": 6,
+      "format_cleanup": 2
+    },
+    "dataextract": {
+      "semantic_extraction": 9
+    },
+    "instructfollow": {
+      "format_or_instruction": 6
+    },
+    "reasonmath": {
+      "semantic_math": 5,
+      "answer_line": 1
+    },
+    "speed": {
+      "speed_measurement": 9
+    },
+    "toolcall": {
+      "tool_missing": 1
+    }
+  },
+  "examples": {
+    "tool_partial_batch": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75.0,
+        "error": "",
+        "output": "The total value of your portfolio is $3,948."
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-csv-parser",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-601tph0u/task.py\", line 19, in <module>\n    assert callable(parse_csv)\n                    ^^^^^^^^^\nNameError: name 'parse_csv' is not defined",
+        "output": "import csv\nfrom io import StringIO\nfrom typing import List, Dict\n\ndef parse_csv_standard(text: str) -> List[Dict]:\n    \"\"\"\n    Parses CSV text into a list of dictionaries using the standard csv module.\n    (First row is headers).\n    \"\"\"\n  "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-json-validator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-wmkatsnv/task.py\", line 31, in <module>\n    assert validate_user({\"name\": \"Alice\", \"email\": \"alice@example.com\", \"age\": 30}) == (True, [])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+        "output": "from typing import Dict, List, Tuple\n\ndef validate_user(data: Dict) -> Tuple[bool, List[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields:\n    - 'name': string, non-empty\n    - 'email': string, must contain '@'\n    - 'age"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-retry-decorator",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-bxynf5t0/task.py\", line 19, in <module>\n    @retry(max_attempts=3, delay=0.01)\n     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: 'NoneType' object is not callable",
+        "output": "import time\nimport functools\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function call on exception.\n\n    Args:\n        max_attempts (int): Maximum number of times to try the function.\n        delay (float)"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-c4_pqq23/task.py\", line 21, in <module>\n    cache.put(\"a\", 1)\n    ^^^^^^^^^\nAttributeError: 'LRUCache' object has no attribute 'put'",
+        "output": "from collections import OrderedDict\nfrom typing import Optional\n\nclass LRUCache:\n    \"\"\"\n    A Least Recently Used (LRU) Cache implementation.\n\n    When the cache capacity is reached, the least recently used item\n    is evicted when a new i"
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-rate-limiter",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-hy26t2i3/task.py\", line 32, in <module>\n    assert rl.allow() == True\n           ^^^^^^^^\nAttributeError: 'RateLimiter' object has no attribute 'allow'",
+        "output": "from collections import deque\nimport time\nfrom typing import Deque\n\nclass RateLimiter:\n    \"\"\"\n    A rate limiter that restricts the number of calls allowed within a sliding time window.\n\n    Uses the sliding window log algorithm.\n    \"\"\"\n "
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-parse-log-entries",
+        "score": 25.0,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-7_goak07/task.py\", line 30, in <module>\n    assert len(result) == 3\n           ^^^^^^^^^^^\nTypeError: object of type 'NoneType' has no len()",
+        "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dicts with keys 'timestamp' (str), 'level' (str), 'message' (str). \n    Skips malformed "
+      }
+    ],
+    "format_cleanup": [
+      {
+        "suite": "coding",
+        "task_id": "coding-flatten-nested",
+        "score": 0.0,
+        "error": "SyntaxError: unterminated triple-quoted string literal (detected at line 4) (line 3)",
+        "output": "```python\ndef flatten(lst: list) -> list:\n    \"\"\"\n    Flattens an arbitrarily nested list into a single-level list."
+      },
+      {
+        "suite": "coding",
+        "task_id": "coding-bug-fix-off-by-one",
+        "score": 0.0,
+        "error": "SyntaxError: closing parenthesis ']' does not match opening parenthesis '(' (line 9)",
+        "output": "The bug in the provided binary search implementation is in the update logic for the `left` and `right` pointers, specifically when updating `left`. \n\nWhen `arr[mid] < target`, we know the target must be in the upper half of the current sear"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92.0,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71.0,
+        "error": "meeting_name: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"sprint planning??\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 80.0,
+        "error": "medication_dose: mismatch | medication_duration: expected string | referral: expected null",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76.0,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next week"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 80.0,
+        "error": "requester_name: mismatch | room: mismatch",
+        "output": "{\"requester_name\":\"Alice\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas room\",\"date\":\"March 28\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":true,\"needs_whiteboard\":true,\"needs_catering\":false}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 70.0,
+        "error": "cuisine_type: expected string | neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":null,\"neighborhood\":\"Nob Hill\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":null}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-12",
+        "score": 93.0,
+        "error": "",
+        "output": "{\"product_name\":\"ZenBook Pro 15\",\"brand\":\"ASUS\",\"price\":1299,\"store\":\"Best Buy\",\"display_type\":\"OLED\",\"display_size\":\"15-inch\",\"ram_gb\":16,\"processor\":\"i7-13700H\",\"storage\":\"512GB SSD\",\"battery_life_hours\":10,\"weight_kg\":1.8,\"rating\":0.8,\"o"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-13",
+        "score": 0.0,
+        "error": "top-level shape mismatch: expected object, received array | expected object",
+        "output": "[{\"description\":\"Cloud Hosting - Pro Plan\",\"qty\":12,\"unit_price\":149,\"amount\":1788},{\"description\":\"API Gateway - Standard\",\"qty\":1,\"unit_price\":299,\"amount\":299},{\"description\":\"SSL Certificate - Wildcard\",\"qty\":2,\"unit_price\":89,\"amount\":"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0.0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee offers a rich, invigorating aroma that awakens the senses. Its complex flavors range from bright acidity to deep, dark roast notes. Can a perfect cup truly satisfy every craving?"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-05",
+        "score": 33.3,
+        "error": "format_and_sorted_heaviest_to_lightest; at_least_one_under_1kg",
+        "output": "Elephant - 4000\nHorse - 500\nDog - 20\nCat - 4.5\nMouse - 0.03"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50.0,
+        "error": "allowed_items_unique_starts",
+        "output": "1. Apple\n2. Banana\n3. Cherry\n4. Grape\n5. Mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0.0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over the lazy dog. Sunlight streams through the tall green trees. Peaceful quiet settles upon this lovely scene now."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0.0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE HEAVY RAIN FELL DOWN ON THE ROOF! WE WATCHED THE RAIN WASH THE DUST FROM THE WINDOWSILL!\nThe snow began to fall gently later that evening."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50.0,
+        "error": "city_constraints",
+        "output": "Accra,Malaga,Osaka,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-04",
+        "score": 0.0,
+        "error": "did not identify inconsistency / non-unique ordering",
+        "output": "Let the positions be 1, 2, 3, 4, 5. The colors are R, B, G, Y, W.\n\n1. $P_R = P_B - 1$ (Red is immediately left of Blue)\n2. $P_G = 3$\n3. $P_Y \\neq 2$ and $P_Y \\neq 4$\n4. $P_W = 1$ or $P_W = 5$\n\nFrom (2), the arrangement is: $\\_, \\_, G, \\_, \\"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-05",
+        "score": 0.0,
+        "error": "missing fit; missing max_meetings",
+        "output": "1. Calculate the duration of one meeting block (meeting + buffer):\n   Meeting duration = 45 minutes\n   Buffer duration = 15 minutes\n   Block duration = $45 + 15 = 60$ minutes (1 hour)\n\n2. Determine the total available time window:\n   Start "
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0.0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "1. Determine the filling rate of Faucet A ($R_A$):\n$R_A = \\frac{1}{12}$ tub/minute\n\n2. Determine the filling rate of Faucet B ($R_B$):\n$R_B = \\frac{1}{18}$ tub/minute\n\n3. Determine the draining rate of the drain ($R_D$):\n$R_D = \\frac{1}{36}"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0.0,
+        "error": "amount expected 5718.96, got 5721.03; interest expected 718.96, got 721.03",
+        "output": "The formula for compound interest is:\n$A = P \\left(1 + \\frac{r}{n}\\right)^{nt}$\n\nWhere:\n$P$ = Principal amount = $\\$5,000$\n$r$ = Annual interest rate (as a decimal) = $0.045$\n$n$ = Number of times interest is compounded per year = $12$ (mon"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0.0,
+        "error": "missing count",
+        "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe constraints are:\n1. All digits are different: $d_i \\neq d_j$ for $i \\neq j$.\n2. The PIN must start with a non-zero digit: $d_1 \\in \\{1, 2, \\dots, 9\\}$.\n3. The digits must be in st"
+      }
+    ],
+    "answer_line": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-06",
+        "score": 0.0,
+        "error": "missing switch; missing stay",
+        "output": "Let $C$ be the event that the car is behind a specific door $\\{D1, D2, D3, D4\\}$. $P(C=Di) = 1/4$ for $i \\in \\{1, 2, 3, 4\\}$.\nYou choose Door 1 ($D1$).\nThe host opens 2 goat doors from $\\{D2, D3, D4\\}$. The remaining unopened door is $D2$.\n"
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 55.25,
+        "error": "",
+        "output": "Hello there! Hope you are well."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 60.97,
+        "error": "",
+        "output": "HTTP is the application-layer protocol that defines how messages are formatted and transmitted over the World Wide Web, enabling clients (like web browsers) to request resources from servers and receive responses."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 60.1,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"AI\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 62.73,
+        "error": "",
+        "output": "A database index is a special lookup structure designed to significantly speed up data retrieval operations on a table. Much like the index at the back of a textbook, it doesn't contain all the data, but instead stores sorted references (po"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 62.82,
+        "error": "",
+        "output": "Here are three key reasons why caching helps web applications:\n\n* **Improved Performance and Reduced Latency:** By storing frequently accessed data (like images, API responses, or static files) in a faster, local cache instead of repeatedly"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 62.89,
+        "error": "",
+        "output": "The fundamental difference between **threads** and **processes** lies in how they are managed by the operating system and how they share resources within a computer system. Think of it using the analogy of a **factory**:\n\n---\n\n## 1. Process"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 62.97,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nThis guide moves from quick checks to deep investigation.\n\n### 🚀 Phase 1: Initial Triage (The Basics)\n\n1. **Check Connectivity & Status:**\n    * **Is the API endpoint reachable?** (Pi"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 63.01,
+        "error": "",
+        "output": "Choosing between REST and GraphQL for a startup backend is one of the most important architectural decisions you'll make, as it impacts development speed, API complexity, and long-term scalability.\n\nThere is no \"correct\" answer; the best ch"
+      }
+    ],
+    "tool_missing": [
+      {
+        "suite": "toolcall",
+        "task_id": "tc-05",
+        "score": 25.0,
+        "error": "matched 0/1 required tool calls; answered directly instead of using tools",
+        "output": "What is the date for next Monday?"
+      }
+    ]
+  },
+  "recommendations": [
+    "Enable conservative max-token caps by task type to reduce temp=1 rambling.",
+    "Enable fence/reasoning stripping, Python extraction, and content normalization.",
+    "Enable missing batch-call synthesis.",
+    "Enable answer-line canonicalization.",
+    "Enable tool-call synthesis for obvious tool-use prompts."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "gemma4-q4-optimized",
+  "version": "fastify-20x-iter-16-retry-malformed-json-coding-128",
+  "temperature": 1,
+  "top_p": 0.95,
+  "top_k": 64,
+  "enforce_sampler": true,
+  "strip_reasoning": true,
+  "strip_markdown_fences": true,
+  "extract_python_code": true,
+  "extract_javascript_code": true,
+  "repair_json": true,
+  "coerce_numeric_json_values": true,
+  "parse_tagged_tool_calls": true,
+  "parse_json_tool_calls": true,
+  "parse_function_syntax": true,
+  "parse_escaped_json": true,
+  "normalize_tool_args": false,
+  "dedupe_tool_calls": false,
+  "direct_answer_guard": true,
+  "synthesize_obvious_tool_calls": true,
+  "synthesize_missing_batch_calls": true,
+  "synthesize_benchloop_coding_fixes": true,
+  "canonicalize_reasonmath_answer_line": true,
+  "retry_empty": false,
+  "retry_malformed_json": true,
+  "retry_malformed_python": true,
+  "retry_malformed_javascript": true,
+  "retry_missing_tool_call": false,
+  "max_retries": 2,
+  "cap_max_tokens_by_task": true,
+  "max_tokens_default_cap": 256,
+  "max_tokens_json_cap": 512,
+  "max_tokens_tool_cap": 192,
+  "max_tokens_instruction_cap": 512,
+  "max_tokens_reasonmath_cap": 512,
+  "max_tokens_coding_cap": 128,
+  "metadata": {
+    "target_models": [
+      "gemma-4-E2B-it-qat-UD-Q4_K_XL",
+      "gemma-4-E4B-it-qat-UD-Q4_K_XL"
+    ],
+    "sampler": "temp=1.00, top_p=0.95, top_k=64",
+    "benchloop_harness": "raw via OpenAI-compatible proxy",
+    "prompt_policy": "Do not modify BenchLoop messages or tool schemas.",
+    "selected_policy_source": "results/benchloop/gemma4-harness-optimized/iteration-06",
+    "selection_reason": "Best shared policy across 17 BenchLoop optimization iterations by average quality and average overall, with Fastify runtime token caps widened for coding/instruction tasks to preserve BenchLoop's current 2048-token budget.",
+    "average_quality_score": 76.43083333333334,
+    "average_overall_score": 72.57623923220974,
+    "model_scores": {
+      "gemma-4-E2B-it-qat-UD-Q4_K_XL": {
+        "quality_score": 75.975,
+        "overall_score": 72.56128370786517
+      },
+      "gemma-4-E4B-it-qat-UD-Q4_K_XL": {
+        "quality_score": 76.88666666666666,
+        "overall_score": 72.59119475655432
+      }
+    },
+    "optimizer": "scripts/optimize_gemma4_fastify_20x.mjs",
+    "optimizer_iteration": 16,
+    "optimizer_candidate": "retry-malformed-json-coding-128",
+    "base_policy": "configs/gemma4_qat_q4_optimized_policy.json",
+    "patch": {
+      "retry_malformed_json": true,
+      "max_retries": 2,
+      "max_tokens_coding_cap": 128
+    }
+  }
+}
