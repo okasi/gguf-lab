@@ -112,31 +112,38 @@ if (Test-Path -LiteralPath $BenchExportJson) {
     }
 }
 
-$hardRowsByCsv = @{
-    (Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv") = @()
-}
 $nmax2HardTsCsv = Join-Path $LogDir "readme-noreason-nmax2-hard-ts-RESULTS.csv"
-$hardRowsByCsv[$nmax2HardTsCsv] = @()
-foreach ($csvPath in @($hardRowsByCsv.Keys)) {
-    if (Test-Path -LiteralPath $csvPath) {
-        $hardRowsByCsv[$csvPath] = @(Import-Csv -LiteralPath $csvPath)
+$defaultHardTsCsv = Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv"
+$hardRowsByCsv = @{}
+foreach ($csvPath in @($defaultHardTsCsv, $nmax2HardTsCsv)) {
+    $hardRowsByCsv[$csvPath] = if (Test-Path -LiteralPath $csvPath) { @(Import-Csv -LiteralPath $csvPath) } else { @() }
+}
+
+function Get-ReasoningOffRowConfig {
+    param($Model)
+
+    if (Test-Gemma4QatMtpModel -Model $Model) {
+        return @{
+            AliasSuffix = "-noreason-nmax2"
+            HardTsCsv = (Join-Path $LogDir "readme-noreason-nmax2-hard-ts-RESULTS.csv")
+            SpecDraftNMaxOverride = 2
+        }
+    }
+    return @{
+        AliasSuffix = "-noreason"
+        HardTsCsv = (Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv")
+        SpecDraftNMaxOverride = 0
     }
 }
 
-$variants = @(
-    @{ AliasSuffix = "-noreason"; HardTsCsv = (Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv"); SpecDraftNMaxOverride = 0; ForAllModels = $true }
-    @{ AliasSuffix = "-noreason-nmax2"; HardTsCsv = $nmax2HardTsCsv; SpecDraftNMaxOverride = 2; ForAllModels = $false }
-)
-
 $rows = @()
-foreach ($variant in $variants) {
 foreach ($model in $models) {
-    if (-not $variant.ForAllModels -and -not (Test-Gemma4QatMtpModel -Model $model)) { continue }
-    $alias = "$($model.Alias)$($variant.AliasSuffix)"
+    $rowConfig = Get-ReasoningOffRowConfig -Model $model
+    $alias = "$($model.Alias)$($rowConfig.AliasSuffix)"
     $name = [string]$model.Name
     $bench = if ($benchRuns.ContainsKey($alias)) { $benchRuns[$alias] } else { $null }
 
-    $hardRows = $hardRowsByCsv[$variant.HardTsCsv]
+    $hardRows = $hardRowsByCsv[$rowConfig.HardTsCsv]
     $modelHard = @($hardRows | Where-Object { $_.Model -eq $name })
     $textRow = @($modelHard | Where-Object { $_.Mode -eq "text" } | Select-Object -Last 1)
     $visionRow = @($modelHard | Where-Object { $_.Mode -eq "vision" } | Select-Object -Last 1)
@@ -176,7 +183,7 @@ foreach ($model in $models) {
         MemBucket = $memBucket
         ModelLabel = Get-ReadmeModelLabel -Model $model
         Ctx = if ($model.CtxSize) { $model.CtxSize } else { 262144 }
-        Sampler = Get-SamplerLabel -Model $model -SpecDraftNMaxOverride $variant.SpecDraftNMaxOverride
+        Sampler = Get-SamplerLabel -Model $model -SpecDraftNMaxOverride $rowConfig.SpecDraftNMaxOverride
         LoadMem = $loadGiB
         TextGen = $textGen
         ImageGen = $imageGen
@@ -190,9 +197,8 @@ foreach ($model in $models) {
         BlAgent = $blAgent
     }
 }
-}
 
-$rows = @($rows | Sort-Object SortGiB, ModelLabel, Sampler)
+$rows = @($rows | Sort-Object SortGiB, ModelLabel)
 $tableLines = @(
     "| Mem bucket | Model / file | Max ctx | Sampler settings | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |",
     "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
@@ -205,7 +211,7 @@ foreach ($row in $rows) {
 $generatedAt = (Get-Date).ToString("yyyy-MM-dd")
 $tableBlock = (@("<!-- reasoning-off-table-start -->") + $tableLines + @("<!-- reasoning-off-table-end -->")) -join "`n"
 $intro = @(
-    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters; duplicate rows compare `--spec-draft-n-max` 4 vs 2.'
+    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters at `--spec-draft-n-max 2`.'
     "BenchLoop scores are from the $generatedAt reasoning-off refresh; rerun with ``Run-Readme-NoReasoning.ps1`` and refresh this section via ``Export-ReadmeNoReasoningTable.ps1``."
 ) -join ' '
 $section = @(

@@ -77,7 +77,6 @@ MTP add-on, only for MTP GGUF files:
 
 Models covered by this preset:
 
-- `Jackrong/Qwopus3.5-4B-v3-GGUF / Qwen3.5-4B.Q5_K_M.gguf`
 - `Jackrong/Qwopus3.5-9B-Coder-GGUF / Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf`
 - `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF / Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf`
 - `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF / Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf`
@@ -89,47 +88,6 @@ Vision:
 - Qwopus 27B MTP: use the matching non-MTP Qwopus 27B v2 mmproj.
 - Qwopus 35B / Holo 35B: use a compatible 35B A3B mmproj.
 - For image-heavy runs, compare with MTP off.
-
-## Qwen
-
-Use the shared defaults for `--reasoning auto` and `--ctx-size 262144`.
-
-Sampler:
-
-```powershell
---temp 0.75 `
---top-p 0.95 `
---top-k 20 `
---min-p 0.0 `
---presence-penalty 0.0 `
---repeat-penalty 1.0
-```
-
-Models covered by this preset:
-
-- `unsloth/Qwen3.5-4B-GGUF / Qwen3.5-4B-Q5_K_M.gguf`
-
-## LFM2.5
-
-Use the shared defaults for `--reasoning auto`.
-
-Context:
-
-- `--ctx-size 128000` (128K max; GGUF `n_ctx_train=128000` — do not use `131072` or `262144`)
-
-Sampler:
-
-```powershell
---temp 0.2 `
---top-p 0.95 `
---top-k 80 `
---repeat-penalty 1.05 `
---reasoning auto
-```
-
-Models covered by this preset:
-
-- `LiquidAI/LFM2.5-8B-A1B-GGUF / LFM2.5-8B-A1B-Q5_K_M.gguf`
 
 ## Gemma 4
 
@@ -171,7 +129,7 @@ MTP add-on for Unsloth Gemma 4 QAT (needs llama.cpp b9551+ with Gemma4 MTP, merg
 ```powershell
 --model-draft <repo>/MTP/gemma-4-<size>-it-Q8_0-MTP.gguf `
 --spec-type draft-mtp `
---spec-draft-n-max 4
+--spec-draft-n-max 2
 ```
 
 QAT repos also ship root `mtp-gemma-4-<size>-it.gguf` for `-hf` auto-discovery. Our harness resolves `ModelDraftFile` under the model snapshot's `MTP/` folder.
