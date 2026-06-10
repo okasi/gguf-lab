@@ -10,7 +10,7 @@ const ACTIONABLE_HINTS = {
   tool_partial_batch: "Enable missing batch-call synthesis.",
   answer_line: "Enable answer-line canonicalization.",
   format_cleanup: "Enable fence/reasoning stripping and content normalization.",
-  speed_measurement: "Use conservative max-token caps by task type to reduce temp=1 rambling.",
+  speed_measurement: "Reduce temp=1 rambling with tighter prompts or post-processing; avoid truncating model output.",
 };
 
 function parseArgs(argv) {

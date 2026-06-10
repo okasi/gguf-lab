@@ -54,13 +54,6 @@ export const DEFAULT_POLICY = {
   retry_malformed_javascript: false,
   retry_missing_tool_call: false,
   max_retries: 1,
-  cap_max_tokens_by_task: false,
-  max_tokens_default_cap: 256,
-  max_tokens_json_cap: 512,
-  max_tokens_tool_cap: 192,
-  max_tokens_instruction_cap: 192,
-  max_tokens_reasonmath_cap: 512,
-  max_tokens_coding_cap: 512,
   metadata: {},
 };
 
@@ -76,39 +69,8 @@ export function prepareUpstreamPayload(payload, policy) {
     outgoing.top_p = Number(policy.top_p);
     outgoing.top_k = Number(policy.top_k);
   }
-  if (policy.cap_max_tokens_by_task) {
-    const current = Number(outgoing.max_tokens ?? policy.max_tokens_default_cap);
-    const cap = inferMaxTokensCap(outgoing, policy);
-    if (cap > 0 && current > cap) outgoing.max_tokens = cap;
-  }
   if (outgoing.stream === undefined) outgoing.stream = false;
   return outgoing;
-}
-
-function inferMaxTokensCap(payload, policy) {
-  const messages = Array.isArray(payload.messages) ? payload.messages : [];
-  const tools = Array.isArray(payload.tools) ? payload.tools : [];
-  const text = `${systemTexts(messages)}\n${lastUserText(messages)}`.toLowerCase();
-  if (
-    text.includes("coding assistant") ||
-    text.includes("write python") ||
-    text.includes("write javascript") ||
-    text.includes("write typescript") ||
-    text.includes("write js") ||
-    text.includes("write ts") ||
-    ((text.includes("implement") || text.includes("function")) && /\b(python|javascript|typescript|js|ts|jsx|tsx)\b/.test(text))
-  ) {
-    return policy.max_tokens_coding_cap;
-  }
-  if (text.includes("output valid json") || (text.includes("extract") && text.includes("fields:"))) {
-    return policy.max_tokens_json_cap;
-  }
-  if (tools.length) return policy.max_tokens_tool_cap;
-  if (text.includes("follow the user's instructions precisely")) return policy.max_tokens_instruction_cap;
-  if (text.includes('end with exactly one line that starts with "answer:') || text.includes("practical reasoning problems")) {
-    return policy.max_tokens_reasonmath_cap;
-  }
-  return policy.max_tokens_default_cap;
 }
 
 export function processChatCompletion(body, requestPayload, policy) {

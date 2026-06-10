@@ -14,52 +14,44 @@ const BASE_POLICY = "../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_o
 
 const CANDIDATES = [
   [
-    "reasonmath-896-instruction-640-coding-128",
+    "scalar-json-clarification",
     {
-      max_tokens_reasonmath_cap: 896,
-      max_tokens_instruction_cap: 640,
-      max_tokens_coding_cap: 128,
+      coerce_scalar_json_values: true,
+      synthesize_tool_calls_from_prompt_on_clarification: true,
     },
   ],
   [
-    "json-640-tool-256-coding-128",
+    "tool-normalize-dedupe",
     {
-      max_tokens_json_cap: 640,
-      max_tokens_tool_cap: 256,
-      max_tokens_coding_cap: 128,
+      normalize_tool_args: true,
+      dedupe_tool_calls: true,
     },
   ],
   [
-    "tool-normalize-dedupe-retry-coding-128",
+    "tool-normalize-dedupe-retry",
     {
       normalize_tool_args: true,
       dedupe_tool_calls: true,
       retry_missing_tool_call: true,
-      max_tokens_tool_cap: 256,
-      max_tokens_coding_cap: 128,
     },
   ],
   [
-    "json-640-instruction-384-reasonmath-768",
-    {
-      max_tokens_json_cap: 640,
-      max_tokens_instruction_cap: 384,
-      max_tokens_reasonmath_cap: 768,
-      max_tokens_coding_cap: 128,
-    },
-  ],
-  [
-    "balanced-retry-empty-json-320-896",
+    "retry-empty-json",
     {
       retry_empty: true,
       retry_malformed_json: true,
       max_retries: 2,
-      max_tokens_default_cap: 320,
-      max_tokens_json_cap: 640,
-      max_tokens_tool_cap: 256,
-      max_tokens_instruction_cap: 512,
-      max_tokens_reasonmath_cap: 896,
-      max_tokens_coding_cap: 128,
+    },
+  ],
+  [
+    "balanced-repair-profile",
+    {
+      coerce_scalar_json_values: true,
+      synthesize_tool_calls_from_prompt_on_clarification: true,
+      retry_empty: true,
+      retry_malformed_json: true,
+      retry_missing_tool_call: true,
+      max_retries: 2,
     },
   ],
 ];

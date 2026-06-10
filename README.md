@@ -15,6 +15,7 @@ Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full tables: [`macos-m1-pro
 | No MTP f16 (`-c 4096`) | 77.8 | 15.70 | 1477s |
 | No MTP KV Q8 (`-c 0`) | 76.9 | 14.12 | 1735s |
 | **Unsloth MTP nmax2 f16** | **78.9** | **21.65** | **957s** |
+| Unsloth MTP nmax2 + Fastify harness | **81.0** | — | ~941s |
 | Unsloth MTP nmax2 KV Q8 | 76.9 | 15.83 | 1723s |
 
 ## Hardware
