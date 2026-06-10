@@ -18,7 +18,7 @@ This harness is a Fastify/OpenAI-compatible proxy in front of `llama.cpp`. Bench
 
 Implemented harness pieces:
 
-- [Fastify runtime proxy](harness/gemma4_benchloop_harness_fastify/proxy.mjs): `/health`, `/v1/models`, `/v1/chat/completions`, policy loading, sampler enforcement, Gemma response parsing/post-processing, Lezer AST validation for generated Python, Babel AST validation for generated JavaScript/TypeScript, BenchLoop coding fallback, upstream retry handling, JSONL diagnostics.
+- [Fastify runtime proxy](../gemma4_benchloop_harness_fastify/proxy.mjs): `/health`, `/v1/models`, `/v1/chat/completions`, policy loading, sampler enforcement, Gemma response parsing/post-processing, Lezer AST validation for generated Python, Babel AST validation for generated JavaScript/TypeScript, upstream retry handling, JSONL diagnostics.
 - [Node failure analyzer](scripts/analyze_gemma4_run.mjs): classifies BenchLoop failures and writes JSON/Markdown analysis reports.
 - [Node run copier](scripts/copy_latest_benchloop_run.mjs): copies the latest BenchLoop `run.json` into the local artifact directory.
 - [Optimized runner](scripts/run_gemma4_harness_optimized.sh): starts `llama-server`, starts the Fastify proxy, runs BenchLoop, copies the run JSON, and writes analysis artifacts.
@@ -26,8 +26,7 @@ Implemented harness pieces:
 Run the fast parser/proxy checks:
 
 ```bash
-npm install
-npm run test:fastify-harness
+cd ../gemma4_benchloop_harness_fastify && npm install && npm test
 ```
 
 Run one optimized all-category BenchLoop pass for both target models. The script starts `llama-server`, then the Fastify proxy, then BenchLoop:
@@ -42,7 +41,7 @@ Run only one target model when rechecking a result:
 MODEL_FILTER=gemma-4-E2B-it-qat-UD-Q4_K_XL ./scripts/run_gemma4_harness_optimized.sh
 ```
 
-The current promoted policy is [configs/gemma4_qat_q4_optimized_policy.json](configs/gemma4_qat_q4_optimized_policy.json), selected from the forensic 3-round Fastify/Node.js optimization sweep layered on top of the Extra5 policy. The historical 17-step schedule is in [configs/gemma4_qat_q4_iteration_schedule.json](configs/gemma4_qat_q4_iteration_schedule.json). Baseline failure analyses used to seed the rules are here:
+The current promoted policy is [../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json](../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json), selected from the forensic 3-round Fastify/Node.js optimization sweep layered on top of the Extra5 policy. The historical 17-step schedule is in [../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_iteration_schedule.json](../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_iteration_schedule.json). Baseline failure analyses used to seed the rules are here:
 
 - [E2B baseline harness analysis](results/benchloop/gemma4-harness-optimized/e2b-baseline-analysis.md)
 - [E4B baseline harness analysis](results/benchloop/gemma4-harness-optimized/e4b-baseline-analysis.md)

@@ -58,16 +58,11 @@ Janvitos MTP results are **excluded** from this directory.
 
 ## Optimized Fastify harness
 
-The promoted Gemma 4 BenchLoop proxy lives at the **repo root**:
-
-- [`../gemma4_benchloop_harness_fastify/proxy.mjs`](../gemma4_benchloop_harness_fastify/proxy.mjs)
-- Policy: [`../configs/gemma4_qat_q4_optimized_policy.json`](../configs/gemma4_qat_q4_optimized_policy.json)
+The promoted Gemma 4 BenchLoop harness is [`../gemma4_benchloop_harness_fastify/`](../gemma4_benchloop_harness_fastify/).
 
 ```bash
-cd ..   # repo root
-npm install
-npm run test:fastify-harness
-./scripts/run_gemma4_harness_optimized.sh
+cd ../gemma4_benchloop_harness_fastify && npm install && npm test
+./scripts/run_gemma4_harness_optimized.sh   # from macos-m1-pro/
 ```
 
 ## Re-running benchmarks

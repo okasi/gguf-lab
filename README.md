@@ -4,7 +4,7 @@ Benchmarks run locally on Windows with llama.cpp Vulkan. New benchmark results s
 
 Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
 
-The Gemma 4 optimized Fastify BenchLoop harness (`gemma4_benchloop_harness_fastify/proxy.mjs`) and promoted policy (`configs/gemma4_qat_q4_optimized_policy.json`) are shared at the repo root.
+The Gemma 4 optimized Fastify BenchLoop harness lives in [`gemma4_benchloop_harness_fastify/`](gemma4_benchloop_harness_fastify/).
 
 ## macOS M1 Pro (Metal)
 

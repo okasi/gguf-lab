@@ -9,7 +9,7 @@ import {
   loadPolicy,
   prepareUpstreamPayload,
   processChatCompletion,
-} from "../../../gemma4_benchloop_harness_fastify/proxy.mjs";
+} from "./proxy.mjs";
 
 const TOOLS = [
   {

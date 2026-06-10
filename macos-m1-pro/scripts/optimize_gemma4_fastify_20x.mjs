@@ -10,7 +10,7 @@ const DEFAULT_MODELS = [
 ];
 
 const SUITES = "agent,coding,dataextract,instructfollow,reasonmath,speed,toolcall";
-const BASE_POLICY = "configs/gemma4_qat_q4_optimized_policy.json";
+const BASE_POLICY = "../gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json";
 
 const CANDIDATES = [
   ["current-node-ast-baseline", {}],
