@@ -47,9 +47,7 @@ export const DEFAULT_POLICY = {
   synthesize_obvious_tool_calls: true,
   synthesize_tool_calls_from_prompt_on_clarification: false,
   synthesize_missing_batch_calls: true,
-  synthesize_benchloop_coding_fixes: false,
   canonicalize_reasonmath_answer_line: true,
-  canonicalize_reasonmath_from_prompt: false,
   retry_empty: true,
   retry_malformed_json: true,
   retry_malformed_python: false,
@@ -141,37 +139,6 @@ export function processChatCompletion(body, requestPayload, policy) {
   return { body: result, stats };
 }
 
-export function preflightChatCompletion(requestPayload, policy) {
-  if (!policy.synthesize_benchloop_coding_fixes) return null;
-  const { systemText, userText } = messageTexts(requestPayload?.messages ?? []);
-  if (!likelyCodingTask(systemText, userText)) return null;
-  const synthesized = benchloopCodingSolution(userText);
-  if (!synthesized) return null;
-  const body = {
-    id: `chatcmpl_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
-    object: "chat.completion",
-    created: Math.floor(Date.now() / 1000),
-    model: String(requestPayload?.model ?? ""),
-    choices: [
-      {
-        index: 0,
-        message: { role: "assistant", content: synthesized },
-        finish_reason: "stop",
-      },
-    ],
-    usage: {
-      prompt_tokens: estimateTokens(messagesToText(requestPayload?.messages ?? [])),
-      completion_tokens: estimateTokens(synthesized),
-      total_tokens: estimateTokens(messagesToText(requestPayload?.messages ?? [])) + estimateTokens(synthesized),
-    },
-  };
-  const processed = processChatCompletion(body, requestPayload, policy);
-  processed.stats.repairs.unshift("preflight_benchloop_coding_solution");
-  processed.stats.preflight = true;
-  processed.body.gemma_harness = processed.stats;
-  return processed;
-}
-
 function normalizeMessage(message, requestPayload, policy) {
   const stats = { repairs: [] };
   const out = structuredClone(message);
@@ -235,13 +202,6 @@ function normalizeMessage(message, requestPayload, policy) {
 
   const codeLanguage = inferCodeLanguage(systemText, userText);
   if (codeLanguage) {
-    if (policy.synthesize_benchloop_coding_fixes) {
-      const synthesized = benchloopCodingSolution(userText);
-      if (synthesized) {
-        content = synthesized;
-        stats.repairs.push("synthesized_benchloop_coding_solution");
-      }
-    }
     if (policy.extract_python_code && codeLanguage === "python") {
       const repaired = normalizePythonCodeResponse(content, stats);
       if (repaired !== null) content = repaired;
@@ -253,7 +213,7 @@ function normalizeMessage(message, requestPayload, policy) {
   }
 
   if (policy.canonicalize_reasonmath_answer_line) {
-    const canonical = canonicalizeReasonmathAnswer(userText, content, stats, policy);
+    const canonical = canonicalizeReasonmathAnswer(userText, content, stats);
     if (canonical !== content) content = canonical;
   }
 
@@ -716,10 +676,6 @@ function firstNumber(value) {
   return match ? Number(match[0]) : null;
 }
 
-function likelyCodingTask(systemText, userText) {
-  return inferCodeLanguage(systemText, userText) !== null;
-}
-
 function inferCodeLanguage(systemText, userText) {
   const prompt = `${systemText}\n${userText}`.toLowerCase();
   if (/\bpython\b/.test(prompt) || /\bpy\b/.test(prompt)) return "python";
@@ -735,144 +691,6 @@ function messageTexts(messages) {
     systemText: list.filter((m) => m?.role === "system").map((m) => String(m?.content ?? "")).join("\n"),
     userText: list.filter((m) => m?.role === "user").map((m) => String(m?.content ?? "")).join("\n"),
   };
-}
-
-function messagesToText(messages) {
-  return (Array.isArray(messages) ? messages : []).map((message) => String(message?.content ?? "")).join("\n");
-}
-
-function estimateTokens(text) {
-  return Math.max(1, Math.ceil(String(text ?? "").length / 4));
-}
-
-function benchloopCodingSolution(userText) {
-  const prompt = String(userText ?? "").toLowerCase();
-  if (prompt.includes("parse_csv(text: str)")) return `import csv
-from io import StringIO
-
-def parse_csv(text: str) -> list[dict]:
-    reader = csv.DictReader(StringIO(text))
-    return [dict(row) for row in reader]`;
-  if (prompt.includes("fib(n: int)")) return `def fib(n: int) -> int:
-    memo = {0: 0, 1: 1}
-    def go(k):
-        if k not in memo:
-            memo[k] = go(k - 1) + go(k - 2)
-        return memo[k]
-    return go(n)`;
-  if (prompt.includes("flatten(lst: list)")) return `def flatten(lst: list) -> list:
-    out = []
-    for item in lst:
-        if isinstance(item, list):
-            out.extend(flatten(item))
-        else:
-            out.append(item)
-    return out`;
-  if (prompt.includes("binary_search(arr, target)")) return `def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-        if arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1`;
-  if (prompt.includes("validate_user(data: dict)")) return `def validate_user(data: dict) -> tuple[bool, list[str]]:
-    errors = []
-    if not isinstance(data.get("name"), str) or not data.get("name", "").strip():
-        errors.append("name is required")
-    if not isinstance(data.get("email"), str) or "@" not in data.get("email", ""):
-        errors.append("email is invalid")
-    age = data.get("age")
-    if not isinstance(age, int) or age < 0 or age > 150:
-        errors.append("age is invalid")
-    return (not errors, errors)`;
-  if (prompt.includes("decorator `retry")) return `import time
-from functools import wraps
-
-def retry(max_attempts=3, delay=1.0):
-    def decorate(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            last_error = None
-            for attempt in range(max_attempts):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as exc:
-                    last_error = exc
-                    if attempt < max_attempts - 1:
-                        time.sleep(delay)
-            raise last_error
-        return wrapper
-    return decorate`;
-  if (prompt.includes("dedupe(lst: list)")) return `def dedupe(lst: list) -> list:
-    seen = set()
-    out = []
-    for item in lst:
-        if item not in seen:
-            seen.add(item)
-            out.append(item)
-    return out`;
-  if (prompt.includes("get_nested_value(data, keys)")) return `def get_nested_value(data, keys):
-    result = data
-    try:
-        for key in keys:
-            result = result[key]
-        return result
-    except Exception:
-        return None`;
-  if (prompt.includes("class `lrucache`")) return `from collections import OrderedDict
-
-class LRUCache:
-    def __init__(self, capacity: int):
-        self.capacity = capacity
-        self.items = OrderedDict()
-
-    def get(self, key: str) -> int | None:
-        if key not in self.items:
-            return None
-        value = self.items.pop(key)
-        self.items[key] = value
-        return value
-
-    def put(self, key: str, value: int) -> None:
-        if key in self.items:
-            self.items.pop(key)
-        self.items[key] = value
-        if len(self.items) > self.capacity:
-            self.items.popitem(last=False)`;
-  if (prompt.includes("class `ratelimiter`")) return `import time
-from collections import deque
-
-class RateLimiter:
-    def __init__(self, max_calls: int, window_seconds: float):
-        self.max_calls = max_calls
-        self.window_seconds = window_seconds
-        self.calls = deque()
-
-    def allow(self) -> bool:
-        now = time.time()
-        while self.calls and now - self.calls[0] >= self.window_seconds:
-            self.calls.popleft()
-        if len(self.calls) >= self.max_calls:
-            return False
-        self.calls.append(now)
-        return True`;
-  if (prompt.includes("process_pipeline_sync")) return `def process_pipeline_sync(data: list[int]) -> int:
-    return sum(x * 2 for x in data if x * 2 > 4)`;
-  if (prompt.includes("parse_logs(text: str)")) return `import re
-
-def parse_logs(text: str) -> list[dict]:
-    pattern = re.compile(r"^\\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\] ([A-Z]+): (.*)$")
-    rows = []
-    for line in text.splitlines():
-        match = pattern.match(line.strip())
-        if match:
-            rows.append({"timestamp": match.group(1), "level": match.group(2), "message": match.group(3)})
-    return rows`;
-  return null;
 }
 
 function normalizePythonCodeResponse(content, stats) {
@@ -1052,11 +870,11 @@ function javaScriptParserPlugins(language, text) {
   return plugins;
 }
 
-function canonicalizeReasonmathAnswer(userText, content, stats, policy = DEFAULT_POLICY) {
+function canonicalizeReasonmathAnswer(userText, content, stats) {
   const prompt = userText.toLowerCase();
   const canonical =
-    canonicalSwitchStayAnswer(prompt, content, policy) ??
-    canonicalPinCountAnswer(prompt, content, policy);
+    canonicalSwitchStayAnswer(prompt, content) ??
+    canonicalPinCountAnswer(prompt, content);
   if (!canonical) return content;
   if (content.toLowerCase().includes(canonical.toLowerCase())) return content;
   const prefix = content.trim();
@@ -1064,7 +882,7 @@ function canonicalizeReasonmathAnswer(userText, content, stats, policy = DEFAULT
   return prefix ? `${prefix}\n${canonical}` : canonical;
 }
 
-function canonicalSwitchStayAnswer(prompt, content, policy = DEFAULT_POLICY) {
+function canonicalSwitchStayAnswer(prompt, content) {
   if (!prompt.includes("switch") || !prompt.includes("stay")) return null;
   const fullText = content.toLowerCase();
   const lastLine = lastNonemptyLine(content).toLowerCase();
@@ -1073,18 +891,13 @@ function canonicalSwitchStayAnswer(prompt, content, policy = DEFAULT_POLICY) {
   let stayValue = numberNearKeyword(searchText, "stay");
   if (switchValue === null && /switch[\s\S]{0,160}(3\/4|0\.75|75%)/i.test(searchText)) switchValue = 0.75;
   if (stayValue === null && /stay[\s\S]{0,160}(1\/4|0\.25|25%)/i.test(searchText)) stayValue = 0.25;
-  const taskText = `${prompt}\n${content}`;
-  if (policy.canonicalize_reasonmath_from_prompt && (switchValue === null || stayValue === null) && prompt.includes("4") && prompt.includes("door") && taskText.match(/door\s*3/i) && taskText.match(/door\s*4/i)) {
-    switchValue ??= 0.75;
-    stayValue ??= 0.25;
-  }
   if (switchValue === null || stayValue === null) return null;
   return `ANSWER: switch=${formatNumber(switchValue)}; stay=${formatNumber(stayValue)}`;
 }
 
-function canonicalPinCountAnswer(prompt, content, policy = DEFAULT_POLICY) {
+function canonicalPinCountAnswer(prompt, content) {
   if (!prompt.includes("4-digit") || !prompt.includes("pin") || !prompt.includes("increasing") || !prompt.includes("non-zero")) return null;
-  const count = combinationCountFromText(content) ?? (policy.canonicalize_reasonmath_from_prompt ? 126 : null);
+  const count = combinationCountFromText(content);
   if (count === null) return null;
   return `ANSWER: count=${count}`;
 }
@@ -1308,19 +1121,6 @@ export function buildServer(state) {
     if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
       reply.code(400);
       return { error: { message: "request body must be a JSON object" } };
-    }
-    const preflight = preflightChatCompletion(requestPayload, state.policy);
-    if (preflight) {
-      writeJsonl(state.logJsonl, {
-        path: request.url,
-        model: requestPayload.model,
-        elapsed_ms: Number((performance.now() - started).toFixed(3)),
-        attempts: [{ attempt: 0, status: 200, retry_reason: "preflight_benchloop_coding_solution" }],
-        parse: preflight.stats,
-        preflight: true,
-      });
-      reply.code(200).headers({ "content-type": "application/json" });
-      return reply.send(Buffer.from(JSON.stringify(preflight.body)));
     }
     const upstreamPayload = prepareUpstreamPayload(requestPayload, state.policy);
     const attempts = [];

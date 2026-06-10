@@ -17,7 +17,6 @@ const CANDIDATES = [
     "forensic-repairs-shared",
     {
       coerce_scalar_json_values: true,
-      canonicalize_reasonmath_from_prompt: true,
       synthesize_tool_calls_from_prompt_on_clarification: true,
     },
   ],
@@ -25,7 +24,6 @@ const CANDIDATES = [
     "forensic-json-agent-lean",
     {
       coerce_scalar_json_values: true,
-      canonicalize_reasonmath_from_prompt: true,
       synthesize_tool_calls_from_prompt_on_clarification: true,
       retry_empty: true,
       retry_malformed_json: true,
@@ -42,7 +40,6 @@ const CANDIDATES = [
     "forensic-tool-reason",
     {
       coerce_scalar_json_values: true,
-      canonicalize_reasonmath_from_prompt: true,
       synthesize_tool_calls_from_prompt_on_clarification: true,
       retry_empty: true,
       retry_malformed_json: true,

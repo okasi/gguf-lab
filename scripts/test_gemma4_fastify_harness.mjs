@@ -210,13 +210,13 @@ await test("18 prose python extraction", () => {
   assert.equal(message.content, "from collections import Counter\n\ndef count_items(items):\n    return Counter(items)");
 });
 
-await test("19 BenchLoop coding fallback", () => {
+await test("19 BenchLoop coding output is not replaced with answer key", () => {
   const req = request("Write a Python function `fib(n: int) -> int` that returns the nth Fibonacci number using memoization.", { tools: [] });
-  const result = processChatCompletion(response("Here is code:\n```python\ndef fib(n):\n    return"), req, loadPolicy(null, { synthesize_benchloop_coding_fixes: true }));
+  const malformed = "Here is code:\n```python\ndef fib(n):\n    return";
+  const result = processChatCompletion(response(malformed), req, loadPolicy(null));
   const content = result.body.choices[0].message.content;
-  assert.match(content, /def fib/);
-  assert.match(content, /memo/);
-  assert.ok(result.stats.repairs.includes("synthesized_benchloop_coding_solution"));
+  assert.equal(result.stats.repairs.includes("synthesized_benchloop_coding_solution"), false);
+  assert.equal(content.includes("memo = {0: 0, 1: 1}"), false);
 });
 
 await test("20 malformed Python is not extracted", () => {
@@ -256,18 +256,18 @@ await test("24 scalar JSON coercion", () => {
   assert.equal(data.referral, null);
 });
 
-await test("25 prompt-scanned reasonmath canonicalization", () => {
+await test("25 reasonmath answer is not inferred from prompt alone", () => {
   const req = request("In a 4 door game, should I switch or stay after the host opens Door 3 and Door 4?", { tools: [] });
   const content = "Work...\nThe alternative door has the accumulated three-quarters chance, while the original has one-quarter.";
-  const result = processChatCompletion(response(content), req, loadPolicy(null, { canonicalize_reasonmath_from_prompt: true }));
-  assert.match(result.body.choices[0].message.content, /ANSWER: switch=0.75; stay=0.25$/);
+  const result = processChatCompletion(response(content), req, loadPolicy(null));
+  assert.equal(result.body.choices[0].message.content.includes("ANSWER: switch=0.75; stay=0.25"), false);
 });
 
-await test("26 prompt-inferred PIN count canonicalization", () => {
+await test("26 PIN count is not inferred from prompt alone", () => {
   const req = request("A 4-digit PIN must start non-zero, use different digits, and be strictly increasing. What is the count?", { tools: [] });
   const content = "Choose any 4 digits from 1 through 9 in increasing order.";
-  const result = processChatCompletion(response(content), req, loadPolicy(null, { canonicalize_reasonmath_from_prompt: true }));
-  assert.match(result.body.choices[0].message.content, /ANSWER: count=126$/);
+  const result = processChatCompletion(response(content), req, loadPolicy(null));
+  assert.equal(result.body.choices[0].message.content.includes("ANSWER: count=126"), false);
 });
 
 await test("27 clarification tool synthesis", () => {
@@ -395,16 +395,17 @@ await test("30 Fastify retries malformed TypeScript", async () => {
   }
 });
 
-await test("31 Fastify preflights BenchLoop coding fallback", async () => {
+await test("31 Fastify always calls upstream for BenchLoop coding prompts", async () => {
   let calls = 0;
   const upstream = await startUpstreamServer((_req, res) => {
     calls += 1;
-    res.statusCode = 500;
-    res.end("{}");
+    res.statusCode = 200;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify(response("def fib(n: int) -> int:\n    return n")));
   });
   const app = buildServer({
     upstream: `http://127.0.0.1:${upstream.port}/`,
-    policy: loadPolicy(null, { synthesize_benchloop_coding_fixes: true }),
+    policy: loadPolicy(null),
     timeoutSec: 10,
   });
   await app.listen({ host: "127.0.0.1", port: 0 });
@@ -416,9 +417,10 @@ await test("31 Fastify preflights BenchLoop coding fallback", async () => {
       body: JSON.stringify(request("Write a Python function `fib(n: int) -> int` that returns the nth Fibonacci number using memoization.", { tools: [] })),
     });
     const json = await res.json();
-    assert.equal(calls, 0);
+    assert.equal(calls, 1);
     assert.match(json.choices[0].message.content, /def fib/);
-    assert.ok(json.gemma_harness.repairs.includes("preflight_benchloop_coding_solution"));
+    assert.equal(json.gemma_harness?.preflight, undefined);
+    assert.equal(json.gemma_harness?.repairs?.includes("preflight_benchloop_coding_solution"), false);
   } finally {
     await app.close();
     await upstream.close();
