@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport fs from \"fs\";\n\nfunction solve(): void {\n  const data = fs.readFileSync(0, \"utf8\").trim();\n  const lines = data.split(\"\\n\");\n  const [H, W] = lines[0].split(\" \").map(Number);\n  const grid: string[][] = [];\n  let startR = -1, startC = -1, targetR = -1, targetC = -1;\n\n  for (let r = 0; r \u003c H; r++) {\n    grid.push(lines[r + 1].split(\"\"));\n    for (let c = 0; c \u003c W; c++) {\n      if (grid[r][c] === \"S\") {\n        startR = r;\n        startC = c;\n      } else if (grid[r][c] === \"T\") {\n        targetR = r;\n        targetC = c;\n      }\n    }\n  }\n\n  // Dijkstra\u0027s algorithm\n  // dist[r][c] = minimum cost to reach cell (r, c)\n  const dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(Infinity));\n  dist[startR][startC] = 0;\n\n  // Priority queue using a simple array-based min-heap\n  // Each element: [cost, r, c]\n  const heap: [number, number, number][] = [[0, startR, startC]];\n\n  const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];\n\n  function heapPush(item: [number, number, number]): void {\n    heap.push(item);\n    let i = heap.length - 1;\n    while (i \u003e 0) {\n      const parent = (i - 1) \u003e\u003e 1;\n      if (heap[parent][0] \u003c= heap[i][0]) break;\n      [heap[parent], heap[i]] = [heap[i], heap[parent]];\n      i = parent;\n    }\n  }\n\n  function heapPop(): [number, number, number] | undefined {\n    if (heap.length === 0) return undefined;\n    const top = heap[0];\n    const last = heap.pop()!;\n    if (heap.length \u003e 0) {\n      heap[0] = last;\n      let i = 0;\n      while (true) {\n        let smallest = i;\n        const left = 2 * i + 1;\n        const right = 2 * i + 2;\n        if (left \u003c heap.length \u0026\u0026 heap[left][0] \u003c heap[smallest][0]) smallest = left;\n        if (right \u003c heap.length \u0026\u0026 heap[right][0] \u003c heap[smallest][0]) smallest = right;\n        if (smallest === i) break;\n        [heap[smallest], heap[i]] = [heap[i], heap[smallest]];\n        i = smallest;\n      }\n    }\n    return top;\n  }\n\n  while (heap.length \u003e 0) {\n    const [cost, r, c] = heapPop()!;\n\n    if (cost \u003e dist[r][c]) continue;\n\n    if (r === targetR \u0026\u0026 c === targetC) {\n      console.log(cost);\n      return;\n    }\n\n    for (const [dr, dc] of directions) {\n      const nr = r + dr;\n      const nc = c + dc;\n      if (nr \u003c 0 || nr \u003e= H || nc \u003c 0 || nc \u003e= W) continue;\n      const cell = grid[nr][nc];\n      if (cell === \"#\") continue;\n\n      let newCost = cost;\n      if (cell \u003e= \"0\" \u0026\u0026 cell \u003c= \"9\") {\n        newCost = cost + (cell.charCodeAt(0) - 48);\n      }\n\n      if (newCost \u003c dist[nr][nc]) {\n        dist[nr][nc] = newCost;\n        heapPush([newCost, nr, nc]);\n      }\n    }\n  }\n\n  console.log(-1);\n}\n\nsolve();\n```"
+                                    }
+                    }
+                ],
+    "created":  1781101486,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-mtp-iq4-xs-nmax2-noreason-mtp2",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  926,
+                  "prompt_tokens":  193,
+                  "total_tokens":  1119,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-8QPAcJb5jvAfGsXXxIP0imWMddYbiSVS",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  193,
+                    "prompt_ms":  327.855,
+                    "prompt_per_token_ms":  1.6987305699481867,
+                    "prompt_per_second":  588.6748715133214,
+                    "predicted_n":  926,
+                    "predicted_ms":  12164.919,
+                    "predicted_per_token_ms":  13.137061555075594,
+                    "predicted_per_second":  76.12052328502968,
+                    "draft_n":  654,
+                    "draft_n_accepted":  599
+                }
+}

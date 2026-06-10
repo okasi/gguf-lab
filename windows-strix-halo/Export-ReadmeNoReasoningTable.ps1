@@ -57,9 +57,10 @@ function Get-MemBucket {
 
 function Get-ReadmeModelLabel {
     param($Model)
-    $file = [string]$Model.File
+    $file = if ($Model.ReadmeFileLabel) { [string]$Model.ReadmeFileLabel } else { [string]$Model.File }
     $name = [string]$Model.Name
     if ($name -match "Qwopus3\.5-4B") { return "Qwopus3.5-4B-v3 / $file" }
+    if ($name -match "Holo-3\.1-9B") { return "Holo-3.1-9B / $file" }
     if ($name -match "Holo") { return "Holo-3.1-35B-A3B / $file" }
     return $file
 }
@@ -113,15 +114,32 @@ if (Test-Path -LiteralPath $BenchExportJson) {
 }
 
 $nmax2HardTsCsv = Join-Path $LogDir "readme-noreason-nmax2-hard-ts-RESULTS.csv"
+$mtp2HardTsCsv = Join-Path $LogDir "readme-noreason-mtp2-hard-ts-RESULTS.csv"
 $defaultHardTsCsv = Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv"
 $hardRowsByCsv = @{}
-foreach ($csvPath in @($defaultHardTsCsv, $nmax2HardTsCsv)) {
+foreach ($csvPath in @($defaultHardTsCsv, $nmax2HardTsCsv, $mtp2HardTsCsv)) {
     $hardRowsByCsv[$csvPath] = if (Test-Path -LiteralPath $csvPath) { @(Import-Csv -LiteralPath $csvPath) } else { @() }
 }
 
 function Get-ReasoningOffRowConfig {
     param($Model)
 
+    if ($Model.ReasoningOffAliasSuffix) {
+        $suffix = [string]$Model.ReasoningOffAliasSuffix
+        $csvName = if ($suffix -eq "-noreason-nmax2") {
+            "readme-noreason-nmax2-hard-ts-RESULTS.csv"
+        } elseif ($suffix -eq "-noreason-mtp2") {
+            "readme-noreason-mtp2-hard-ts-RESULTS.csv"
+        } else {
+            "readme$($suffix -replace '^-','-')-hard-ts-RESULTS.csv"
+        }
+        $override = if ($suffix -match 'mtp2|nmax2') { 2 } else { 0 }
+        return @{
+            AliasSuffix = $suffix
+            HardTsCsv = (Join-Path $LogDir $csvName)
+            SpecDraftNMaxOverride = $override
+        }
+    }
     if (Test-Gemma4QatMtpModel -Model $Model) {
         return @{
             AliasSuffix = "-noreason-nmax2"
@@ -211,7 +229,7 @@ foreach ($row in $rows) {
 $generatedAt = (Get-Date).ToString("yyyy-MM-dd")
 $tableBlock = (@("<!-- reasoning-off-table-start -->") + $tableLines + @("<!-- reasoning-off-table-end -->")) -join "`n"
 $intro = @(
-    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters at `--spec-draft-n-max 2`.'
+    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters at `--spec-draft-n-max 2`. Qwopus3.6 35B MTP rows use Jackrong `*-MTP-GGUF` weights at `--spec-draft-n-max 2`. Holo-3.1-35B `q4_k_m.gguf` has no MTP tensors in the published GGUF, so it is not benchmarked with speculative MTP here.'
     "BenchLoop scores are from the $generatedAt reasoning-off refresh; rerun with ``Run-Readme-NoReasoning.ps1`` and refresh this section via ``Export-ReadmeNoReasoningTable.ps1``."
 ) -join ' '
 $section = @(

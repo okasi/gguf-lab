@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nconst fs = require(\u0027fs\u0027);\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nconst lines = input.split(\u0027\\n\u0027).map(l =\u003e l.trim()).filter(l =\u003e l.length \u003e 0);\n\nconst [N, M] = lines[0].split(\u0027 \u0027).map(Number);\nconst tasks = lines[1].split(\u0027 \u0027);\nconst adjacency = new Map\u003cstring, string[]\u003e();\nconst inDegree = new Map\u003cstring, number\u003e();\n\nfor (const task of tasks) {\n    adjacency.set(task, []);\n    inDegree.set(task, 0);\n}\n\nfor (let i = 0; i \u003c M; i++) {\n    const [A, B] = lines[2 + i].split(\u0027 \u0027);\n    adjacency.get(A)!.push(B);\n    inDegree.set(B, inDegree.get(B)! + 1);\n}\n\n// Min-heap implementation for priority queue\nclass MinHeap {\n    private heap: string[] = [];\n\n    private getParentIndex(i: number): number {\n        return Math.floor((i - 1) / 2);\n    }\n\n    private getLeftChildIndex(i: number): number {\n        return 2 * i + 1;\n    }\n\n    private getRightChildIndex(i: number): number {\n        return 2 * i + 2;\n    }\n\n    private swap(i: number, j: number): void {\n        [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];\n    }\n\n    private bubbleUp(index: number): void {\n        while (index \u003e 0) {\n            const parentIndex = this.getParentIndex(index);\n            if (this.heap[parentIndex] \u003c= this.heap[index]) {\n                break;\n            }\n            this.swap(index, parentIndex);\n            index = parentIndex;\n        }\n    }\n\n    private bubbleDown(index: number): void {\n        const length = this.heap.length;\n        while (true) {\n            const leftChildIndex = this.getLeftChildIndex(index);\n            const rightChildIndex = this.getRightChildIndex(index);\n            let smallestIndex = index;\n\n            if (leftChildIndex \u003c length \u0026\u0026 this.heap[leftChildIndex] \u003c this.heap[smallestIndex]) {\n                smallestIndex = leftChildIndex;\n            }\n            if (rightChildIndex \u003c length \u0026\u0026 this.heap[rightChildIndex] \u003c this.heap[smallestIndex]) {\n                smallestIndex = rightChildIndex;\n            }\n\n            if (smallestIndex === index) {\n                break;\n            }\n\n            this.swap(index, smallestIndex);\n            index = smallestIndex;\n        }\n    }\n\n    push(item: string): void {\n        this.heap.push(item);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    pop(): string {\n        const top = this.heap[0];\n        const last = this.heap.pop()!;\n        if (this.heap.length \u003e 0) {\n            this.heap[0] = last;\n            this.bubbleDown(0);\n        }\n        return top;\n    }\n\n    isEmpty(): boolean {\n        return this.heap.length === 0;\n    }\n\n    peek(): string {\n        return this.heap[0];\n    }\n}\n\nconst pq = new MinHeap();\nconst result: string[] = [];\n\n// Initialize the heap with tasks that have no dependencies\nfor (const task of tasks) {\n    if (inDegree.get(task)! === 0) {\n        pq.push(task);\n    }\n}\n\nwhile (!pq.isEmpty()) {\n    const current = pq.pop();\n    result.push(current);\n\n    for (const neighbor of adjacency.get(current)!) {\n        inDegree.set(neighbor, inDegree.get(neighbor)! - 1);\n        if (inDegree.get(neighbor)! === 0) {\n            pq.push(neighbor);\n        }\n    }\n}\n\nif (result.length !== N) {\n    console.log(\"IMPOSSIBLE\");\n} else {\n    console.log(result.join(\u0027 \u0027));\n}\n```"
+                                    }
+                    }
+                ],
+    "created":  1781101500,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-mtp-iq4-xs-nmax2-noreason-mtp2",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  893,
+                  "prompt_tokens":  193,
+                  "total_tokens":  1086,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-mpDUJlC6gC6HuzMCzQnSwRDA2wbr4dEZ",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  193,
+                    "prompt_ms":  320.992,
+                    "prompt_per_token_ms":  1.6631709844559586,
+                    "prompt_per_second":  601.2610906190807,
+                    "predicted_n":  893,
+                    "predicted_ms":  11601.452,
+                    "predicted_per_token_ms":  12.991547592385217,
+                    "predicted_per_second":  76.97312370899782,
+                    "draft_n":  622,
+                    "draft_n_accepted":  583
+                }
+}

@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \u0027fs\u0027;\n\ntype Token = {\n  type: \u0027num\u0027;\n  value: number;\n} | {\n  type: \u0027op\u0027;\n  value: \u0027+\u0027 | \u0027-\u0027 | \u0027*\u0027 | \u0027/\u0027;\n} | {\n  type: \u0027lparen\u0027;\n} | {\n  type: \u0027rparen\u0027;\n};\n\nfunction tokenize(input: string): Token[] {\n  const tokens: Token[] = [];\n  let i = 0;\n  while (i \u003c input.length) {\n    const c = input[i];\n    if (c === \u0027 \u0027 || c === \u0027\\t\u0027) {\n      i++;\n      continue;\n    }\n    if (c === \u0027(\u0027) {\n      tokens.push({ type: \u0027lparen\u0027 });\n      i++;\n      continue;\n    }\n    if (c === \u0027)\u0027) {\n      tokens.push({ type: \u0027rparen\u0027 });\n      i++;\n      continue;\n    }\n    if (c === \u0027+\u0027 || c === \u0027-\u0027 || c === \u0027*\u0027 || c === \u0027/\u0027) {\n      tokens.push({ type: \u0027op\u0027, value: c });\n      i++;\n      continue;\n    }\n    // number\n    let start = i;\n    while (i \u003c input.length \u0026\u0026 (input[i] \u003e= \u00270\u0027 \u0026\u0026 input[i] \u003c= \u00279\u0027)) {\n      i++;\n    }\n    tokens.push({ type: \u0027num\u0027, value: parseInt(input.substring(start, i), 10) });\n  }\n  return tokens;\n}\n\n// Shunting-yard algorithm to convert to RPN\nfunction toRPN(tokens: Token[]): Token[] {\n  const output: Token[] = [];\n  const ops: Token[] = [];\n  const precedence: Record\u003cstring, number\u003e = {\n    \u0027+\u0027: 1,\n    \u0027-\u0027: 1,\n    \u0027*\u0027: 2,\n    \u0027/\u0027: 2,\n  };\n\n  for (let j = 0; j \u003c tokens.length; j++) {\n    const token = tokens[j];\n    if (token.type === \u0027num\u0027) {\n      output.push(token);\n    } else if (token.type === \u0027lparen\u0027) {\n      ops.push(token);\n    } else if (token.type === \u0027rparen\u0027) {\n      while (ops.length \u003e 0 \u0026\u0026 ops[ops.length - 1].type !== \u0027lparen\u0027) {\n        output.push(ops.pop()!);\n      }\n      if (ops.length === 0) {\n        throw new Error(\u0027Mismatched parentheses\u0027);\n      }\n      ops.pop(); // remove lparen\n    } else if (token.type === \u0027op\u0027) {\n      while (\n        ops.length \u003e 0 \u0026\u0026\n        ops[ops.length - 1].type === \u0027op\u0027 \u0026\u0026\n        precedence[ops[ops.length - 1].value] \u003e= precedence[token.value]\n      ) {\n        output.push(ops.pop()!);\n      }\n      ops.push(token);\n    }\n  }\n  while (ops.length \u003e 0) {\n    const op = ops.pop()!;\n    if (op.type === \u0027lparen\u0027) {\n      throw new Error(\u0027Mismatched parentheses\u0027);\n    }\n    output.push(op);\n  }\n  return output;\n}\n\n// Evaluate RPN\nfunction evaluateRPN(rpn: Token[]): number {\n  const stack: number[] = [];\n  for (const token of rpn) {\n    if (token.type === \u0027num\u0027) {\n      stack.push(token.value);\n    } else if (token.type === \u0027op\u0027) {\n      if (stack.length \u003c 2) {\n        throw new Error(\u0027Invalid expression\u0027);\n      }\n      const b = stack.pop()!;\n      const a = stack.pop()!;\n      let result: number;\n      switch (token.value) {\n        case \u0027+\u0027:\n          result = a + b;\n          break;\n        case \u0027-\u0027:\n          result = a - b;\n          break;\n        case \u0027*\u0027:\n          result = a * b;\n          break;\n        case \u0027/\u0027:\n          if (b === 0) {\n            throw new Error(\u0027Division by zero\u0027);\n          }\n          // Truncate toward zero\n          result = Math.trunc(a / b);\n          break;\n        default:\n          throw new Error(\u0027Unknown operator\u0027);\n      }\n      stack.push(result);\n    }\n  }\n  if (stack.length !== 1) {\n    throw new Error(\u0027Invalid expression\u0027);\n  }\n  return stack[0];\n}\n\n// Handle unary +/- by inserting 0 before the operator\nfunction insertUnaryZeros(tokens: Token[]): Token[] {\n  const result: Token[] = [];\n  for (let i = 0; i \u003c tokens.length; i++) {\n    const token = tokens[i];\n    if (token.type === \u0027op\u0027 \u0026\u0026 (token.value === \u0027+\u0027 || token.value === \u0027-\u0027)) {\n      // Check if it\u0027s unary:\n      // It\u0027s unary if:\n      // - It\u0027s the first token\n      // - The previous token is an operator, lparen, or unary op\n      const isUnary =\n        i === 0 ||\n        tokens[i - 1].type === \u0027op\u0027 ||\n        tokens[i - 1].type === \u0027lparen\u0027 ||\n        (tokens[i - 1].type === \u0027op\u0027 \u0026\u0026\n          (tokens[i - 1].value === \u0027+\u0027 || tokens[i - 1].value === \u0027-\u0027));\n\n      if (isUnary) {\n        // Insert 0 before the unary operator\n        result.push({ type: \u0027num\u0027, value: 0 });\n      }\n      result.push(token);\n    } else {\n      result.push(token);\n    }\n  }\n  return result;\n}\n\nfunction evaluate(input: string): number {\n  const tokens = tokenize(input);\n  const tokensWithUnary = insertUnaryZeros(tokens);\n  const rpn = toRPN(tokensWithUnary);\n  return evaluateRPN(rpn);\n}\n\nconst input = fs.readFileSync(0, \u0027utf8\u0027).trim();\nconsole.log(evaluate(input));\n```"
+                                    }
+                    }
+                ],
+    "created":  1781101472,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-mtp-iq4-xs-nmax2-noreason-mtp2",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1357,
+                  "prompt_tokens":  169,
+                  "total_tokens":  1526,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-fDa5I3onnltIJtQFgIfKIKx8pX5puPY1",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  169,
+                    "prompt_ms":  300.449,
+                    "prompt_per_token_ms":  1.7778047337278107,
+                    "prompt_per_second":  562.4914710982563,
+                    "predicted_n":  1357,
+                    "predicted_ms":  18188.935,
+                    "predicted_per_token_ms":  13.403784082535005,
+                    "predicted_per_second":  74.60579742574262,
+                    "draft_n":  964,
+                    "draft_n_accepted":  874
+                }
+}

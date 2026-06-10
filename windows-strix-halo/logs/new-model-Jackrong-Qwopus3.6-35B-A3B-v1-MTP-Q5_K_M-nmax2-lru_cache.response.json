@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \"fs\";\n\nclass LRUCache {\n    private capacity: number;\n    private keyNodeMap: Map\u003cstring, DoublyListNode\u003e;\n    private head: DoublyListNode;\n    private tail: DoublyListNode;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.keyNodeMap = new Map();\n        this.head = new DoublyListNode(null, null);\n        this.tail = new DoublyListNode(null, null);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private removeFromNode(node: DoublyListNode): void {\n        node.prev!.next = node.next;\n        node.next!.prev = node.prev;\n    }\n\n    private addToHead(node: DoublyListNode): void {\n        node.next = this.head.next;\n        this.head.next!.prev = node;\n        this.head.next = node;\n        node.prev = this.head;\n    }\n\n    private removeTail(): DoublyListNode | null {\n        const node = this.tail.prev;\n        if (node === this.head) {\n            return null;\n        }\n        this.removeFromNode(node);\n        return node;\n    }\n\n    get(key: string): number {\n        const node = this.keyNodeMap.get(key);\n        if (!node) {\n            return -1;\n        }\n        this.removeFromNode(node);\n        this.addToHead(node);\n        return node.value;\n    }\n\n    put(key: string, value: number): void {\n        const existingNode = this.keyNodeMap.get(key);\n        if (existingNode) {\n            existingNode.value = value;\n            this.removeFromNode(existingNode);\n            this.addToHead(existingNode);\n        } else {\n            if (this.keyNodeMap.size \u003e= this.capacity) {\n                const evictedNode = this.removeTail();\n                if (evictedNode) {\n                    this.keyNodeMap.delete(evictedNode.key!);\n                }\n            }\n            const newNode = new DoublyListNode(key, value);\n            this.addToHead(newNode);\n            this.keyNodeMap.set(key, newNode);\n        }\n    }\n\n    delete(key: string): void {\n        const node = this.keyNodeMap.get(key);\n        if (node) {\n            this.removeFromNode(node);\n            this.keyNodeMap.delete(key);\n        }\n    }\n\n    getLRUOrder(): string[] {\n        const result: string[] = [];\n        let current = this.head.next;\n        while (current \u0026\u0026 current !== this.tail) {\n            result.push(current.key!);\n            current = current.next;\n        }\n        return result;\n    }\n}\n\nclass DoublyListNode {\n    public key: string | null;\n    public value: number;\n    public prev: DoublyListNode | null;\n    public next: DoublyListNode | null;\n\n    constructor(key: string | null, value: number) {\n        this.key = key;\n        this.value = value;\n        this.prev = null;\n        this.next = null;\n    }\n}\n\nfunction main(): void {\n    const input = fs.readFileSync(0, \"utf8\").trim();\n    const lines = input.split(\"\\n\");\n    const firstLine = lines[0].split(/\\s+/);\n    const capacity = parseInt(firstLine[0], 10);\n    const n = parseInt(firstLine[1], 10);\n\n    const cache = new LRUCache(capacity);\n    const getResults: string[] = [];\n\n    for (let i = 1; i \u003c= n; i++) {\n        const parts = lines[i].split(/\\s+/);\n        const operation = parts[0];\n        const key = parts[1];\n\n        if (operation === \"GET\") {\n            const result = cache.get(key);\n            getResults.push(String(result));\n        } else if (operation === \"PUT\") {\n            const value = parseInt(parts[2], 10);\n            cache.put(key, value);\n        } else if (operation === \"DEL\") {\n            cache.delete(key);\n        }\n    }\n\n    const getOutput = getResults.length \u003e 0 ? getResults.join(\" \") : \"EMPTY\";\n    const keysOrder = cache.getLRUOrder();\n    const keysOutput = keysOrder.length \u003e 0 ? keysOrder.join(\" \") : \"EMPTY\";\n\n    console.log(getOutput);\n    console.log(keysOutput);\n}\n\nmain();\n```"
+                                    }
+                    }
+                ],
+    "created":  1781102555,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-noreason-mtp2",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1003,
+                  "prompt_tokens":  284,
+                  "total_tokens":  1287,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-JpgDU4UwR8xckEQRiYxzFzkK3XOxNhq2",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  284,
+                    "prompt_ms":  660.827,
+                    "prompt_per_token_ms":  2.326855633802817,
+                    "prompt_per_second":  429.76452233337926,
+                    "predicted_n":  1003,
+                    "predicted_ms":  14489.178,
+                    "predicted_per_token_ms":  14.445840478564307,
+                    "predicted_per_second":  69.22407882627986,
+                    "draft_n":  708,
+                    "draft_n_accepted":  648
+                }
+}

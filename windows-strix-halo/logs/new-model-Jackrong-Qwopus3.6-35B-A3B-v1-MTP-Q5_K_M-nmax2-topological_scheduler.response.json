@@ -1,0 +1,38 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "```typescript\nimport * as fs from \u0027fs\u0027;\n\nclass MinHeap\u003cT\u003e {\n    private data: T[];\n\n    constructor(private compare: (a: T, b: T) =\u003e number) {\n        this.data = [];\n    }\n\n    push(item: T): void {\n        this.data.push(item);\n        this.bubbleUp(this.data.length - 1);\n    }\n\n    pop(): T | undefined {\n        if (this.data.length === 0) return undefined;\n        const top = this.data[0];\n        const last = this.data.pop();\n        if (this.data.length \u003e 0 \u0026\u0026 last !== undefined) {\n            this.data[0] = last;\n            this.sinkDown(0);\n        }\n        return top;\n    }\n\n    isEmpty(): boolean {\n        return this.data.length === 0;\n    }\n\n    private bubbleUp(index: number): void {\n        while (index \u003e 0) {\n            const parentIndex = Math.floor((index - 1) / 2);\n            if (this.compare(this.data[index], this.data[parentIndex]) \u003c 0) {\n                [this.data[index], this.data[parentIndex]] = [this.data[parentIndex], this.data[index]];\n                index = parentIndex;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private sinkDown(index: number): void {\n        const length = this.data.length;\n        while (true) {\n            const leftChildIndex = 2 * index + 1;\n            const rightChildIndex = 2 * index + 2;\n            let smallest = index;\n\n            if (leftChildIndex \u003c length \u0026\u0026 this.compare(this.data[leftChildIndex], this.data[smallest]) \u003c 0) {\n                smallest = leftChildIndex;\n            }\n\n            if (rightChildIndex \u003c length \u0026\u0026 this.compare(this.data[rightChildIndex], this.data[smallest]) \u003c 0) {\n                smallest = rightChildIndex;\n            }\n\n            if (smallest !== index) {\n                [this.data[index], this.data[smallest]] = [this.data[smallest], this.data[index]];\n                index = smallest;\n            } else {\n                break;\n            }\n        }\n    }\n}\n\nfunction solve(): void {\n    const input = fs.readFileSync(0, \"utf8\");\n    const lines = input.trim().split(\u0027\\n\u0027);\n    if (lines.length === 0) return;\n\n    const firstLine = lines[0].trim().split(/\\s+/);\n    const N = parseInt(firstLine[0], 10);\n    const M = parseInt(firstLine[1], 10);\n\n    const secondLine = lines[1].trim().split(/\\s+/);\n    const tasks = secondLine;\n\n    const taskIndexMap = new Map\u003cstring, number\u003e();\n    for (let i = 0; i \u003c N; i++) {\n        taskIndexMap.set(tasks[i], i);\n    }\n\n    const adjacencyList: number[][] = Array.from({ length: N }, () =\u003e []);\n    const inDegree: number[] = new Array(N).fill(0);\n\n    for (let i = 0; i \u003c M; i++) {\n        const line = lines[2 + i].trim().split(/\\s+/);\n        const A = line[0];\n        const B = line[1];\n        const aIdx = taskIndexMap.get(A);\n        const bIdx = taskIndexMap.get(B);\n        if (aIdx === undefined || bIdx === undefined) continue;\n        adjacencyList[aIdx].push(bIdx);\n        inDegree[bIdx]++;\n    }\n\n    const pq = new MinHeap\u003cnumber\u003e((a, b) =\u003e tasks[a].localeCompare(tasks[b]));\n\n    for (let i = 0; i \u003c N; i++) {\n        if (inDegree[i] === 0) {\n            pq.push(i);\n        }\n    }\n\n    const result: string[] = [];\n    let processedCount = 0;\n\n    while (!pq.isEmpty()) {\n        const current = pq.pop()!;\n        result.push(tasks[current]);\n        processedCount++;\n\n        for (const neighbor of adjacencyList[current]) {\n            inDegree[neighbor]--;\n            if (inDegree[neighbor] === 0) {\n                pq.push(neighbor);\n            }\n        }\n    }\n\n    if (processedCount !== N) {\n        console.log(\"IMPOSSIBLE\");\n    } else {\n        console.log(result.join(\" \"));\n    }\n}\n\nsolve();\n```"
+                                    }
+                    }
+                ],
+    "created":  1781102616,
+    "model":  "jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-noreason-mtp2",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  1024,
+                  "prompt_tokens":  193,
+                  "total_tokens":  1217,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-fOXDRtYkqHFSrkWbr6pxuTYWWhN2YdQi",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  193,
+                    "prompt_ms":  380.685,
+                    "prompt_per_token_ms":  1.9724611398963732,
+                    "prompt_per_second":  506.98083717509223,
+                    "predicted_n":  1024,
+                    "predicted_ms":  14334.843,
+                    "predicted_per_token_ms":  13.9988701171875,
+                    "predicted_per_second":  71.43433660208207,
+                    "draft_n":  708,
+                    "draft_n_accepted":  671
+                }
+}

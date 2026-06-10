@@ -1,0 +1,36 @@
+﻿{
+    "choices":  [
+                    {
+                        "finish_reason":  "stop",
+                        "index":  0,
+                        "message":  {
+                                        "role":  "assistant",
+                                        "content":  "import { readFileSync } from \u0027fs\u0027;\nimport { MaxBinaryHeap } from \u0027./MaxBinaryHeap\u0027;\n\nfunction solve() {\n  const input = readFileSync(0, \u0027utf8\u0027).trim().split(/\\r?\\n/);\n  const [N, M] = input[0].split(\u0027 \u0027).map(Number);\n  const taskNames = input[1].split(\u0027 \u0027).sort(); // lexicographically smallest when available\n\n  const taskMap = new Map(taskNames.map((name, index) =\u003e [name, index]));\n  const inDegree = new Array(N).fill(0);\n  const graph = new Array(N).fill(0).map(() =\u003e []);\n\n  for (let i = 2; i \u003c= M + 1; i++) {\n    const [A, B] = input[i].split(\u0027 \u0027).map(Number);\n    graph[taskMap.get(input[A])]?.push(taskMap.get(input[B]));\n    inDegree[taskMap.get(input[B])]++;\n  }\n\n  const heap = new MaxBinaryHeap(taskNames.filter((_, i) =\u003e inDegree[i] === 0));\n\n  while (heap.size() \u003e 0) {\n    const current = heap.poll();\n    console.log(current, \u0027 \u0027);\n    for (const neighbor of graph[taskMap.get(current)]) {\n      inDegree[neighbor]--;\n      if (inDegree[neighbor] === 0) {\n        heap.enqueue(currentNames[neighbor]);\n      }\n    }\n  }\n\n  if (heap.size() === 0 \u0026\u0026 inDegree.some(deg =\u003e deg !== 0)) {\n    console.log(\u0027IMPOSSIBLE\u0027);\n  }\n}\n\nsolve();"
+                                    }
+                    }
+                ],
+    "created":  1781100952,
+    "model":  "mradermacher-holo-3.1-9b-q5-k-m-noreason",
+    "system_fingerprint":  "b9551-379ac6673",
+    "object":  "chat.completion",
+    "usage":  {
+                  "completion_tokens":  365,
+                  "prompt_tokens":  193,
+                  "total_tokens":  558,
+                  "prompt_tokens_details":  {
+                                                "cached_tokens":  0
+                                            }
+              },
+    "id":  "chatcmpl-MYUfHUuwClmNQHNzXRx2CCEQ8RDM5qcS",
+    "timings":  {
+                    "cache_n":  0,
+                    "prompt_n":  193,
+                    "prompt_ms":  319.571,
+                    "prompt_per_token_ms":  1.6558082901554405,
+                    "prompt_per_second":  603.9346498900088,
+                    "predicted_n":  365,
+                    "predicted_ms":  11487.157,
+                    "predicted_per_token_ms":  31.471663013698628,
+                    "predicted_per_second":  31.774615773075972
+                }
+}

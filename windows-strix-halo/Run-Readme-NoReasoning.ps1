@@ -40,7 +40,9 @@ function Stop-BenchmarkPorts {
 if ($Fresh) {
     $Resume = $false
     Stop-BenchmarkPorts
-    Remove-Item -LiteralPath $HardTsCsv -Force -ErrorAction SilentlyContinue
+    if ($OnlyModels.Count -eq 0) {
+        Remove-Item -LiteralPath $HardTsCsv -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function ConvertTo-PlainHashtable {
