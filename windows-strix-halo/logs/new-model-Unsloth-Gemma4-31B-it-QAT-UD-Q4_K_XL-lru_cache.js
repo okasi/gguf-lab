@@ -60,9 +60,16 @@ class LRUCache {
             this.tail = node.prev;
     }
     setMRU(node) {
-        if (this.head === node)
-            return;
         this.remove(node);
+        node.next = this.head;
+        node.prev = null;
+        if (this.head)
+            this.head.prev = node;
+        this.head = node;
+        if (!this.tail)
+            this.tail = node;
+    }
+    addToMRU(node) {
         node.next = this.head;
         node.prev = null;
         if (this.head)
@@ -81,13 +88,13 @@ class LRUCache {
             if (this.map.size >= this.capacity) {
                 const lru = this.tail;
                 if (lru) {
-                    this.map.delete(lru.key);
                     this.remove(lru);
+                    this.map.delete(lru.key);
                 }
             }
             const newNode = new Node(key, value);
             this.map.set(key, newNode);
-            this.setMRU(newNode);
+            this.addToMRU(newNode);
         }
     }
     get(key) {
@@ -100,8 +107,8 @@ class LRUCache {
     del(key) {
         const node = this.map.get(key);
         if (node) {
-            this.map.delete(key);
             this.remove(node);
+            this.map.delete(key);
         }
     }
     getKeys() {
@@ -115,33 +122,36 @@ class LRUCache {
     }
 }
 function solve() {
-    const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    let ptr = 0;
-    if (ptr >= input.length)
+    const input = fs.readFileSync(0, "utf8");
+    const lines = input.split(/\r?\n/);
+    if (lines.length === 0)
         return;
-    const C = parseInt(input[ptr++]);
-    const N = parseInt(input[ptr++]);
-    const cache = new LRUCache(C);
+    const firstLine = lines[0].trim().split(/\s+/);
+    if (firstLine.length < 2)
+        return;
+    const C = parseInt(firstLine[0]);
+    const N = parseInt(firstLine[1]);
+    const lru = new LRUCache(C);
     const getResults = [];
-    for (let i = 0; i < N; i++) {
-        const op = input[ptr++];
+    for (let i = 1; i <= N; i++) {
+        const line = lines[i];
+        if (!line)
+            continue;
+        const parts = line.trim().split(/\s+/);
+        const op = parts[0];
         if (op === 'PUT') {
-            const key = input[ptr++];
-            const value = parseInt(input[ptr++]);
-            cache.put(key, value);
+            lru.put(parts[1], parseInt(parts[2]));
         }
         else if (op === 'GET') {
-            const key = input[ptr++];
-            const val = cache.get(key);
-            getResults.push(val === null ? -1 : val);
+            const val = lru.get(parts[1]);
+            getResults.push(val === null ? "-1" : val.toString());
         }
         else if (op === 'DEL') {
-            const key = input[ptr++];
-            cache.del(key);
+            lru.del(parts[1]);
         }
     }
-    process.stdout.write((getResults.length > 0 ? getResults.join(' ') : 'EMPTY') + '\n');
-    const finalKeys = cache.getKeys();
-    process.stdout.write((finalKeys.length > 0 ? finalKeys.join(' ') : 'EMPTY') + '\n');
+    process.stdout.write((getResults.length > 0 ? getResults.join(" ") : "EMPTY") + "\n");
+    const finalKeys = lru.getKeys();
+    process.stdout.write((finalKeys.length > 0 ? finalKeys.join(" ") : "EMPTY") + "\n");
 }
 solve();

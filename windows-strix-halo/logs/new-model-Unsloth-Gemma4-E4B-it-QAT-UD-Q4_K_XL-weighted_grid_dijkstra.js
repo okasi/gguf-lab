@@ -76,47 +76,47 @@ function solve() {
     // Initialize start node
     dist[startRow][startCol] = 0;
     pq.enqueue([0, startRow, startCol]);
-    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+    const dr = [-1, 1, 0, 0]; // Up, Down
+    const dc = [0, 0, -1, 1]; // Left, Right
     while (!pq.isEmpty()) {
-        const [currentCost, r, c] = pq.dequeue();
-        if (currentCost > dist[r][c]) {
+        const [cost, r, c] = pq.dequeue();
+        if (cost > dist[r][c]) {
             continue;
         }
         if (r === targetRow && c === targetCol) {
-            console.log(currentCost);
+            console.log(cost);
             return;
         }
-        for (const [dr, dc] of directions) {
-            const nr = r + dr;
-            const nc = c + dc;
+        // Explore neighbors
+        for (let i = 0; i < 4; i++) {
+            const nr = r + dr[i];
+            const nc = c + dc[i];
+            // Check boundaries
             if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
                 const cell = grid[nr][nc];
-                let moveCost = 0;
+                // Check for walls
                 if (cell === '#') {
-                    // Wall
                     continue;
                 }
-                else if (cell === 'S' || cell === 'T') {
-                    // Start or Target cost is 0 to enter
-                    moveCost = 0;
-                }
-                else if (cell >= '0' && cell <= '9') {
-                    // Digit cost
+                let moveCost = 0;
+                // Calculate cost to enter the new cell (nr, nc)
+                if (cell >= '0' && cell <= '9') {
                     moveCost = parseInt(cell);
                 }
-                else {
-                    // Should not happen based on problem description
-                    continue;
+                else if (cell === 'S' || cell === 'T') {
+                    // Entering S or T costs 0, as per problem description.
+                    // Note: Start cost is handled by initialization.
+                    moveCost = 0;
                 }
-                const newCost = currentCost + moveCost;
-                if (newCost < dist[nr][nc]) {
-                    dist[nr][nc] = newCost;
-                    pq.enqueue([newCost, nr, nc]);
+                const newDist = dist[r][c] + moveCost;
+                if (newDist < dist[nr][nc]) {
+                    dist[nr][nc] = newDist;
+                    pq.enqueue([newDist, nr, nc]);
                 }
             }
         }
     }
-    // If target was not reached
+    // If the loop finishes and target hasn't been reached
     console.log(-1);
 }
 solve();

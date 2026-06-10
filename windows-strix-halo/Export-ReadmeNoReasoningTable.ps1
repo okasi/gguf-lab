@@ -65,13 +65,17 @@ function Get-ReadmeModelLabel {
 }
 
 function Get-SamplerLabel {
-    param($Model)
+    param(
+        $Model,
+        [int]$SpecDraftNMaxOverride = 0
+    )
     $temp = if ($Model.Temp) { $Model.Temp } else { 0.75 }
     $topP = if ($Model.TopP) { $Model.TopP } else { 0.95 }
     $topK = if ($Model.TopK) { $Model.TopK } else { 20 }
     $label = "$temp / $topP / $topK"
     if ($Model.Mtp) {
-        $max = if ($Model.SpecDraftNMax) { $Model.SpecDraftNMax } else { 2 }
+        $max = if ($SpecDraftNMaxOverride -gt 0) { $SpecDraftNMaxOverride }
+            elseif ($Model.SpecDraftNMax) { $Model.SpecDraftNMax } else { 2 }
         $modelName = [string]$Model.Name
         if ($modelName -match 'Qwopus3\.6-27B') {
             $label += ', MTP draft 1-2'
@@ -82,6 +86,12 @@ function Get-SamplerLabel {
         }
     }
     return $label
+}
+
+function Test-Gemma4QatMtpModel {
+    param($Model)
+    $name = [string]$Model.Name
+    return ($name -match 'Gemma4' -and $Model.Mtp)
 }
 
 if (Test-Path -LiteralPath $BenchLoop) {
@@ -97,22 +107,36 @@ $benchRuns = @{}
 if (Test-Path -LiteralPath $BenchExportJson) {
     $export = Get-Content -LiteralPath $BenchExportJson -Raw | ConvertFrom-Json
     foreach ($run in @($export.runs)) {
-        if ($run.model -notmatch '-noreason$') { continue }
+        if ($run.model -notmatch '-noreason') { continue }
         $benchRuns[[string]$run.model] = $run
     }
 }
 
-$hardRows = @()
-if (Test-Path -LiteralPath $HardTsCsv) {
-    $hardRows = @(Import-Csv -LiteralPath $HardTsCsv)
+$hardRowsByCsv = @{
+    (Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv") = @()
+}
+$nmax2HardTsCsv = Join-Path $LogDir "readme-noreason-nmax2-hard-ts-RESULTS.csv"
+$hardRowsByCsv[$nmax2HardTsCsv] = @()
+foreach ($csvPath in @($hardRowsByCsv.Keys)) {
+    if (Test-Path -LiteralPath $csvPath) {
+        $hardRowsByCsv[$csvPath] = @(Import-Csv -LiteralPath $csvPath)
+    }
 }
 
+$variants = @(
+    @{ AliasSuffix = "-noreason"; HardTsCsv = (Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv"); SpecDraftNMaxOverride = 0; ForAllModels = $true }
+    @{ AliasSuffix = "-noreason-nmax2"; HardTsCsv = $nmax2HardTsCsv; SpecDraftNMaxOverride = 2; ForAllModels = $false }
+)
+
 $rows = @()
+foreach ($variant in $variants) {
 foreach ($model in $models) {
-    $alias = "$($model.Alias)-noreason"
+    if (-not $variant.ForAllModels -and -not (Test-Gemma4QatMtpModel -Model $model)) { continue }
+    $alias = "$($model.Alias)$($variant.AliasSuffix)"
     $name = [string]$model.Name
     $bench = if ($benchRuns.ContainsKey($alias)) { $benchRuns[$alias] } else { $null }
 
+    $hardRows = $hardRowsByCsv[$variant.HardTsCsv]
     $modelHard = @($hardRows | Where-Object { $_.Model -eq $name })
     $textRow = @($modelHard | Where-Object { $_.Mode -eq "text" } | Select-Object -Last 1)
     $visionRow = @($modelHard | Where-Object { $_.Mode -eq "vision" } | Select-Object -Last 1)
@@ -152,7 +176,7 @@ foreach ($model in $models) {
         MemBucket = $memBucket
         ModelLabel = Get-ReadmeModelLabel -Model $model
         Ctx = if ($model.CtxSize) { $model.CtxSize } else { 262144 }
-        Sampler = Get-SamplerLabel -Model $model
+        Sampler = Get-SamplerLabel -Model $model -SpecDraftNMaxOverride $variant.SpecDraftNMaxOverride
         LoadMem = $loadGiB
         TextGen = $textGen
         ImageGen = $imageGen
@@ -166,8 +190,9 @@ foreach ($model in $models) {
         BlAgent = $blAgent
     }
 }
+}
 
-$rows = @($rows | Sort-Object SortGiB, ModelLabel)
+$rows = @($rows | Sort-Object SortGiB, ModelLabel, Sampler)
 $tableLines = @(
     "| Mem bucket | Model / file | Max ctx | Sampler settings | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |",
     "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
@@ -180,7 +205,7 @@ foreach ($row in $rows) {
 $generatedAt = (Get-Date).ToString("yyyy-MM-dd")
 $tableBlock = (@("<!-- reasoning-off-table-start -->") + $tableLines + @("<!-- reasoning-off-table-end -->")) -join "`n"
 $intro = @(
-    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters where configured.'
+    'Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs ''{"enable_thinking":false}''`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters; duplicate rows compare `--spec-draft-n-max` 4 vs 2.'
     "BenchLoop scores are from the $generatedAt reasoning-off refresh; rerun with ``Run-Readme-NoReasoning.ps1`` and refresh this section via ``Export-ReadmeNoReasoningTable.ps1``."
 ) -join ' '
 $section = @(

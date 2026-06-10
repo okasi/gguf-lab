@@ -61,17 +61,17 @@ function solve() {
         grid.push(input[i + 2]);
     }
 
-    let startX = -1, startY = -1;
-    let targetX = -1, targetY = -1;
+    let startR = -1, startC = -1;
+    let targetR = -1, targetC = -1;
 
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
             if (grid[r][c] === 'S') {
-                startX = r;
-                startY = c;
+                startR = r;
+                startC = c;
             } else if (grid[r][c] === 'T') {
-                targetX = r;
-                targetY = c;
+                targetR = r;
+                targetC = c;
             }
         }
     }
@@ -79,8 +79,8 @@ function solve() {
     const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
     const pq = new PriorityQueue<{ r: number; c: number }>();
 
-    dist[startX][startY] = 0;
-    pq.push({ r: startX, c: startY }, 0);
+    dist[startR][startC] = 0;
+    pq.push({ r: startR, c: startC }, 0);
 
     const dr = [-1, 1, 0, 0];
     const dc = [0, 0, -1, 1];
@@ -88,9 +88,10 @@ function solve() {
     while (pq.size() > 0) {
         const current = pq.pop()!;
         const { r, c } = current;
+        const d = dist[r][c];
 
-        if (r === targetX && c === targetY) {
-            console.log(dist[r][c]);
+        if (r === targetR && c === targetC) {
+            console.log(d);
             return;
         }
 
@@ -102,13 +103,13 @@ function solve() {
                 const char = grid[nr][nc];
                 if (char === '#') continue;
 
-                let cost = 0;
+                let weight = 0;
                 if (char >= '0' && char <= '9') {
-                    cost = parseInt(char);
+                    weight = parseInt(char);
                 }
 
-                if (dist[r][c] + cost < dist[nr][nc]) {
-                    dist[nr][nc] = dist[r][c] + cost;
+                if (dist[nr][nc] > d + weight) {
+                    dist[nr][nc] = d + weight;
                     pq.push({ r: nr, c: nc }, dist[nr][nc]);
                 }
             }

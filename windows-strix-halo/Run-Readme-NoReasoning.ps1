@@ -4,15 +4,25 @@ param(
     [switch]$Resume,
     [switch]$Fresh,
     [switch]$BenchLoopOnly,
-    [switch]$HardTsOnly
+    [switch]$HardTsOnly,
+    [string]$AliasSuffix = "-noreason",
+    [int]$SpecDraftNMaxOverride = 0,
+    [string]$HardTsResultName = ""
 )
 
 $ErrorActionPreference = "Continue"
 $Root = $PSScriptRoot
 $LogDir = Join-Path $Root "logs"
 $ModelsJson = Join-Path $Root "readme-models.json"
-$AliasSuffix = "-noreason"
-$HardTsCsv = Join-Path $LogDir "readme-noreason-hard-ts-RESULTS.csv"
+if (-not $HardTsResultName) {
+    $HardTsResultName = if ($AliasSuffix -eq "-noreason") {
+        "readme-noreason-hard-ts-RESULTS.csv"
+    } else {
+        "readme$($AliasSuffix -replace '^-','-')-hard-ts-RESULTS.csv"
+    }
+}
+$HardTsCsv = Join-Path $LogDir $HardTsResultName
+$RunTag = $AliasSuffix.TrimStart('-')
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 function Stop-BenchmarkPorts {
@@ -118,24 +128,20 @@ foreach ($model in $models) {
     }
 }
 
-$runnerLog = Join-Path $LogDir "readme-noreason-runner.out.log"
-$benchLog = Join-Path $LogDir "readme-noreason-benchloop.out.log"
-$hardTsLog = Join-Path $LogDir "readme-noreason-hard-ts.out.log"
+$runnerLog = Join-Path $LogDir "readme-$RunTag-runner.out.log"
+$benchLog = Join-Path $LogDir "readme-$RunTag-benchloop.out.log"
+$hardTsLog = Join-Path $LogDir "readme-$RunTag-hard-ts.out.log"
 $benchExit = 0
 $hardExit = 0
 
-"$(Get-Date -Format o) Run-Readme-NoReasoning.ps1 Fresh=$Fresh Resume=$Resume BenchLoopOnly=$BenchLoopOnly HardTsOnly=$HardTsOnly" | Out-File -Encoding utf8 $runnerLog
+"$(Get-Date -Format o) Run-Readme-NoReasoning.ps1 AliasSuffix=$AliasSuffix SpecDraftNMaxOverride=$SpecDraftNMaxOverride Fresh=$Fresh Resume=$Resume BenchLoopOnly=$BenchLoopOnly HardTsOnly=$HardTsOnly" | Out-File -Encoding utf8 $runnerLog
 "$(Get-Date -Format o) bench aliases pending: $($benchAliases.Count) hard-ts models pending: $($hardModels.Count)" | Out-File -Encoding utf8 -Append $runnerLog
 
 if (-not $HardTsOnly -and ($benchAliases.Count -gt 0 -or (-not $Resume))) {
     $benchCount = if ($Resume) { $benchAliases.Count } else { $models.Count }
     "$(Get-Date -Format o) starting Run-BenchLoop.ps1 (reasoning off) for $benchCount models" | Out-File -Encoding utf8 -Append $benchLog
-    if ($Resume) {
-        "$(Get-Date -Format o) bench aliases: $($benchAliases -join ', ')" | Out-File -Encoding utf8 -Append $runnerLog
-        & (Join-Path $Root "Run-BenchLoop.ps1") -Reasoning off -AliasSuffix $AliasSuffix -OnlyAliases $benchAliases *>> $benchLog
-    } else {
-        & (Join-Path $Root "Run-BenchLoop.ps1") -Reasoning off -AliasSuffix $AliasSuffix *>> $benchLog
-    }
+    "$(Get-Date -Format o) bench aliases: $($benchAliases -join ', ')" | Out-File -Encoding utf8 -Append $runnerLog
+    & (Join-Path $Root "Run-BenchLoop.ps1") -Reasoning off -AliasSuffix $AliasSuffix -SpecDraftNMaxOverride $SpecDraftNMaxOverride -OnlyAliases $benchAliases *>> $benchLog
     $benchExit = $LASTEXITCODE
     "$(Get-Date -Format o) Run-BenchLoop.ps1 exit $benchExit" | Out-File -Encoding utf8 -Append $benchLog
     "$(Get-Date -Format o) Run-BenchLoop.ps1 exit $benchExit" | Out-File -Encoding utf8 -Append $runnerLog
@@ -146,11 +152,16 @@ if (-not $HardTsOnly -and ($benchAliases.Count -gt 0 -or (-not $Resume))) {
 if (-not $BenchLoopOnly -and ($hardModels.Count -gt 0 -or (-not $Resume))) {
     $hardCount = if ($Resume) { $hardModels.Count } else { $models.Count }
     "$(Get-Date -Format o) starting Run-Hard-Typescript.ps1 (reasoning off) for $hardCount models" | Out-File -Encoding utf8 -Append $hardTsLog
-    if ($Resume) {
-        & (Join-Path $Root "Run-Hard-Typescript.ps1") -Reasoning off -AliasSuffix $AliasSuffix -CodeMaxTokens 7168 -ResultNameOverride "readme-noreason-hard-ts-RESULTS.csv" -OnlyModels $hardModels -KeepResults *>> $hardTsLog
-    } else {
-        & (Join-Path $Root "Run-Hard-Typescript.ps1") -Reasoning off -AliasSuffix $AliasSuffix -CodeMaxTokens 7168 -ResultNameOverride "readme-noreason-hard-ts-RESULTS.csv" *>> $hardTsLog
+    $hardTsArgs = @{
+        Reasoning = "off"
+        AliasSuffix = $AliasSuffix
+        SpecDraftNMaxOverride = $SpecDraftNMaxOverride
+        CodeMaxTokens = 7168
+        ResultNameOverride = $HardTsResultName
+        OnlyModels = $hardModels
     }
+    if ($Resume) { $hardTsArgs.KeepResults = $true }
+    & (Join-Path $Root "Run-Hard-Typescript.ps1") @hardTsArgs *>> $hardTsLog
     $hardExit = $LASTEXITCODE
     "$(Get-Date -Format o) Run-Hard-Typescript.ps1 exit $hardExit" | Out-File -Encoding utf8 -Append $hardTsLog
     "$(Get-Date -Format o) Run-Hard-Typescript.ps1 exit $hardExit" | Out-File -Encoding utf8 -Append $runnerLog

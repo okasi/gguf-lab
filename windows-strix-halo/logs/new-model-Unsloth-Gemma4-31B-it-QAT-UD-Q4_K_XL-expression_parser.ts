@@ -32,11 +32,15 @@ class Parser {
     }
 
     private peek() {
-        return this.tokens[this.pos];
+        return this.tokens[this.pos] || null;
     }
 
     private consume() {
         return this.tokens[this.pos++];
+    }
+
+    public parse(): number {
+        return this.parseExpression();
     }
 
     private parseExpression(): number {
@@ -80,15 +84,11 @@ class Parser {
     private parsePrimary(): number {
         const token = this.consume();
         if (token === '(') {
-            const val = this.parseExpression();
+            const result = this.parseExpression();
             this.consume(); // consume ')'
-            return val;
+            return result;
         }
         return parseInt(token, 10);
-    }
-
-    public evaluate(): number {
-        return this.parseExpression();
     }
 }
 
@@ -96,7 +96,7 @@ function main() {
     const input = fs.readFileSync(0, "utf8").trim();
     if (!input) return;
     const parser = new Parser(input);
-    process.stdout.write(parser.evaluate().toString() + "\n");
+    process.stdout.write(parser.parse().toString() + "\n");
 }
 
 main();

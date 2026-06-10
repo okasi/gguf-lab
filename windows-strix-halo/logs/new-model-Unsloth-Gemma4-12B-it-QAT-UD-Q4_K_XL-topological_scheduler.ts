@@ -1,12 +1,13 @@
 ﻿import * as fs from 'fs';
 
 /**
- * Represents a Min-Heap (Priority Queue) to keep task names lexicographically sorted.
+ * Min-Heap implementation to satisfy the lexicographical smallest 
+ * requirement in O(log N) time for insertions and extractions.
  */
 class MinHeap {
     private heap: string[] = [];
 
-    push(val: string): void {
+    push(val: string) {
         this.heap.push(val);
         this.bubbleUp(this.heap.length - 1);
     }
@@ -17,7 +18,7 @@ class MinHeap {
         const last = this.heap.pop()!;
         if (this.size() > 0) {
             this.heap[0] = last;
-            this.bubbleDown(0);
+            this.sinkDown(0);
         }
         return top;
     }
@@ -26,19 +27,19 @@ class MinHeap {
         return this.heap.length;
     }
 
-    private bubbleUp(index: number): void {
+    private bubbleUp(index: number) {
         while (index > 0) {
-            let parentIndex = Math.floor((index - 1) / 2);
-            if (this.heap[index] < this.heap[parentIndex]) {
-                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-                index = parentIndex;
+            let parent = Math.floor((index - 1) / 2);
+            if (this.heap[index] < this.heap[parent]) {
+                [this.heap[index], this.heap[parent]] = [this.heap[parent], this.heap[index]];
+                index = parent;
             } else {
                 break;
             }
         }
     }
 
-    private bubbleDown(index: number): void {
+    private sinkDown(index: number) {
         while (true) {
             let smallest = index;
             let left = 2 * index + 1;
@@ -63,7 +64,7 @@ class MinHeap {
 
 function solve() {
     const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    if (input.length < 2) return;
+    if (input.length === 0 || input[0] === "") return;
 
     let ptr = 0;
     const N = parseInt(input[ptr++]);
@@ -71,29 +72,27 @@ function solve() {
 
     if (isNaN(N)) return;
 
-    const tasks = [];
-    for (let i = 0; i < N; i++) {
-        tasks.push(input[ptr++]);
-    }
-
+    const tasks = new Set<string>();
     const adj = new Map<string, string[]>();
     const inDegree = new Map<string, number>();
 
-    for (const task of tasks) {
-        adj.set(task, []);
-        inDegree.set(task, 0);
+    for (let i = 0; i < N; i++) {
+        const name = input[ptr++];
+        tasks.add(name);
+        adj.set(name, []);
+        inDegree.set(name, 0);
     }
 
     for (let i = 0; i < M; i++) {
         const u = input[ptr++];
         const v = input[ptr++];
-        adj.get(u)?.push(v);
+        adj.get(u)!.push(v);
         inDegree.set(v, (inDegree.get(v) || 0) + 1);
     }
 
     const pq = new MinHeap();
     for (const task of tasks) {
-        if (inDegree.get(task) === 0) {
+        if ((inDegree.get(task) || 0) === 0) {
             pq.push(task);
         }
     }
@@ -105,9 +104,8 @@ function solve() {
 
         const neighbors = adj.get(u) || [];
         for (const v of neighbors) {
-            const currentDegree = inDegree.get(v)! - 1;
-            inDegree.set(v, currentDegree);
-            if (currentDegree === 0) {
+            inDegree.set(v, inDegree.get(v)! - 1);
+            if (inDegree.get(v) === 0) {
                 pq.push(v);
             }
         }

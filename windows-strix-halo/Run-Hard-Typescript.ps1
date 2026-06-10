@@ -13,7 +13,8 @@
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "auto",
     [string]$AliasSuffix = "",
-    [switch]$KeepResults
+    [switch]$KeepResults,
+    [int]$SpecDraftNMaxOverride = 0
 )
 
 $ErrorActionPreference = "Continue"
@@ -194,7 +195,11 @@ foreach ($parsedModel in $parsedModels) {
     if ($model.ContainsKey("ModelDraftFile") -and $model.ModelDraftFile) { $runArgs.ModelDraftFile = [string]$model.ModelDraftFile }
     if ($model.ContainsKey("MtpAutoDiscoveryFile") -and $model.MtpAutoDiscoveryFile) { $runArgs.MtpAutoDiscoveryFile = [string]$model.MtpAutoDiscoveryFile }
     if ($model.ContainsKey("SpecDraftNMin") -and $null -ne $model.SpecDraftNMin) { $runArgs.SpecDraftNMin = [int]$model.SpecDraftNMin }
-    if ($model.ContainsKey("SpecDraftNMax") -and $null -ne $model.SpecDraftNMax) { $runArgs.SpecDraftNMax = [int]$model.SpecDraftNMax }
+    if ($SpecDraftNMaxOverride -gt 0) {
+        $runArgs.SpecDraftNMax = $SpecDraftNMaxOverride
+    } elseif ($model.ContainsKey("SpecDraftNMax") -and $null -ne $model.SpecDraftNMax) {
+        $runArgs.SpecDraftNMax = [int]$model.SpecDraftNMax
+    }
     $Runs += New-BatchRun @runArgs
 }
 if ($OnlyModels.Count -gt 0) {

@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "import * as fs from \u0027fs\u0027;\n\nclass ListNode {\n    constructor(\n        public key: string,\n        public value: number,\n        public prev: ListNode | null = null,\n        public next: ListNode | null = null\n    ) {}\n}\n\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, ListNode\u003e;\n    private head: ListNode;\n    private tail: ListNode;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map\u003cstring, ListNode\u003e();\n        this.head = new ListNode(\"\", 0);\n        this.tail = new ListNode(\"\", 0);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private detach(node: ListNode) {\n        const prev = node.prev;\n        const next = node.next;\n        if (prev) prev.next = next;\n        if (next) next.prev = prev;\n    }\n\n    private attachToFront(node: ListNode) {\n        node.next = this.head.next;\n        node.prev = this.head;\n        if (this.head.next) this.head.next.prev = node;\n        this.head.next = node;\n    }\n\n    get(key: string): number {\n        const node = this.map.get(key);\n        if (!node) return -1;\n        this.detach(node);\n        this.attachToFront(node);\n        return node.value;\n    }\n\n    put(key: string, value: number): void {\n        const existingNode = this.map.get(key);\n        if (existingNode) {\n            existingNode.value = value;\n            this.detach(existingNode);\n            this.attachToFront(existingNode);\n        } else {\n            if (this.map.size \u003e= this.capacity) {\n                const lru = this.tail.prev!;\n                this.detach(lru);\n                this.map.delete(lru.key);\n            }\n            const newNode = new ListNode(key, value);\n            this.map.set(key, newNode);\n            this.attachToFront(newNode);\n        }\n    }\n\n    delete(key: string): void {\n        const node = this.map.get(key);\n        if (node) {\n            this.detach(node);\n            this.map.delete(key);\n        }\n    }\n\n    getOrderedKeys(): string[] {\n        const keys: string[] = [];\n        let current = this.head.next;\n        while (current !== this.tail \u0026\u0026 current !== null) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n\n    isEmpty(): boolean {\n        return this.map.size === 0;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\");\n    const lines = input.split(/\\r?\\n/);\n    if (lines.length === 0) return;\n\n    const firstLine = lines[0].trim().split(/\\s+/);\n    if (firstLine.length \u003c 2) return;\n    \n    const C = parseInt(firstLine[0]);\n    const N = parseInt(firstLine[1]);\n    \n    const cache = new LRUCache(C);\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= N; i++) {\n        const line = lines[i]?.trim();\n        if (!line) continue;\n        \n        const parts = line.split(/\\s+/);\n        const command = parts[0];\n\n        if (command === \u0027PUT\u0027) {\n            cache.put(parts[1], parseInt(parts[2]));\n        } else if (command === \u0027GET\u0027) {\n            getResults.push(cache.get(parts[1]));\n        } else if (command === \u0027DEL\u0027) {\n            cache.delete(parts[1]);\n        }\n    }\n\n    process.stdout.write(getResults.length \u003e 0 ? getResults.join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\n    const remainingKeys = cache.getOrderedKeys();\n    process.stdout.write(remainingKeys.length \u003e 0 ? remainingKeys.join(\u0027 \u0027) + \u0027\\n\u0027 : \u0027EMPTY\\n\u0027);\n}\n\nsolve();"
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nclass ListNode {\n    constructor(\n        public key: string,\n        public value: number,\n        public prev: ListNode | null = null,\n        public next: ListNode | null = null\n    ) {}\n}\n\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, ListNode\u003e;\n    private head: ListNode;\n    private tail: ListNode;\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map\u003cstring, ListNode\u003e();\n        this.head = new ListNode(\"\", 0);\n        this.tail = new ListNode(\"\", 0);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private removeNode(node: ListNode): void {\n        const prev = node.prev!;\n        const next = node.next!;\n        prev.next = next;\n        next.prev = prev;\n    }\n\n    private addToHead(node: ListNode): void {\n        node.next = this.head.next;\n        node.prev = this.head;\n        this.head.next!.prev = node;\n        this.head.next = node;\n    }\n\n    private moveToHead(node: ListNode): void {\n        this.removeNode(node);\n        this.addToHead(node);\n    }\n\n    get(key: string): number {\n        if (!this.map.has(key)) return -1;\n        const node = this.map.get(key)!;\n        this.moveToHead(node);\n        return node.value;\n    }\n\n    put(key: string, value: number): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            node.value = value;\n            this.moveToHead(node);\n        } else {\n            if (this.map.size \u003e= this.capacity) {\n                const lru = this.tail.prev!;\n                if (lru !== this.head) {\n                    this.map.delete(lru.key);\n                    this.removeNode(lru);\n                }\n            }\n            const newNode = new ListNode(key, value);\n            this.map.set(key, newNode);\n            this.addToHead(newNode);\n        }\n    }\n\n    delete(key: string): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            this.removeNode(node);\n            this.map.delete(key);\n        }\n    }\n\n    getKeysLRUOrder(): string[] {\n        const keys: string[] = [];\n        let current = this.head.next;\n        while (current !== this.tail \u0026\u0026 current !== null) {\n            keys.push(current.key);\n            current = current.next;\n        }\n        return keys;\n    }\n\n    isEmpty(): boolean {\n        return this.map.size === 0;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\");\n    const lines = input.split(/\\r?\\n/);\n    if (lines.length === 0) return;\n\n    const firstLine = lines[0].trim().split(/\\s+/);\n    if (firstLine.length \u003c 2) return;\n\n    const capacity = parseInt(firstLine[0]);\n    const n = parseInt(firstLine[1]);\n\n    const cache = new LRUCache(capacity);\n    const getResults: number[] = [];\n\n    for (let i = 1; i \u003c= n; i++) {\n        const line = lines[i];\n        if (!line) continue;\n        const parts = line.trim().split(/\\s+/);\n        const cmd = parts[0];\n\n        if (cmd === \u0027PUT\u0027) {\n            cache.put(parts[1], parseInt(parts[2]));\n        } else if (cmd === \u0027GET\u0027) {\n            getResults.push(cache.get(parts[1]));\n        } else if (cmd === \u0027DEL\u0027) {\n            cache.delete(parts[1]);\n        }\n    }\n\n    const getOutput = getResults.length \u003e 0 ? getResults.join(\u0027 \u0027) : \"EMPTY\";\n    const keyOutput = !cache.isEmpty() ? cache.getKeysLRUOrder().join(\u0027 \u0027) : \"EMPTY\";\n\n    process.stdout.write(getOutput + \"\\n\" + keyOutput + \"\\n\");\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1781091545,
-    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781098548,
+    "model":  "unsloth-gemma4-26b-a4b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  1021,
+                  "completion_tokens":  1045,
                   "prompt_tokens":  323,
-                  "total_tokens":  1344,
+                  "total_tokens":  1368,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-EstorbNBqGUjJnIAp8S1auvdzmXQ6V0S",
+    "id":  "chatcmpl-bwMTHARP7tAd7TJDPvSaIPVHYKCPqRy6",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  323,
-                    "prompt_ms":  407.098,
-                    "prompt_per_token_ms":  1.2603653250773994,
-                    "prompt_per_second":  793.4207488123252,
-                    "predicted_n":  1021,
-                    "predicted_ms":  12014.794,
-                    "predicted_per_token_ms":  11.767672869735554,
-                    "predicted_per_second":  84.97856892094863,
-                    "draft_n":  912,
-                    "draft_n_accepted":  795
+                    "prompt_ms":  434.816,
+                    "prompt_per_token_ms":  1.3461795665634675,
+                    "prompt_per_second":  742.8429496614662,
+                    "predicted_n":  1045,
+                    "predicted_ms":  12809.276,
+                    "predicted_per_token_ms":  12.257680382775119,
+                    "predicted_per_second":  81.58150390388965,
+                    "draft_n":  726,
+                    "draft_n_accepted":  682
                 }
 }

@@ -90,19 +90,23 @@ Sampler column uses `temp / top_p / top_k`. Every row uses `--reasoning auto`, `
 
 ## Benchmark Results (reasoning off)
 
-Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs '{"enable_thinking":false}'`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters where configured. BenchLoop scores are from the 2026-06-10 reasoning-off refresh; rerun with `Run-Readme-NoReasoning.ps1` and refresh this section via `Export-ReadmeNoReasoningTable.ps1`.
+Same harness and hardware as the table above, but every row uses `--reasoning off`. Gemma rows also use `--chat-template-kwargs '{"enable_thinking":false}'`. Gemma4 QAT rows use llama.cpp `b9551` with Unsloth MTP drafters; duplicate rows compare `--spec-draft-n-max` 4 vs 2. BenchLoop scores are from the 2026-06-10 reasoning-off refresh; rerun with `Run-Readme-NoReasoning.ps1` and refresh this section via `Export-ReadmeNoReasoningTable.ps1`.
 
 <!-- reasoning-off-table-start -->
 | Mem bucket | Model / file | Max ctx | Sampler settings | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |
 |---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Under 8 GiB | `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | 3.99 GiB | 121.54 tok/s | 176.33 tok/s | 220.57 tok/s | 9/25 | 81.1 | 84.1 | 82.63 tok/s | 100.0 | 90.0 | 96.9 |
 | Under 8 GiB | `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-4` | 3.99 GiB | 99.45 tok/s | 97.95 tok/s | 139.12 tok/s | 15/25 | 80.5 | 84.1 | 76.51 tok/s | 100.0 | 90.0 | 96.9 |
 | Under 8 GiB | `LFM2.5-8B-A1B-Q5_K_M.gguf` | 128000 | `0.2 / 0.95 / 80` | 7.08 GiB | 140.24 tok/s | N/A | 138.97 tok/s | 0/25 | 67.2 | 65.9 | 104.26 tok/s | 45.8 | 85.0 | 78.1 |
 | Under 14 GiB | `Qwopus3.5-4B-v3 / Qwen3.5-4B.Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | 9.34 GiB | 57.41 tok/s | 54.43 tok/s | 54.63 tok/s | 9/25 | 68.8 | 69.5 | 50.09 tok/s | 68.8 | 86.7 | 96.9 |
 | Under 14 GiB | `Qwen3.5-4B-Q5_K_M.gguf` | 262144 | `0.75 / 0.95 / 20` | 9.41 GiB | 57.08 tok/s | 54.49 tok/s | 54.47 tok/s | 0/25 | 78.1 | 82.8 | 46.27 tok/s | 100.0 | 90.0 | 96.9 |
+| Under 14 GiB | `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | 10.71 GiB | 87.15 tok/s | 80.87 tok/s | 105.74 tok/s | 16/25 | 77.5 | 82.9 | 44.22 tok/s | 100.0 | 75.0 | 96.9 |
 | Under 14 GiB | `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-4` | 10.71 GiB | 72.84 tok/s | 71.10 tok/s | 120.58 tok/s | 9/25 | 77.3 | 82.9 | 41.13 tok/s | 100.0 | 75.0 | 96.9 |
 | Under 14 GiB | `Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | 11.40 GiB | 34.24 tok/s | N/A | 33.90 tok/s | 0/25 | 72.9 | 77.2 | 31.72 tok/s | 75.0 | 96.7 | 93.8 |
+| Under 14 GiB | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | 11.45 GiB | 42.23 tok/s | 42.95 tok/s | 46.28 tok/s | 22/25 | 79.5 | 84.8 | 37.60 tok/s | 100.0 | 83.3 | 96.9 |
 | Under 14 GiB | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-4` | 11.45 GiB | 35.78 tok/s | 37.10 tok/s | 47.29 tok/s | 23/25 | 79.1 | 84.8 | 32.80 tok/s | 100.0 | 83.3 | 96.9 |
 | Over 14 GiB | `gpt-oss.gguf` | 131072 | `0.7 / 0.95 / 20` | 15.16 GiB | 49.08 tok/s | N/A | 47.43 tok/s | 23/25 | 78.5 | 83.5 | 40.24 tok/s | 93.8 | 88.3 | 90.6 |
+| Over 14 GiB | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | 19.85 GiB | 77.48 tok/s | 74.59 tok/s | 87.09 tok/s | 22/25 | 79.2 | 83.0 | 59.24 tok/s | 91.7 | 83.3 | 96.9 |
 | Over 14 GiB | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-4` | 19.85 GiB | 58.21 tok/s | 60.73 tok/s | 86.89 tok/s | 22/25 | 79.6 | 84.1 | 50.87 tok/s | 91.7 | 83.3 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20` | 22.71 GiB | 72.29 tok/s | 64.16 tok/s | 65.15 tok/s | 18/25 | 79.8 | 83.8 | 54.17 tok/s | 93.8 | 90.0 | 96.9 |
 | Over 14 GiB | `CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP` | 23.84 GiB | 64.58 tok/s | N/A | 81.72 tok/s | 21/25 | 77.1 | 81.0 | 47.58 tok/s | 100.0 | 81.7 | 96.9 |
@@ -110,5 +114,6 @@ Same harness and hardware as the table above, but every row uses `--reasoning of
 | Over 14 GiB | `Qwopus3.6-35B-A3B-v1-Q4_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | 24.78 GiB | 71.80 tok/s | 65.42 tok/s | 66.10 tok/s | 20/25 | 81.3 | 85.6 | 54.87 tok/s | 100.0 | 93.3 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | 27.65 GiB | 19.28 tok/s | 22.03 tok/s | 26.77 tok/s | 12/25 | 77.4 | 85.7 | 19.52 tok/s | 100.0 | 90.0 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | 28.25 GiB | 66.50 tok/s | 60.37 tok/s | 61.48 tok/s | 18/25 | 81.4 | 85.7 | 51.02 tok/s | 100.0 | 93.3 | 96.9 |
+| Over 14 GiB | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | 31.68 GiB | 23.20 tok/s | 25.55 tok/s | 28.96 tok/s | 23/25 | 80.2 | 88.9 | 19.58 tok/s | 100.0 | 83.3 | 96.9 |
 | Over 14 GiB | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-4` | 31.68 GiB | 17.51 tok/s | 26.11 tok/s | 28.28 tok/s | 19/25 | 79.6 | 88.7 | 16.79 tok/s | 100.0 | 83.3 | 96.9 |
 <!-- reasoning-off-table-end -->

@@ -34,60 +34,47 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-/**
- * Tokenizes the input arithmetic expression string.
- * Handles numbers, operators, parentheses, and distinguishes between binary and unary signs.
- * @param expression The input expression string.
- * @returns An array of tokens.
- */
-function tokenize(expression) {
+// Tokenizer
+function tokenize(input) {
     const tokens = [];
     let i = 0;
-    const n = expression.length;
-    while (i < n) {
-        let char = expression[i];
-        if (/\s/.test(char)) {
-            i++;
-            continue;
-        }
-        if (/[0-9]/.test(char)) {
+    const chars = input.replace(/\s/g, ''); // Remove all spaces initially for simpler logic
+    while (i < chars.length) {
+        const char = chars[i];
+        if (char >= '0' && char <= '9' || char === '.') {
             let numStr = '';
-            while (i < n && /[0-9]/.test(expression[i])) {
-                numStr += expression[i];
+            while (i < chars.length && (chars[i] >= '0' && chars[i] <= '9' || chars[i] === '.')) {
+                numStr += chars[i];
                 i++;
             }
-            tokens.push({ type: 'NUMBER', value: parseInt(numStr, 10) });
+            // Since the problem statement implies integers, we handle potential floats defensively,
+            // but the requirement says "integers", so we parse as integer.
+            tokens.push({ type: 'NUMBER', value: parseInt(numStr) });
             continue;
         }
-        if (char === '(') {
+        else if (char === '(') {
             tokens.push({ type: 'LPAREN' });
-            i++;
-            continue;
         }
-        if (char === ')') {
+        else if (char === ')') {
             tokens.push({ type: 'RPAREN' });
-            i++;
-            continue;
         }
-        if (char === '+' || char === '-') {
-            // Look ahead to determine if the sign is unary or binary
-            const isStart = i === 0 || expression[i - 1] === '(' || expression[i - 1] === ' ' || expression[i - 1] === '*';
-            if (isStart) {
-                // Unary sign: We treat unary + as identity (skip it) and unary - as a special indicator
-                // For simplicity in the Shunting Yard/RPN, we'll handle unary minus by pushing a '0' followed by the '-' operator
-                // but since the requirement implies standard arithmetic structure, we will inject a 0 for unary minus.
-                if (char === '-') {
-                    tokens.push({ type: 'NUMBER', value: 0 });
-                    tokens.push({ type: 'OPERATOR_MINUS' });
+        else if (char === '+' || char === '-') {
+            // Determine if it's unary or binary
+            // A '+' or '-' is unary if it's the first token, or if it follows '(', or if it follows another operator
+            const isStart = i === 0;
+            let previousTokenType = i > 0 ? tokens[tokens.length - 1].type : null;
+            const isUnary = isStart || previousTokenType === 'LPAREN' ||
+                previousTokenType === 'OPERATOR_PLUS' || previousTokenType === 'OPERATOR_MINUS' ||
+                previousTokenType === 'OPERATOR_MULTIPLY' || previousTokenType === 'OPERATOR_DIVIDE';
+            if (isUnary) {
+                if (char === '+') {
+                    tokens.push({ type: 'UNARY_PLUS' });
                 }
-                else if (char === '+') {
-                    // Unary plus is ignored (treated as 0 + X)
-                    i++;
-                    continue;
+                else {
+                    tokens.push({ type: 'UNARY_MINUS' });
                 }
             }
             else {
-                // Binary sign
                 if (char === '+') {
                     tokens.push({ type: 'OPERATOR_PLUS' });
                 }
@@ -95,133 +82,130 @@ function tokenize(expression) {
                     tokens.push({ type: 'OPERATOR_MINUS' });
                 }
             }
-            i++;
-            continue;
         }
-        if (char === '*' || char === '/') {
-            if (char === '*') {
-                tokens.push({ type: 'OPERATOR_MULTIPLY' });
-            }
-            else { // '/'
-                tokens.push({ type: 'OPERATOR_DIVIDE' });
-            }
-            i++;
-            continue;
+        else if (char === '*') {
+            tokens.push({ type: 'OPERATOR_MULTIPLY' });
         }
-        // Should not happen based on problem constraints
-        throw new Error(`Unexpected character: ${char}`);
+        else if (char === '/') {
+            tokens.push({ type: 'OPERATOR_DIVIDE' });
+        }
+        else {
+            // Should not happen based on problem description
+            throw new Error(`Unknown character: ${char}`);
+        }
+        i++;
     }
-    tokens.push({ type: 'EOF' });
     return tokens;
 }
-// Operator precedence: Higher number means higher precedence
-const precedence = {
-    'OPERATOR_PLUS': 1,
-    'OPERATOR_MINUS': 1,
-    'OPERATOR_MULTIPLY': 2,
-    'OPERATOR_DIVIDE': 2,
+// Shunting-Yard implementation adapted for direct evaluation (RPN style)
+// Since we are aiming for direct evaluation, we will use two stacks: values and operators.
+// This is effectively the standard algorithm for infix evaluation.
+// Operator precedence
+const precedence = (token) => {
+    if (!token)
+        return 0;
+    switch (token.type) {
+        case 'OPERATOR_PLUS':
+        case 'OPERATOR_MINUS':
+            return 1;
+        case 'OPERATOR_MULTIPLY':
+        case 'OPERATOR_DIVIDE':
+            return 2;
+        default:
+            return 0;
+    }
 };
-// Shunting-yard implementation to convert infix to Reverse Polish Notation (RPN)
-function shuntingYard(tokens) {
-    const outputQueue = [];
-    const operatorStack = [];
-    for (const token of tokens.filter(t => t.type !== 'EOF')) {
-        switch (token.type) {
-            case 'NUMBER':
-                outputQueue.push(token);
-                break;
-            case 'LPAREN':
-                operatorStack.push(token);
-                break;
-            case 'RPAREN':
-                while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== 'LPAREN') {
-                    outputQueue.push(operatorStack.pop());
-                }
-                if (operatorStack.length === 0 || operatorStack[operatorStack.length - 1].type !== 'LPAREN') {
-                    throw new Error("Mismatched parentheses");
-                }
-                operatorStack.pop(); // Discard '('
-                break;
-            case 'OPERATOR_PLUS':
-            case 'OPERATOR_MINUS':
-            case 'OPERATOR_MULTIPLY':
-            case 'OPERATOR_DIVIDE':
-                const op1 = token;
-                while (operatorStack.length > 0 &&
-                    operatorStack[operatorStack.length - 1].type !== 'LPAREN' &&
-                    (precedence[operatorStack[operatorStack.length - 1].type] >= precedence[op1.type])) {
-                    outputQueue.push(operatorStack.pop());
-                }
-                operatorStack.push(op1);
-                break;
-        }
+// Apply an operator to the top two values
+function applyOp(op, values) {
+    const b = values.pop();
+    const a = values.pop();
+    switch (op.type) {
+        case 'OPERATOR_PLUS':
+            return a + b;
+        case 'OPERATOR_MINUS':
+            return a - b;
+        case 'OPERATOR_MULTIPLY':
+            return a * b;
+        case 'OPERATOR_DIVIDE':
+            // Truncates toward zero (integer division)
+            return Math.trunc(a / b);
+        case 'UNARY_PLUS':
+            // Unary plus is identity
+            return a;
+        case 'UNARY_MINUS':
+            // Unary minus: negate the first operand
+            return -a;
+        default:
+            throw new Error(`Unknown operator encountered: ${op.type}`);
     }
-    while (operatorStack.length > 0) {
-        const op = operatorStack.pop();
-        if (op.type === 'LPAREN' || op.type === 'RPAREN') {
-            throw new Error("Mismatched parentheses remaining");
-        }
-        outputQueue.push(op);
-    }
-    return outputQueue;
 }
-// Evaluates the RPN expression
-function evaluateRPN(rpnTokens) {
-    const stack = [];
-    for (const token of rpnTokens) {
+function evaluateExpression(tokens) {
+    const values = [];
+    const ops = [];
+    for (const token of tokens) {
         if (token.type === 'NUMBER') {
-            stack.push(token.value);
+            values.push(token.value);
         }
-        else if (token.type === 'OPERATOR_PLUS' || token.type === 'OPERATOR_MINUS' || token.type === 'OPERATOR_MULTIPLY' || token.type === 'OPERATOR_DIVIDE') {
-            if (stack.length < 2) {
-                throw new Error("Invalid RPN expression: insufficient operands");
+        else if (token.type === 'LPAREN') {
+            ops.push(token);
+        }
+        else if (token.type === 'RPAREN') {
+            while (ops.length > 0 && ops[ops.length - 1].type !== 'LPAREN') {
+                const op = ops.pop();
+                values.push(applyOp(op, values));
             }
-            const b = stack.pop();
-            const a = stack.pop();
-            let result;
-            switch (token.type) {
-                case 'OPERATOR_PLUS':
-                    result = a + b;
-                    break;
-                case 'OPERATOR_MINUS':
-                    result = a - b;
-                    break;
-                case 'OPERATOR_MULTIPLY':
-                    result = a * b;
-                    break;
-                case 'OPERATOR_DIVIDE':
-                    // Truncate toward zero for division
-                    result = Math.trunc(a / b);
-                    break;
-                default:
-                    throw new Error("Unknown operator");
+            if (ops.length === 0 || ops[ops.length - 1].type !== 'LPAREN') {
+                throw new Error("Mismatched parentheses: Missing '('");
             }
-            stack.push(result);
+            ops.pop(); // Pop the '('
+        }
+        else if (token.type.startsWith('OPERATOR') || token.type.startsWith('UNARY')) {
+            const currentPrecedence = precedence(token);
+            // While there is an operator on top of the stack with greater or equal precedence
+            // (Note: Unary operators are handled implicitly by the tokenization/application logic,
+            // but here we treat them like operators for precedence comparison against binary ones).
+            while (ops.length > 0) {
+                const topOp = ops[ops.length - 1];
+                // Special handling for unary operators: they are effectively higher precedence than binary operators,
+                // but in the standard infix stack algorithm, we process them when their scope ends or when the incoming
+                // operator has lower precedence. For simplicity, we let the tokenizer handle the distinction,
+                // and treat unary as having high precedence relative to binary ones.
+                if (precedence(topOp) >= currentPrecedence && topOp.type !== 'LPAREN') {
+                    const op = ops.pop();
+                    values.push(applyOp(op, values));
+                }
+                else {
+                    break;
+                }
+            }
+            ops.push(token);
         }
     }
-    if (stack.length !== 1) {
-        throw new Error("Invalid RPN expression: too many operands left");
+    // Empty the operator stack
+    while (ops.length > 0) {
+        const op = ops.pop();
+        if (op.type === 'LPAREN') {
+            throw new Error("Mismatched parentheses: Extra '('");
+        }
+        values.push(applyOp(op, values));
     }
-    return stack[0];
+    if (values.length !== 1) {
+        throw new Error("Invalid expression format.");
+    }
+    return values[0];
 }
-function solve() {
-    try {
-        // Read all input from stdin
-        const input = fs.readFileSync(0, 'utf8').trim();
-        if (!input)
-            return;
-        // 1. Tokenize
-        const tokens = tokenize(input);
-        // 2. Convert to RPN
-        const rpn = shuntingYard(tokens);
-        // 3. Evaluate RPN
-        const result = evaluateRPN(rpn);
-        console.log(result);
+// Main execution
+try {
+    const input = fs.readFileSync(0, 'utf8').trim();
+    if (!input) {
+        // Handle empty input case if necessary, though problem implies valid input
+        return;
     }
-    catch (error) {
-        // In a strict contest environment, errors might need specific handling, 
-        // but for robust execution, we log if necessary.
-        // console.error(error);
-    }
+    const tokens = tokenize(input);
+    const result = evaluateExpression(tokens);
+    console.log(result);
 }
-solve();
+catch (e) {
+    // In a real environment, we might log the error, but for strict output, we adhere to success path.
+    // console.error(e);
+}

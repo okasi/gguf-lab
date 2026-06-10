@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * LRUCache implementation using a Map to store values/nodes \n * and a Doubly Linked List to maintain the order of usage.\n * This ensures O(1) time complexity for all operations.\n */\nclass DLLNode {\n    key: string;\n    value: number;\n    prev: DLLNode | null = null;\n    next: DLLNode | null = null;\n\n    constructor(key: string, value: number) {\n        this.key = key;\n        this.value = value;\n    }\n}\n\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, DLLNode\u003e;\n    private head: DLLNode | null = null; // Most Recently Used\n    private tail: DLLNode | null = null; // Least Recently Used\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map();\n    }\n\n    private removeNode(node: DLLNode) {\n        if (node.prev) node.prev.next = node.next;\n        if (node.next) node.next.prev = node.prev;\n        if (node === this.head) this.head = node.next;\n        if (node === this.tail) this.tail = node.prev;\n        node.prev = null;\n        node.next = null;\n    }\n\n    private setHead(node: DLLNode) {\n        node.next = this.head;\n        node.prev = null;\n        if (this.head) this.head.prev = node;\n        this.head = node;\n        if (!this.tail) this.tail = node;\n    }\n\n    public put(key: string, value: number): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            node.value = value;\n            this.removeNode(node);\n            this.setHead(node);\n        } else {\n            if (this.map.size === this.capacity) {\n                if (this.tail) {\n                    this.map.delete(this.tail.key);\n                    this.removeNode(this.tail);\n                }\n            }\n            const newNode = new DLLNode(key, value);\n            this.map.set(key, newNode);\n            this.setHead(newNode);\n        }\n    }\n\n    public get(key: string): number {\n        if (!this.map.has(key)) return -1;\n        const node = this.map.get(key)!;\n        this.removeNode(node);\n        this.setHead(node);\n        return node.value;\n    }\n\n    public del(key: string): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            this.removeNode(node);\n            this.map.delete(key);\n        }\n    }\n\n    public getOrder(): string[] {\n        const result: string[] = [];\n        let curr = this.head;\n        while (curr) {\n            result.push(curr.key);\n            curr = curr.next;\n        }\n        return result;\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    if (input.length === 0) return;\n\n    let ptr = 0;\n    const C = parseInt(input[ptr++]);\n    const N = parseInt(input[ptr++]);\n\n    const cache = new LRUCache(C);\n    const getResults: number[] = [];\n\n    for (let i = 0; i \u003c N; i++) {\n        const op = input[ptr++];\n        if (op === \"PUT\") {\n            const key = input[ptr++];\n            const val = parseInt(input[ptr++]);\n            cache.put(key, val);\n        } else if (op === \"GET\") {\n            const key = input[ptr++];\n            getResults.push(cache.get(key));\n        } else if (op === \"DEL\") {\n            const key = input[ptr++];\n            cache.del(key);\n        }\n    }\n\n    process.stdout.write(getResults.length === 0 ? \"EMPTY\\n\" : getResults.join(\" \") + \"\\n\");\n    const order = cache.getOrder();\n    process.stdout.write(order.length === 0 ? \"EMPTY\\n\" : order.join(\" \") + \"\\n\");\n}\n\nsolve();"
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * LRUCache implementation using a Map to store key-value pairs and \n * a Doubly Linked List to maintain the order of usage.\n * Map provides O(1) access, Linked List provides O(1) removal/insertion.\n */\nclass LRUCache {\n    private capacity: number;\n    private map: Map\u003cstring, ListNode\u003e;\n    private head: ListNode; // Most recently used\n    private tail: ListNode; // Least recently used\n\n    constructor(capacity: number) {\n        this.capacity = capacity;\n        this.map = new Map();\n        this.head = new ListNode(null, null);\n        this.tail = new ListNode(null, null);\n        this.head.next = this.tail;\n        this.tail.prev = this.head;\n    }\n\n    private remove(node: ListNode) {\n        node.prev!.next = node.next!;\n        node.next!.prev = node.prev!;\n    }\n\n    private addToHead(node: ListNode) {\n        node.next = this.head.next;\n        node.prev = this.head;\n        this.head.next!.prev = node;\n        this.head.next = node;\n    }\n\n    public get(key: string): number {\n        if (!this.map.has(key)) {\n            return -1;\n        }\n        const node = this.map.get(key)!;\n        this.remove(node);\n        this.addToHead(node);\n        return node.value;\n    }\n\n    public put(key: string, value: number): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            node.value = value;\n            this.remove(node);\n            this.addToHead(node);\n        } else {\n            if (this.map.size \u003e= this.capacity) {\n                const lru = this.tail.prev!;\n                this.remove(lru);\n                this.map.delete(lru.key);\n            }\n            const newNode = new ListNode(key, value);\n            this.addToHead(newNode);\n            this.map.set(key, newNode);\n        }\n    }\n\n    public del(key: string): void {\n        if (this.map.has(key)) {\n            const node = this.map.get(key)!;\n            this.remove(node);\n            this.map.delete(key);\n        }\n    }\n\n    public getFinalOrder(): string[] {\n        const result: string[] = [];\n        let current = this.head.next;\n        while (current !== this.tail) {\n            result.push(current.key);\n            current = current.next;\n        }\n        return result;\n    }\n}\n\nclass ListNode {\n    constructor(public key: string | null, public value: number | null, public prev: ListNode | null = null, public next: ListNode | null = null) {}\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    let cursor = 0;\n\n    if (input.length \u003c 2) return;\n    const capacity = parseInt(input[cursor++]);\n    const n = parseInt(input[cursor++]);\n\n    const cache = new LRUCache(capacity);\n    const getResults: number[] = [];\n\n    for (let i = 0; i \u003c n; i++) {\n        const op = input[cursor++];\n        if (op === \u0027PUT\u0027) {\n            const key = input[cursor++];\n            const value = parseInt(input[cursor++]);\n            cache.put(key, value);\n        } else if (op === \u0027GET\u0027) {\n            const key = input[cursor++];\n            getResults.push(cache.get(key));\n        } else if (op === \u0027DEL\u0027) {\n            const key = input[cursor++];\n            cache.del(key);\n        }\n    }\n\n    if (getResults.length === 0) {\n        process.stdout.write(\"EMPTY\\n\");\n    } else {\n        process.stdout.write(getResults.join(\" \") + \"\\n\");\n    }\n\n    const finalKeys = cache.getFinalOrder();\n    if (finalKeys.length === 0) {\n        process.stdout.write(\"EMPTY\\n\");\n    } else {\n        process.stdout.write(finalKeys.join(\" \") + \"\\n\");\n    }\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1781091441,
-    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781098429,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  1058,
+                  "completion_tokens":  1045,
                   "prompt_tokens":  323,
-                  "total_tokens":  1381,
+                  "total_tokens":  1368,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-GC45Xv8H3awUwacB1INBiMIKtugkFiPl",
+    "id":  "chatcmpl-2AFrFebHRrHkZWZcBCmBygAjiwliAHMh",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  323,
-                    "prompt_ms":  716.06,
-                    "prompt_per_token_ms":  2.2169040247678016,
-                    "prompt_per_second":  451.0795184761054,
-                    "predicted_n":  1058,
-                    "predicted_ms":  20697.821,
-                    "predicted_per_token_ms":  19.56315784499055,
-                    "predicted_per_second":  51.11649192443977,
-                    "draft_n":  992,
-                    "draft_n_accepted":  809
+                    "prompt_ms":  818.679,
+                    "prompt_per_token_ms":  2.534609907120743,
+                    "prompt_per_second":  394.5380301681123,
+                    "predicted_n":  1045,
+                    "predicted_ms":  20512.743,
+                    "predicted_per_token_ms":  19.629419138755978,
+                    "predicted_per_second":  50.943942504422736,
+                    "draft_n":  738,
+                    "draft_n_accepted":  675
                 }
 }

@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "import * as fs from \u0027fs\u0027;\n\n/**\n * A simple recursive descent parser for arithmetic expressions.\n * Handles: \n * - Addition (+), Subtraction (-)\n * - Multiplication (*), Division (/)\n * - Unary plus (+), Unary minus (-)\n * - Parentheses ()\n * - Integer literals\n * - Truncated division towards zero.\n */\nclass Evaluator {\n    private tokens: string[];\n    private pos: number = 0;\n\n    constructor(input: string) {\n        // Tokenize the input: matches integers, operators, and parentheses\n        this.tokens = input.match(/\\d+|[+\\-*/()]/g) || [];\n    }\n\n    private peek(): string | undefined {\n        return this.tokens[this.pos];\n    }\n\n    private consume(): string {\n        return this.tokens[this.pos++];\n    }\n\n    public evaluate(): number {\n        const result = this.parseExpression();\n        return result;\n    }\n\n    // Grammar:\n    // Expression -\u003e Term { (+|-) Term }\n    // Term       -\u003e Factor { (*|/) Factor }\n    // Factor     -\u003e (+|-) Factor | (Expression) | Number\n    \n    private parseExpression(): number {\n        let left = this.parseTerm();\n\n        while (this.peek() === \u0027+\u0027 || this.peek() === \u0027-\u0027) {\n            const op = this.consume();\n            const right = this.parseTerm();\n            if (op === \u0027+\u0027) left += right;\n            else left -= right;\n        }\n        return left;\n    }\n\n    private parseTerm(): number {\n        let left = this.parseFactor();\n\n        while (this.peek() === \u0027*\u0027 || this.peek() === \u0027/\u0027) {\n            const op = this.consume();\n            const right = this.parseFactor();\n            if (op === \u0027*\u0027) {\n                left *= right;\n            } else {\n                // Truncate toward zero division\n                left = Math.trunc(left / right);\n            }\n        }\n        return left;\n    }\n\n    private parseFactor(): number {\n        const token = this.peek();\n\n        if (token === \u0027+\u0027) {\n            this.consume();\n            return this.parseFactor();\n        }\n\n        if (token === \u0027-\u0027) {\n            this.consume();\n            return -this.parseFactor();\n        }\n\n        if (token === \u0027(\u0027) {\n            this.consume(); // consume (\n            const result = this.parseExpression();\n            this.consume(); // consume )\n            return result;\n        }\n\n        const val = parseInt(this.consume()!, 10);\n        return val;\n    }\n}\n\nfunction main() {\n    try {\n        const input = fs.readFileSync(0, \"utf8\").trim();\n        if (!input) return;\n        const evaluator = new Evaluator(input);\n        console.log(evaluator.evaluate());\n    } catch (e) {\n        // Silent error handling for malformed input\n    }\n}\n\nmain();"
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\n/**\n * A simple arithmetic expression evaluator.\n * Supports integers, + - * /, unary + -, and parentheses.\n * Division truncates toward zero.\n */\n\ntype Token =\n    | { type: \u0027Number\u0027; value: number }\n    | { type: \u0027Operator\u0027; value: string; precedence: number; isUnary: boolean }\n    | { type: \u0027LParen\u0027 }\n    | { type: \u0027RParen\u0027 };\n\nfunction tokenize(input: string): Token[] {\n    const tokens: Token[] = [];\n    let i = 0;\n\n    while (i \u003c input.length) {\n        const char = input[i];\n\n        if (/\\s/.test(char)) {\n            i++;\n            continue;\n        }\n\n        if (/\\d/.test(char)) {\n            let numStr = \u0027\u0027;\n            while (i \u003c input.length \u0026\u0026 /\\d/.test(input[i])) {\n                numStr += input[i];\n                i++;\n            }\n            tokens.push({ type: \u0027Number\u0027, value: parseInt(numStr, 10) });\n            continue;\n        }\n\n        if (char === \u0027(\u0027) {\n            tokens.push({ type: \u0027LParen\u0027 });\n            i++;\n            continue;\n        }\n\n        if (char === \u0027)\u0027) {\n            tokens.push({ type: \u0027RParen\u0027 });\n            i++;\n            continue;\n        }\n\n        if ([\u0027+\u0027, \u0027-\u0027, \u0027*\u0027, \u0027/\u0027].includes(char)) {\n            // Determine if operator is unary\n            // It is unary if it\u0027s at the start or follows an operator or \u0027(\u0027\n            const prev = tokens[tokens.length - 1];\n            const isUnary = !prev || (prev.type === \u0027Operator\u0027 || prev.type === \u0027LParen\u0027);\n            \n            let precedence = 0;\n            if (isUnary) {\n                precedence = 3; // Highest\n            } else {\n                if (char === \u0027+\u0027 || char === \u0027-\u0027) precedence = 1;\n                else precedence = 2;\n            }\n\n            tokens.push({ \n                type: \u0027Operator\u0027, \n                value: char, \n                precedence, \n                isUnary \n            });\n            i++;\n            continue;\n        }\n\n        i++;\n    }\n    return tokens;\n}\n\nfunction evaluate(input: string): number {\n    const tokens = tokenize(input);\n    const outputQueue: Token[] = [];\n    const operatorStack: Token[] = [];\n\n    // Shunting-yard Algorithm\n    for (const token of tokens) {\n        if (token.type === \u0027Number\u0027) {\n            outputQueue.push(token);\n        } else if (token.type === \u0027LParen\u0027) {\n            operatorStack.push(token);\n        } else if (token.type === \u0027RParen\u0027) {\n            while (operatorStack.length \u003e 0 \u0026\u0026 operatorStack[operatorStack.length - 1].type !== \u0027LParen\u0027) {\n                outputQueue.push(operatorStack.pop()!);\n            }\n            operatorStack.pop(); // Remove LParen\n        } else {\n            // Operator\n            while (\n                operatorStack.length \u003e 0 \u0026\u0026\n                operatorStack[operatorStack.length - 1].type === \u0027Operator\u0027 \u0026\u0026\n                operatorStack[operatorStack.length - 1].precedence \u003e= token.precedence\n            ) {\n                outputQueue.push(operatorStack.pop()!);\n            }\n            operatorStack.push(token);\n        }\n    }\n\n    while (operatorStack.length \u003e 0) {\n        outputQueue.push(operatorStack.pop()!);\n    }\n\n    // Evaluate Postfix\n    const stack: number[] = [];\n    for (const token of outputQueue) {\n        if (token.type === \u0027Number\u0027) {\n            stack.push(token.value);\n        } else if (token.type === \u0027Operator\u0027) {\n            if (token.isUnary) {\n                const a = stack.pop()!;\n                switch (token.value) {\n                    case \u0027+\u0027: stack.push(a); break;\n                    case \u0027-\u0027: stack.push(-a); break;\n                }\n            } else {\n                const b = stack.pop()!;\n                const a = stack.pop()!;\n                switch (token.value) {\n                    case \u0027+\u0027: stack.push(a + b); break;\n                    case \u0027-\u0027: stack.push(a - b); break;\n                    case \u0027*\u0027: stack.push(a * b); break;\n                    case \u0027/\u0027: \n                        // Truncate toward zero\n                        const res = a / b;\n                        stack.push(res \u003e 0 ? Math.floor(res) : Math.ceil(res));\n                        break;\n                }\n            }\n        }\n    }\n\n    return stack[0];\n}\n\nconst input = fs.readFileSync(0, \"utf8\").trim();\nif (input) {\n    console.log(evaluate(input));\n}"
                                     }
                     }
                 ],
-    "created":  1781091458,
-    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781098453,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  683,
+                  "completion_tokens":  1128,
                   "prompt_tokens":  187,
-                  "total_tokens":  870,
+                  "total_tokens":  1315,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-YSGKugqma4OhSohOCblcxXoLEeyRKz2J",
+    "id":  "chatcmpl-1wr533pVjJHDvA8GSO0uAIReUoMmhG6u",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  187,
-                    "prompt_ms":  313.472,
-                    "prompt_per_token_ms":  1.6763208556149731,
-                    "prompt_per_second":  596.5445079624337,
-                    "predicted_n":  683,
-                    "predicted_ms":  15156.517,
-                    "predicted_per_token_ms":  22.191093704245972,
-                    "predicted_per_second":  45.06312367148732,
-                    "draft_n":  752,
-                    "draft_n_accepted":  494
+                    "prompt_ms":  326.307,
+                    "prompt_per_token_ms":  1.744957219251337,
+                    "prompt_per_second":  573.0799523148446,
+                    "predicted_n":  1128,
+                    "predicted_ms":  22453.816,
+                    "predicted_per_token_ms":  19.90586524822695,
+                    "predicted_per_second":  50.23644978653072,
+                    "draft_n":  814,
+                    "draft_n_accepted":  720
                 }
 }

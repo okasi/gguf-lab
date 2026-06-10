@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "To avoid repeated tool loops, tool-calling agents must implement **loop termination conditions** and **state management**.\n\n1. **Action Validation:** Before a second call, the agent must evaluate the *previous* tool output to determine if the desired outcome was achieved or if a new, distinct sub-goal has been identified.\n2. **State Tracking:** Maintain a memory or state vector tracking executed tools, their inputs, and the observed effects. If the current step mirrors a previous step without new information, the loop should terminate.\n3. **Goal Check:** The final, definitive step should always be a **goal evaluation** (e.g., checking if the final output meets the prompt requirements), rather than just an execution step.\n\nBy proactively checking the result against the original objective, the agent breaks the cycle of endlessly re-executing irrelevant actions."
+                                        "content":  "To avoid repeated tool loops, tool-calling agents must implement **loop termination conditions** and **state management**.\n\n1. **Action Validation:** After receiving tool output, the agent must rigorously check if the result directly satisfies the original request or if further clarification/action is necessary. Avoid re-triggering the same tool if the input parameters haven\u0027t changed meaningfully.\n2. **Progress Tracking:** Maintain an internal state tracking which tools have been called and with which parameters. If a sequence of tool calls returns identical or redundant information, the loop should break.\n3. **Contextual Constraint Checking:** If the tool output suggests a necessary prerequisite (e.g., \"User must approve X\") that the agent cannot satisfy, it must transition to a *human-in-the-loop* state rather than repeatedly querying the tool for the same outcome.\n\nThis structured approach prevents infinite recursion by enforcing progression toward a definitive answer."
                                     }
                     }
                 ],
-    "created":  1781090762,
-    "model":  "unsloth-gemma4-e4b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781098294,
+    "model":  "unsloth-gemma4-e4b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  175,
+                  "completion_tokens":  189,
                   "prompt_tokens":  35,
-                  "total_tokens":  210,
+                  "total_tokens":  224,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-zbWttTPEMKcFP0qEPXMweBJL6bhbSErH",
+    "id":  "chatcmpl-Pb1DrZeXJJoxZaWc4WyFSCbaFHHb9MOW",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  35,
-                    "prompt_ms":  431.745,
-                    "prompt_per_token_ms":  12.335571428571429,
-                    "prompt_per_second":  81.06637019536996,
-                    "predicted_n":  175,
-                    "predicted_ms":  2402.367,
-                    "predicted_per_token_ms":  13.72781142857143,
-                    "predicted_per_second":  72.8448234595297,
-                    "draft_n":  348,
-                    "draft_n_accepted":  87
+                    "prompt_ms":  439.059,
+                    "prompt_per_token_ms":  12.544542857142858,
+                    "prompt_per_second":  79.7159379491139,
+                    "predicted_n":  189,
+                    "predicted_ms":  2168.708,
+                    "predicted_per_token_ms":  11.474645502645503,
+                    "predicted_per_second":  87.14866178388237,
+                    "draft_n":  206,
+                    "draft_n_accepted":  86
                 }
 }

@@ -51,55 +51,56 @@ class LRUCache {
         this.head.next = this.tail;
         this.tail.prev = this.head;
     }
-    detach(node) {
+    removeNode(node) {
         const prev = node.prev;
         const next = node.next;
-        if (prev)
-            prev.next = next;
-        if (next)
-            next.prev = prev;
+        prev.next = next;
+        next.prev = prev;
     }
-    attachToFront(node) {
+    addToHead(node) {
         node.next = this.head.next;
         node.prev = this.head;
-        if (this.head.next)
-            this.head.next.prev = node;
+        this.head.next.prev = node;
         this.head.next = node;
     }
+    moveToHead(node) {
+        this.removeNode(node);
+        this.addToHead(node);
+    }
     get(key) {
-        const node = this.map.get(key);
-        if (!node)
+        if (!this.map.has(key))
             return -1;
-        this.detach(node);
-        this.attachToFront(node);
+        const node = this.map.get(key);
+        this.moveToHead(node);
         return node.value;
     }
     put(key, value) {
-        const existingNode = this.map.get(key);
-        if (existingNode) {
-            existingNode.value = value;
-            this.detach(existingNode);
-            this.attachToFront(existingNode);
+        if (this.map.has(key)) {
+            const node = this.map.get(key);
+            node.value = value;
+            this.moveToHead(node);
         }
         else {
             if (this.map.size >= this.capacity) {
                 const lru = this.tail.prev;
-                this.detach(lru);
-                this.map.delete(lru.key);
+                if (lru !== this.head) {
+                    this.map.delete(lru.key);
+                    this.removeNode(lru);
+                }
             }
             const newNode = new ListNode(key, value);
             this.map.set(key, newNode);
-            this.attachToFront(newNode);
+            this.addToHead(newNode);
         }
     }
     delete(key) {
-        const node = this.map.get(key);
-        if (node) {
-            this.detach(node);
+        if (this.map.has(key)) {
+            const node = this.map.get(key);
+            this.removeNode(node);
             this.map.delete(key);
         }
     }
-    getOrderedKeys() {
+    getKeysLRUOrder() {
         const keys = [];
         let current = this.head.next;
         while (current !== this.tail && current !== null) {
@@ -120,28 +121,28 @@ function solve() {
     const firstLine = lines[0].trim().split(/\s+/);
     if (firstLine.length < 2)
         return;
-    const C = parseInt(firstLine[0]);
-    const N = parseInt(firstLine[1]);
-    const cache = new LRUCache(C);
+    const capacity = parseInt(firstLine[0]);
+    const n = parseInt(firstLine[1]);
+    const cache = new LRUCache(capacity);
     const getResults = [];
-    for (let i = 1; i <= N; i++) {
-        const line = lines[i]?.trim();
+    for (let i = 1; i <= n; i++) {
+        const line = lines[i];
         if (!line)
             continue;
-        const parts = line.split(/\s+/);
-        const command = parts[0];
-        if (command === 'PUT') {
+        const parts = line.trim().split(/\s+/);
+        const cmd = parts[0];
+        if (cmd === 'PUT') {
             cache.put(parts[1], parseInt(parts[2]));
         }
-        else if (command === 'GET') {
+        else if (cmd === 'GET') {
             getResults.push(cache.get(parts[1]));
         }
-        else if (command === 'DEL') {
+        else if (cmd === 'DEL') {
             cache.delete(parts[1]);
         }
     }
-    process.stdout.write(getResults.length > 0 ? getResults.join(' ') + '\n' : 'EMPTY\n');
-    const remainingKeys = cache.getOrderedKeys();
-    process.stdout.write(remainingKeys.length > 0 ? remainingKeys.join(' ') + '\n' : 'EMPTY\n');
+    const getOutput = getResults.length > 0 ? getResults.join(' ') : "EMPTY";
+    const keyOutput = !cache.isEmpty() ? cache.getKeysLRUOrder().join(' ') : "EMPTY";
+    process.stdout.write(getOutput + "\n" + keyOutput + "\n");
 }
 solve();

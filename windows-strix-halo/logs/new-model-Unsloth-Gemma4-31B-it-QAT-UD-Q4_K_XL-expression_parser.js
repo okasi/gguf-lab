@@ -65,10 +65,13 @@ class Parser {
         return tokens;
     }
     peek() {
-        return this.tokens[this.pos];
+        return this.tokens[this.pos] || null;
     }
     consume() {
         return this.tokens[this.pos++];
+    }
+    parse() {
+        return this.parseExpression();
     }
     parseExpression() {
         let node = this.parseTerm();
@@ -111,14 +114,11 @@ class Parser {
     parsePrimary() {
         const token = this.consume();
         if (token === '(') {
-            const val = this.parseExpression();
+            const result = this.parseExpression();
             this.consume(); // consume ')'
-            return val;
+            return result;
         }
         return parseInt(token, 10);
-    }
-    evaluate() {
-        return this.parseExpression();
     }
 }
 function main() {
@@ -126,6 +126,6 @@ function main() {
     if (!input)
         return;
     const parser = new Parser(input);
-    process.stdout.write(parser.evaluate().toString() + "\n");
+    process.stdout.write(parser.parse().toString() + "\n");
 }
 main();

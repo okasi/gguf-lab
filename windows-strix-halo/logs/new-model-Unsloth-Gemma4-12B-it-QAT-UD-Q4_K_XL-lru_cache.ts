@@ -1,125 +1,126 @@
 ﻿const fs = require('fs');
 
 /**
- * LRUCache implementation using a Map to store values/nodes 
- * and a Doubly Linked List to maintain the order of usage.
- * This ensures O(1) time complexity for all operations.
+ * LRUCache implementation using a Map to store key-value pairs and 
+ * a Doubly Linked List to maintain the order of usage.
+ * Map provides O(1) access, Linked List provides O(1) removal/insertion.
  */
-class DLLNode {
-    key: string;
-    value: number;
-    prev: DLLNode | null = null;
-    next: DLLNode | null = null;
-
-    constructor(key: string, value: number) {
-        this.key = key;
-        this.value = value;
-    }
-}
-
 class LRUCache {
     private capacity: number;
-    private map: Map<string, DLLNode>;
-    private head: DLLNode | null = null; // Most Recently Used
-    private tail: DLLNode | null = null; // Least Recently Used
+    private map: Map<string, ListNode>;
+    private head: ListNode; // Most recently used
+    private tail: ListNode; // Least recently used
 
     constructor(capacity: number) {
         this.capacity = capacity;
         this.map = new Map();
+        this.head = new ListNode(null, null);
+        this.tail = new ListNode(null, null);
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
     }
 
-    private removeNode(node: DLLNode) {
-        if (node.prev) node.prev.next = node.next;
-        if (node.next) node.next.prev = node.prev;
-        if (node === this.head) this.head = node.next;
-        if (node === this.tail) this.tail = node.prev;
-        node.prev = null;
-        node.next = null;
+    private remove(node: ListNode) {
+        node.prev!.next = node.next!;
+        node.next!.prev = node.prev!;
     }
 
-    private setHead(node: DLLNode) {
-        node.next = this.head;
-        node.prev = null;
-        if (this.head) this.head.prev = node;
-        this.head = node;
-        if (!this.tail) this.tail = node;
+    private addToHead(node: ListNode) {
+        node.next = this.head.next;
+        node.prev = this.head;
+        this.head.next!.prev = node;
+        this.head.next = node;
+    }
+
+    public get(key: string): number {
+        if (!this.map.has(key)) {
+            return -1;
+        }
+        const node = this.map.get(key)!;
+        this.remove(node);
+        this.addToHead(node);
+        return node.value;
     }
 
     public put(key: string, value: number): void {
         if (this.map.has(key)) {
             const node = this.map.get(key)!;
             node.value = value;
-            this.removeNode(node);
-            this.setHead(node);
+            this.remove(node);
+            this.addToHead(node);
         } else {
-            if (this.map.size === this.capacity) {
-                if (this.tail) {
-                    this.map.delete(this.tail.key);
-                    this.removeNode(this.tail);
-                }
+            if (this.map.size >= this.capacity) {
+                const lru = this.tail.prev!;
+                this.remove(lru);
+                this.map.delete(lru.key);
             }
-            const newNode = new DLLNode(key, value);
+            const newNode = new ListNode(key, value);
+            this.addToHead(newNode);
             this.map.set(key, newNode);
-            this.setHead(newNode);
         }
-    }
-
-    public get(key: string): number {
-        if (!this.map.has(key)) return -1;
-        const node = this.map.get(key)!;
-        this.removeNode(node);
-        this.setHead(node);
-        return node.value;
     }
 
     public del(key: string): void {
         if (this.map.has(key)) {
             const node = this.map.get(key)!;
-            this.removeNode(node);
+            this.remove(node);
             this.map.delete(key);
         }
     }
 
-    public getOrder(): string[] {
+    public getFinalOrder(): string[] {
         const result: string[] = [];
-        let curr = this.head;
-        while (curr) {
-            result.push(curr.key);
-            curr = curr.next;
+        let current = this.head.next;
+        while (current !== this.tail) {
+            result.push(current.key);
+            current = current.next;
         }
         return result;
     }
 }
 
+class ListNode {
+    constructor(public key: string | null, public value: number | null, public prev: ListNode | null = null, public next: ListNode | null = null) {}
+}
+
 function solve() {
     const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    if (input.length === 0) return;
+    let cursor = 0;
 
-    let ptr = 0;
-    const C = parseInt(input[ptr++]);
-    const N = parseInt(input[ptr++]);
+    if (input.length < 2) return;
+    const capacity = parseInt(input[cursor++]);
+    const n = parseInt(input[cursor++]);
 
-    const cache = new LRUCache(C);
+    const cache = new LRUCache(capacity);
     const getResults: number[] = [];
 
-    for (let i = 0; i < N; i++) {
-        const op = input[ptr++];
-        if (op === "PUT") {
-            const key = input[ptr++];
-            const val = parseInt(input[ptr++]);
-            cache.put(key, val);
-        } else if (op === "GET") {
-            const key = input[ptr++];
+    for (let i = 0; i < n; i++) {
+        const op = input[cursor++];
+        if (op === 'PUT') {
+            const key = input[cursor++];
+            const value = parseInt(input[cursor++]);
+            cache.put(key, value);
+        } else if (op === 'GET') {
+            const key = input[cursor++];
             getResults.push(cache.get(key));
-        } else if (op === "DEL") {
-            const key = input[ptr++];
+        } else if (op === 'DEL') {
+            const key = input[cursor++];
             cache.del(key);
         }
     }
 
-    process.stdout.write(getResults.length === 0 ? "EMPTY\n" : getResults.join(" ") + "\n");
-    const order = cache.getOrder();
-    process.stdout.write(order.length === 0 ? "EMPTY\n" : order.join(" ") + "\n");
+    if (getResults.length === 0) {
+        process.stdout.write("EMPTY\n");
+    } else {
+        process.stdout.write(getResults.join(" ") + "\n");
+    }
+
+    const finalKeys = cache.getFinalOrder();
+    if (finalKeys.length === 0) {
+        process.stdout.write("EMPTY\n");
+    } else {
+        process.stdout.write(finalKeys.join(" ") + "\n");
+    }
 }
 
 solve();

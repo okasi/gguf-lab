@@ -55,21 +55,23 @@ class MinHeap<T> {
 function solve() {
     const input = fs.readFileSync(0, 'utf8');
     const lines = input.split(/\s+/);
-    let cursor = 0;
+    let ptr = 0;
 
-    if (lines[cursor] === "") cursor++;
-    if (cursor >= lines.length) return;
+    if (lines[ptr] === "") ptr++;
+    if (ptr >= lines.length) return;
 
-    const N = parseInt(lines[cursor++]);
-    const M = parseInt(lines[cursor++]);
+    const N = parseInt(lines[ptr++]);
+    const M = parseInt(lines[ptr++]);
 
-    const tasks = [];
+    if (isNaN(N)) return;
+
+    const tasks: string[] = [];
     for (let i = 0; i < N; i++) {
-        tasks.push(lines[cursor++]);
+        tasks.push(lines[ptr++]);
     }
 
-    const adj = new Map<string, string[]>();
-    const inDegree = new Map<string, number>();
+    const adj: Map<string, string[]> = new Map();
+    const inDegree: Map<string, number> = new Map();
 
     for (const task of tasks) {
         adj.set(task, []);
@@ -77,8 +79,8 @@ function solve() {
     }
 
     for (let i = 0; i < M; i++) {
-        const u = lines[cursor++];
-        const v = lines[cursor++];
+        const u = lines[ptr++];
+        const v = lines[ptr++];
         adj.get(u)?.push(v);
         inDegree.set(v, (inDegree.get(v) || 0) + 1);
     }

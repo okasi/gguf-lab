@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "To avoid tool-calling loops, tool-calling agents must incorporate stateful reasoning and feedback mechanisms. Instead of blindly re-invoking tools upon initial failure, the agent should maintain a history of previous tool outputs.\n\nKey strategies include:\n1. **Error Analysis \u0026 Refinement:** The agent must analyze the *failure mode* (e.g., incorrect parameters, insufficient context) from the last call before retrying.\n2. **Contextual Chaining:** Tools should be used sequentially rather than iteratively. Use the output of Tool A to refine the input for Tool B, preventing the agent from looping back to Tool A unless the foundational information is explicitly missing.\n3. **Termination Criteria:** Implement clear exit conditions based on successful state transitions or reaching a defined maximum number of iterations.\n4. **Internal Knowledge Prioritization:** If a tool consistently returns the same or redundant data, the agent should pivot to using its internal LLM knowledge to resolve the ambiguity, bypassing unnecessary tool cycles.\n\nThis approach ensures each tool call contributes uniquely to the problem-solving state."
+                                        "content":  "To avoid tool-calling loops, tool-calling agents must incorporate mechanisms for **state tracking** and **goal-oriented decision-making**.\n\nFirstly, agents should maintain a **tool-call history** or **execution trace**. Before invoking a tool, the agent must query this history to verify if a similar action has already been attempted or if the previous result is relevant to the current sub-goal.\n\nSecondly, implement **termination conditions** based on goal fulfillment. If a sequence of tool calls does not yield the necessary information to progress toward the final objective, the agent must transition to a reasoning step (e.g., generating a response) rather than re-entering the tool-calling cycle.\n\nFinally, employ **hierarchical planning** or **modular sub-tasks**. Decompose complex tasks into smaller, sequential tool-using steps. This prevents the agent from getting stuck in iterative loops when a single, comprehensive action would suffice."
                                     }
                     }
                 ],
-    "created":  1781090678,
-    "model":  "unsloth-gemma4-e2b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781098223,
+    "model":  "unsloth-gemma4-e2b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  218,
+                  "completion_tokens":  190,
                   "prompt_tokens":  35,
-                  "total_tokens":  253,
+                  "total_tokens":  225,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-zPvzMW342jaHICKXdxjQsTQj7Lnjgfa7",
+    "id":  "chatcmpl-vyqZWfxKrD3ejOBawFO62hdpGzgAppJk",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  35,
-                    "prompt_ms":  52.467,
-                    "prompt_per_token_ms":  1.4990571428571429,
-                    "prompt_per_second":  667.0859778527456,
-                    "predicted_n":  218,
-                    "predicted_ms":  2192.14,
-                    "predicted_per_token_ms":  10.055688073394494,
-                    "predicted_per_second":  99.44620325344185,
-                    "draft_n":  436,
-                    "draft_n_accepted":  112
+                    "prompt_ms":  52.014,
+                    "prompt_per_token_ms":  1.4861142857142857,
+                    "prompt_per_second":  672.89575883416,
+                    "predicted_n":  190,
+                    "predicted_ms":  1563.291,
+                    "predicted_per_token_ms":  8.227847368421052,
+                    "predicted_per_second":  121.53847236375059,
+                    "draft_n":  228,
+                    "draft_n_accepted":  76
                 }
 }

@@ -58,89 +58,75 @@ function tokenize(str: string): Token[] {
     return tokens;
 }
 
-function parseToPostfix(tokens: Token[]): Token[] {
-    const outputQueue: Token[] = [];
-    const operatorStack: Token[] = [];
-
-    // Precedence map
-    const precedence: Record<string, number> = {
-        '+': 1,
-        '-': 1,
-        '*': 2,
-        '/': 2,
-        'u+': 3, // Unary plus
-        'u-': 3  // Unary minus
-    };
-
-    // Helper to check if token is a binary operator
-    const isBinaryOp = (t: Token) => 
-        t.type === TokenType.Plus || t.type === TokenType.Minus || 
-        t.type === TokenType.Multiply || t.type === TokenType.Divide;
-
-    // Process tokens and handle unary operators
-    const processedTokens: Token[] = [];
+function parseTokens(tokens: Token[]): Token[] {
+    const processed: Token[] = [];
     for (let i = 0; i < tokens.length; i++) {
-        const current = tokens[i];
-        const prev = i > 0 ? tokens[i - 1] : null;
+        const token = tokens[i];
+        const prev = processed[processed.length - 1];
 
-        if (current.type === TokenType.Plus || current.type === TokenType.Minus) {
-            // If token is + or - and it's at start or follows another operator or '('
-            // then it is a unary operator.
-            const isUnary = !prev || 
-                prev.type === TokenType.Plus || 
-                prev.type === TokenType.Minus || 
-                prev.type === TokenType.Multiply || 
-                prev.type === TokenType.Divide || 
-                prev.type === TokenType.LParen;
+        if (token.type === TokenType.Plus || token.type === TokenType.Minus) {
+            // Check if this is a unary operator
+            // It is unary if it's at the start or preceded by an operator or '('
+            const isUnary = !prev || prev.type === TokenType.Plus || 
+                            prev.type === TokenType.Minus || 
+                            prev.type === TokenType.Multiply || 
+                            prev.type === TokenType.Divide || 
+                            prev.type === TokenType.LParen;
 
             if (isUnary) {
-                if (current.type === TokenType.Plus) {
-                    processedTokens.push({ type: TokenType.UnaryPlus });
-                } else {
-                    processedTokens.push({ type: TokenType.UnaryMinus });
-                }
+                processed.push({ type: token.type === TokenType.Plus ? TokenType.UnaryPlus : TokenType.UnaryMinus });
                 continue;
             }
         }
-        processedTokens.push(current);
+        processed.push(token);
     }
+    return processed;
+}
 
-    for (const token of processedTokens) {
+function evaluate(tokens: Token[]): number {
+    const outputQueue: number[] = [];
+    const operatorStack: Token[] = [];
+
+    const precedence: Record<TokenType, number> = {
+        [TokenType.UnaryPlus]: 3,
+        [TokenType.UnaryMinus]: 3,
+        [TokenType.Multiply]: 2,
+        [TokenType.Divide]: 2,
+        [TokenType.Plus]: 1,
+        [TokenType.Minus]: 1,
+        [TokenType.Number]: 0,
+        [TokenType.LParen]: 0,
+        [TokenType.RParen]: 0
+    };
+
+    const isUnary = (t: Token) => t.type === TokenType.UnaryPlus || t.type === TokenType.UnaryMinus;
+
+    for (const token of tokens) {
         if (token.type === TokenType.Number) {
-            outputQueue.push(token);
+            outputQueue.push(token.value!);
         } else if (token.type === TokenType.LParen) {
             operatorStack.push(token);
         } else if (token.type === TokenType.RParen) {
             while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== TokenType.LParen) {
-                outputQueue.push(operatorStack.pop()!);
+                applyOperator(operatorStack.pop()!, outputQueue);
             }
-            operatorStack.pop(); // Remove '('
+            operatorStack.pop(); // Remove LParen
         } else {
-            // It's an operator
-            const opMap: Record<TokenType, string> = {
-                [TokenType.Plus]: '+',
-                [TokenType.Minus]: '-',
-                [TokenType.Multiply]: '*',
-                [TokenType.Divide]: '/',
-                [TokenType.UnaryPlus]: 'u+',
-                [TokenType.UnaryMinus]: 'u-',
-                [TokenType.LParen]: '(',
-                [TokenType.RParen]: ')',
-                [TokenType.Number]: ''
-            };
-
-            const opType = opMap[token.type];
+            // Operator
             while (operatorStack.length > 0) {
                 const top = operatorStack[operatorStack.length - 1];
                 if (top.type === TokenType.LParen) break;
-                
-                const topOp = opMap[top.type];
-                // Unary operators have higher precedence and are right-associative in standard math,
-                // but here they are simple single-operand.
-                if (precedence[topOp!] >= precedence[opType!]) {
-                    outputQueue.push(operatorStack.pop()!);
+
+                const p1 = precedence[token.type];
+                const p2 = precedence[top.type];
+
+                // Unary operators are right-associative in logic here (high precedence)
+                if (isUnary(token)) {
+                    if (p1 < p2) applyOperator(operatorStack.pop()!, outputQueue);
+                    else break;
                 } else {
-                    break;
+                    if (p1 <= p2) applyOperator(operatorStack.pop()!, outputQueue);
+                    else break;
                 }
             }
             operatorStack.push(token);
@@ -148,49 +134,118 @@ function parseToPostfix(tokens: Token[]): Token[] {
     }
 
     while (operatorStack.length > 0) {
-        outputQueue.push(operatorStack.pop()!);
+        applyOperator(operatorStack.pop()!, outputQueue);
     }
 
-    return outputQueue;
+    return outputQueue[0];
 }
 
-function evaluatePostfix(postfix: Token[]): number {
-    const stack: number[] = [];
-
-    for (const token of postfix) {
-        if (token.type === TokenType.Number) {
-            stack.push(token.value!);
-        } else if (token.type === TokenType.UnaryPlus) {
-            // No-op for integer math
-        } else if (token.type === TokenType.UnaryMinus) {
-            stack.push(-stack.pop()!);
-        } else {
-            const b = stack.pop()!;
-            const a = stack.pop()!;
-            switch (token.type) {
-                case TokenType.Plus: stack.push(a + b); break;
-                case TokenType.Minus: stack.push(a - b); break;
-                case TokenType.Multiply: stack.push(a * b); break;
-                case TokenType.Divide: 
-                    // Truncate towards zero
-                    const res = a / b;
-                    stack.push(res >= 0 ? Math.floor(res) : Math.ceil(res));
-                    break;
-            }
+function applyOperator(token: Token, stack: number[]) {
+    if (token.type === TokenType.UnaryPlus) {
+        stack.push(stack.pop()!);
+    } else if (token.type === TokenType.UnaryMinus) {
+        stack.push(-stack.pop()!);
+    } else {
+        const b = stack.pop()!;
+        const a = stack.pop()!;
+        switch (token.type) {
+            case TokenType.Plus: stack.push(a + b); break;
+            case TokenType.Minus: stack.push(a - b); break;
+            case TokenType.Multiply: stack.push(a * b); break;
+            case TokenType.Divide: 
+                const res = a / b;
+                stack.push(res >= 0 ? Math.trunc(res) : Math.ceil(res)); 
+                // Note: Math.trunc handles "truncate toward zero" for all numbers
+                // but since we are dealing with safe integers, standard truncation is:
+                // stack.push(a / b | 0); // This works for 32-bit, but for safe integers:
+                // stack.push(Math.trunc(a / b));
+                break;
+            default: throw new Error("Invalid operator");
         }
     }
+}
 
-    return stack[0];
+// Re-implementing applyOperator specifically for safe integer truncation
+function applyOperatorCorrect(token: Token, stack: number[]) {
+    if (token.type === TokenType.UnaryPlus) {
+        stack.push(stack.pop()!);
+    } else if (token.type === TokenType.UnaryMinus) {
+        stack.push(-stack.pop()!);
+    } else {
+        const b = stack.pop()!;
+        const a = stack.pop()!;
+        switch (token.type) {
+            case TokenType.Plus: stack.push(a + b); break;
+            case TokenType.Minus: stack.push(a - b); break;
+            case TokenType.Multiply: stack.push(a * b); break;
+            case TokenType.Divide: {
+                const res = a / b;
+                stack.push(Math.trunc(res));
+                break;
+            }
+            default: throw new Error("Invalid operator");
+        }
+    }
+}
+
+// Fix the loop to use the correct apply function
+function evaluateFixed(tokens: Token[]): number {
+    const outputQueue: number[] = [];
+    const operatorStack: Token[] = [];
+    const precedence: Record<TokenType, number> = {
+        [TokenType.Number]: 0,
+        [TokenType.Plus]: 1,
+        [TokenType.Minus]: 1,
+        [TokenType.Multiply]: 2,
+        [TokenType.Divide]: 2,
+        [TokenType.UnaryPlus]: 3,
+        [TokenType.UnaryMinus]: 3,
+        [TokenType.LParen]: 0,
+        [TokenType.RParen]: 0
+    };
+
+    for (const token of tokens) {
+        if (token.type === TokenType.Number) {
+            outputQueue.push(token.value!);
+        } else if (token.type === TokenType.LParen) {
+            operatorStack.push(token);
+        } else if (token.type === TokenType.RParen) {
+            while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== TokenType.LParen) {
+                applyOperatorCorrect(operatorStack.pop()!, outputQueue);
+            }
+            operatorStack.pop();
+        } else {
+            while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== TokenType.LParen) {
+                const top = operatorStack[operatorStack.length - 1];
+                const pTop = precedence[top.type];
+                const pCurr = precedence[token.type];
+                
+                // If current is unary, it has higher precedence than everything except other unaries.
+                // Standard shunting yard: if current is left-assoc and pCurr <= pTop, pop.
+                // Unary is right-assoc.
+                const isCurrUnary = token.type === TokenType.UnaryPlus || token.type === TokenType.UnaryMinus;
+                if (!isCurrUnary && pCurr <= pTop) {
+                    applyOperatorCorrect(operatorStack.pop()!, outputQueue);
+                } else if (isCurrUnary && pCurr < pTop) {
+                    applyOperatorCorrect(operatorStack.pop()!, outputQueue);
+                } else {
+                    break;
+                }
+            }
+            operatorStack.push(token);
+        }
+    }
+    while (operatorStack.length > 0) {
+        applyOperatorCorrect(operatorStack.pop()!, outputQueue);
+    }
+    return outputQueue[0];
 }
 
 function main() {
     const input = fs.readFileSync(0, "utf8");
     if (!input.trim()) return;
-    
-    const tokens = tokenize(input);
-    const postfix = parseToPostfix(tokens);
-    const result = evaluatePostfix(postfix);
-    process.stdout.write(result.toString() + "\n");
+    const tokens = parseTokens(tokenize(input));
+    console.log(evaluateFixed(tokens).toString());
 }
 
 main();

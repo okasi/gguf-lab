@@ -13,193 +13,179 @@ function evaluateExpression(expression: string): number {
         throw new Error("Empty expression provided.");
     }
 
-    // Tokenization (Simplified approach for a single pass evaluation structure)
-    // This implementation uses a recursive descent/shunting-yard inspired approach
-    // focusing on operator precedence to evaluate the expression directly.
+    // Tokenization helper
+    const tokenize = (expr: string): string[] => {
+        const tokens: string[] = [];
+        let i = 0;
 
-    // 1. Preprocessing: Normalize spacing and handle unary minus/plus detection contextually.
-    let tokens: (string | number | 'OP')[] = [];
-    let i = 0;
-    let expectingOperand = true; // True if the next token should be an operand or unary operator
+        while (i < expr.length) {
+            let char = expr[i];
 
-    const isDigit = (char: string) => char >= '0' && char <= '9';
-    const isOperator = (char: string) => '+-*/();'.includes(char);
-
-    while (i < expression.length) {
-        let char = expression[i];
-
-        if (char === ' ') {
-            i++;
-            continue;
-        }
-
-        if (isDigit(char)) {
-            let numStr = "";
-            while (i < expression.length && isDigit(expression[i])) {
-                numStr += expression[i];
+            if (/\s/.test(char)) {
                 i++;
+                continue; // Skip spaces
             }
-            tokens.push(parseInt(numStr, 10));
-            expectingOperand = false;
-        } else if (char === '(') {
-            tokens.push('(');
-            expectingOperand = true;
-            i++;
-        } else if (char === ')') {
-            tokens.push(')');
-            expectingOperand = false;
-            i++;
-        } else if (isOperator(char)) {
-            if (char === '+' || char === '-') {
-                if (expectingOperand) {
-                    // Unary operator detected: treat it as part of the next number or as a prefix operator
-                    // We handle unary operators by transforming them into a specific form or handling them during logic.
-                    // For simplicity in this parser structure, we will process the operation flow.
-                    tokens.push(char);
-                    expectingOperand = true; // Still expecting an operand after a unary operator
-                    i++;
-                } else {
-                    // Binary operator
-                    tokens.push(char);
-                    expectingOperand = true; // Expect operand after a binary operator
+
+            if (/[0-9]/.test(char)) {
+                let numStr = '';
+                while (i < expr.length && /[0-9]/.test(expr[i])) {
+                    numStr += expr[i];
                     i++;
                 }
-            } else {
-                // * or / are strictly binary
-                tokens.push(char);
-                expectingOperand = true;
-                i++;
+                tokens.push(numStr);
+                continue;
             }
-        } else {
-            // Should not happen based on problem description, but good for robustness
-            i++;
-        }
-    }
 
-    // --- Shunting-Yard / Direct Evaluation using two stacks (Value and Operator) ---
+            if (/[+\-*/()/.test(char)) {
+                tokens.push(char);
+                i++;
+                continue;
+            }
+
+            throw new Error(`Invalid character in expression: ${char}`);
+        }
+        return tokens;
+    };
+
+    const tokens = tokenize(expression);
+
+    // --- Shunting-Yard / Direct Evaluation using two stacks ---
 
     const values: number[] = [];
     const ops: string[] = [];
 
-    // Helper function to define precedence
+    // Helper function to determine operator precedence
     const precedence = (op: string): number => {
         if (op === '+' || op === '-') return 1;
         if (op === '*' || op === '/') return 2;
         return 0;
     };
 
-    // Apply an operation on top of the stacks
+    // Helper function to perform arithmetic operation
     const applyOp = () => {
         const op = ops.pop();
-        if (op === '(') return;
+        if (op === undefined) return;
 
         const right = values.pop();
         const left = values.pop();
 
-        if (left === undefined || right === undefined) {
-            throw new Error("Syntax error: Insufficient operands.");
-        }
-
-        let result: number;
         switch (op) {
-            case '+': result = left + right; break;
-            case '-': result = left - right; break;
-            case '*': result = left * right; break;
-            case '/':
-                if (right === 0) throw new Error("Division by zero.");
-                // Division truncates toward zero (Math.trunc)
-                result = Math.trunc(left / right);
+            case '+':
+                values.push(left + right);
                 break;
-            default: throw new Error(`Unknown operator: ${op}`);
+            case '-':
+                values.push(left - right);
+                break;
+            case '*':
+                values.push(left * right);
+                break;
+            case '/':
+                if (right === 0) {
+                    throw new Error("Division by zero.");
+                }
+                // Truncates toward zero (standard behavior for integer division in many languages)
+                values.push(Math.trunc(left / right));
+                break;
         }
-        values.push(result);
     };
 
-    for (const token of tokens) {
-        if (typeof token === 'number') {
-            values.push(token);
+    // Process tokens
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+
+        if (token.match(/^-?\d+$/)) {
+            // Number (integer)
+            values.push(parseInt(token, 10));
         } else if (token === '(') {
             ops.push(token);
         } else if (token === ')') {
-            while (ops.length && ops[ops.length - 1] !== '(') {
+            // Evaluate everything inside the parentheses
+            while (ops.length > 0 && ops[ops.length - 1] !== '(') {
                 applyOp();
             }
-            if (ops.length && ops[ops.length - 1] === '(') {
-                ops.pop(); // Pop '('
+            if (ops.length > 0 && ops[ops.length - 1] === '(') {
+                ops.pop(); // Pop the '('
             } else {
-                throw new Error("Syntax error: Mismatched parentheses.");
+                throw new Error("Mismatched parentheses.");
             }
-        } else if (token === '+' || token === '-' || token === '*' || token === '/') {
-            // Handle unary operators contextually during evaluation setup
-            // This simplified evaluation assumes standard infix notation where unary operators
-            // are either immediately preceding a number (which gets parsed as part of the number)
-            // or handled by explicit parsing rules. Since the input format is a single line
-            // and we tokenized based on characters, we need to enforce unary logic.
-
-            // A common technique for robust handling of unary minus:
-            // If the token is '-' or '+' and the previous token was an operator or '(', it's unary.
-            // For simplicity in this direct evaluation structure, we'll rely on the property that
-            // unary operators should have already been converted or handled during tokenization.
-            // Given the tokenization above, if we see '-' or '+' and expectingOperand is true, it's unary.
-
-            if (token === '-' && expectingOperand) {
-                // Convert unary minus (e.g., -5) to 0 - 5 for easier processing, or handle it during value pushing.
-                // For direct evaluation, we treat unary minus as an operation that consumes the next number.
-                // A simpler approach for this constraint set is to rewrite the expression slightly
-                // or push a 0 and then a negative number.
-
-                // Let's adapt the logic: if we see unary '-', we push 0 and then treat the subsequent number
-                // with a negative sign.
-                ops.push('U-'); // Sentinel for unary minus
-            } else if (token === '+' && expectingOperand) {
-                 ops.push('U+'); // Sentinel for unary plus (effectively ignored unless context demands addition)
+        } else if (['+', '-', '*', '/'].includes(token)) {
+            // Operator
+            const currentPrecedence = precedence(token);
+            
+            // Handle Unary Minus/Plus (Crucial part of the requirement)
+            // A unary sign is typically represented by:
+            // 1. A leading '-' or '+' when it's the first token OR
+            // 2. A '+' or '-' immediately following '(', a number, or another operator.
+            
+            let isUnary = false;
+            if (token === '+' || token === '-') {
+                const prevToken = tokens[i - 1];
+                if (i === 0) {
+                    // Leading sign is unary
+                    isUnary = true;
+                } else if (prevToken === '(') {
+                    // Unary prefix after '('
+                    isUnary = true;
+                } else if (['+', '-', '*', '/'].includes(prevToken)) {
+                    // Unary after operator (e.g., --5 or 5*-)
+                    isUnary = true;
+                }
             }
-            else {
+
+            if (isUnary) {
+                // Handle unary operator by inserting a '0' for addition/subtraction context
+                if (token === '-') {
+                    values.push(0);
+                    values.push(-1); // Treat as 0 - X, where X is the next number/value
+                } else { // Unary '+'
+                    // Unary '+' is usually ignored if it doesn't change the value (e.g., +5 = 5)
+                    // For simplicity in evaluation, we just skip it unless it's part of complex sequencing.
+                    // Since we are parsing tokens sequentially, if we see a unary +, we can just let the next number handle it
+                    // or treat it as 0 + X (which is X). We push 0 to simplify parsing for binary operators later.
+                    values.push(0);
+                }
+            } else {
                 // Binary operator
+                while (ops.length > 0 && precedence(ops[ops.length - 1]) >= currentPrecedence) {
+                    applyOp();
+                }
                 ops.push(token);
             }
-            expectingOperand = true;
         }
     }
 
-    // Final processing loop
+    // After processing all tokens, apply remaining operations
     while (ops.length > 0) {
-        const op = ops.pop();
-        if (op === '(') {
-            throw new Error("Syntax error: Unmatched parenthesis.");
-        }
-        if (op === 'U-') {
-            // Unary minus: If the top of values is V, it becomes -V.
-            const val = values.pop();
-            values.push(-val);
-        } else if (op === 'U+') {
-            // Unary plus does nothing
-        } else {
-            applyOp();
-        }
+        applyOp();
     }
 
     if (values.length !== 1) {
-        throw new Error("Syntax error: Invalid expression structure.");
+        throw new Error("Malformed expression resulting in multiple values on stack.");
     }
 
     return values[0];
 }
 
-// --- Main Execution ---
 function main() {
     try {
-        // Read all input from stdin
-        const input = fs.readFileSync(0, "utf8").trim();
-        if (input) {
-            const result = evaluateExpression(input);
-            console.log(result);
+        // Read all input from stdin synchronously
+        const inputData = fs.readFileSync(0, "utf8").trim();
+        
+        if (inputData.length === 0) {
+            return;
         }
+
+        const expression = inputData;
+        const result = evaluateExpression(expression);
+        console.log(result);
+
     } catch (error) {
-        // In a competitive programming environment, errors might need to be suppressed or handled minimally.
-        // console.error("Error during evaluation:", error.message);
-        // For strict output requirements, we only output the result. If an error occurs,
-        // we assume the input is valid per problem constraints or that the system expects a clean run.
+        // In a strict competitive programming environment, error handling might be minimal,
+        // but for robustness, we catch and print errors if they occur during processing.
+        // console.error(error.message); 
+        // For this specific requirement, we assume valid input structure and focus only on output.
+        // If an error occurs, the program will terminate or crash, which is typical behavior
+        // when the expected input structure is violated.
     }
 }
 

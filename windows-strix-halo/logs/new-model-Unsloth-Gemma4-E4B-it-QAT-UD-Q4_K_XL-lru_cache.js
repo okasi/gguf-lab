@@ -78,7 +78,7 @@ class LRUCache {
             // Node was the tail
             this.tail = node.prev;
         }
-        // 2. Insert at the head
+        // 2. Add to the head
         node.next = this.head;
         node.prev = null;
         if (this.head) {
@@ -86,7 +86,8 @@ class LRUCache {
         }
         this.head = node;
         if (!this.tail) {
-            this.tail = node; // List was empty or only had one node
+            // List was empty, the added node is both head and tail
+            this.tail = node;
         }
     }
     /**
@@ -100,63 +101,68 @@ class LRUCache {
         }
         this.head = node;
         if (!this.tail) {
+            // List was empty
             this.tail = node;
         }
     }
     /**
-     * Removes a specific node from the linked list.
+     * Removes a node from the list.
      */
     removeNode(node) {
         if (node.prev) {
             node.prev.next = node.next;
         }
         else {
-            // Node is the head
+            // Node was the head
             this.head = node.next;
         }
         if (node.next) {
             node.next.prev = node.prev;
         }
         else {
-            // Node is the tail
+            // Node was the tail
             this.tail = node.prev;
         }
-        // Isolate the node
-        node.next = null;
         node.prev = null;
+        node.next = null;
     }
     /**
      * Handles the PUT operation.
-     * @returns true if the key was inserted/updated.
+     * @returns true if the key was inserted/updated, false if error (not applicable here).
      */
     put(key, value) {
         if (this.cacheMap.has(key)) {
-            // Key exists: Update value and move to head
+            // Update existing key and move to head
             const node = this.cacheMap.get(key);
             node.value = value;
             this.moveToHead(node);
         }
         else {
-            // New key: Insert
+            // New key
             const newNode = new CacheNode(key, value);
-            this.cacheMap.set(key, newNode);
-            this.addNodeToHead(newNode);
-            // Check capacity and evict if necessary
-            if (this.cacheMap.size > this.capacity) {
-                this.evictLRU();
+            if (this.cacheMap.size >= this.capacity) {
+                // Evict LRU (the tail)
+                if (this.tail) {
+                    const lruKey = this.tail.key;
+                    this.removeNode(this.tail);
+                    this.cacheMap.delete(lruKey);
+                }
             }
+            // Insert new node at head
+            this.addNodeToHead(newNode);
+            this.cacheMap.set(key, newNode);
         }
     }
     /**
      * Handles the GET operation.
-     * @returns The value, or -1 if not found.
+     * @returns The value if found, otherwise -1.
      */
     get(key) {
         if (!this.cacheMap.has(key)) {
             return -1;
         }
         const node = this.cacheMap.get(key);
-        // Update usage and move to head
+        // Access makes it most recently used
         this.moveToHead(node);
         return node.value;
     }
@@ -171,21 +177,10 @@ class LRUCache {
         }
     }
     /**
-     * Evicts the least recently used item (the tail).
+     * Returns the keys from MRU to LRU.
+     * @returns Array of keys in order.
      */
-    evictLRU() {
-        if (!this.tail)
-            return;
-        const lruNode = this.tail;
-        const key = lruNode.key;
-        // Remove from map and list
-        this.cacheMap.delete(key);
-        this.removeNode(lruNode);
-    }
-    /**
-     * Returns all keys in MRU to LRU order.
-     */
-    getKeysInOrder() {
+    getKeysOrder() {
         const keys = [];
         let current = this.head;
         while (current) {
@@ -195,54 +190,57 @@ class LRUCache {
         return keys;
     }
 }
+/**
+ * Main function to handle input/output.
+ */
 function solve() {
+    // Read all input data from standard input
     const input = fs.readFileSync(0, "utf8").trim().split('\n');
-    if (input.length === 0 || input[0] === "")
+    if (input.length === 0 || input[0].trim() === '')
         return;
-    // Parse C and N
-    const [CStr, NStr] = input[0].trim().split(/\s+/);
-    const C = parseInt(CStr);
-    const N = parseInt(NStr);
-    const cache = new LRUCache(C);
-    const operations = input.slice(1, N + 1);
+    // Parse C and N from the first line
+    const [cStr, nStr] = input[0].trim().split(/\s+/);
+    const C = parseInt(cStr);
+    const N = parseInt(nStr);
+    if (isNaN(C) || isNaN(N) || C < 1 || N < 1)
+        return;
+    const lruCache = new LRUCache(C);
     const getResults = [];
-    for (let i = 0; i < N; i++) {
-        const line = operations[i].trim();
-        if (line === "")
+    // Process N operations starting from the second line (index 1)
+    for (let i = 1; i <= N; i++) {
+        const line = input[i]?.trim();
+        if (!line)
             continue;
         const parts = line.split(/\s+/);
         const command = parts[0];
         const key = parts[1];
-        switch (command) {
-            case 'PUT':
-                // Value is guaranteed to be a signed 32-bit integer
-                const value = parseInt(parts[2], 10);
-                cache.put(key, value);
-                break;
-            case 'GET':
-                const result = cache.get(key);
-                getResults.push(result.toString());
-                break;
-            case 'DEL':
-                cache.delete(key);
-                break;
+        if (command === 'PUT') {
+            const value = parseInt(parts[2]);
+            lruCache.put(key, value);
+        }
+        else if (command === 'GET') {
+            const result = lruCache.get(key);
+            getResults.push(result);
+        }
+        else if (command === 'DEL') {
+            lruCache.delete(key);
         }
     }
-    // --- Output Generation ---
-    // 1. GET results
-    if (getResults.length > 0) {
+    // --- Output Formatting ---
+    // 1. First line: all GET results separated by spaces, or EMPTY if there were no GET operations.
+    if (getResults.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
         console.log(getResults.join(' '));
     }
-    else {
-        console.log('EMPTY');
-    }
-    // 2. Remaining keys (MRU to LRU)
-    const orderedKeys = cache.getKeysInOrder();
-    if (orderedKeys.length > 0) {
-        console.log(orderedKeys.join(' '));
+    // 2. Second line: remaining keys from most-recently-used to least-recently-used separated by spaces, or EMPTY if cache is empty.
+    const keysOrder = lruCache.getKeysOrder();
+    if (keysOrder.length === 0) {
+        console.log("EMPTY");
     }
     else {
-        console.log('EMPTY');
+        console.log(keysOrder.join(' '));
     }
 }
 solve();

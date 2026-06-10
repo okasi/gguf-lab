@@ -6,7 +6,8 @@ param(
     [string]$SuitesOverride = "",
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "auto",
-    [string]$AliasSuffix = ""
+    [string]$AliasSuffix = "",
+    [int]$SpecDraftNMaxOverride = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -235,15 +236,20 @@ foreach ($m in $Models) {
     $imageMinTokens = Get-ModelValue -Model $m -Key "ImageMinTokens" -Default "256"
     $flashAttn = Get-FlashAttnValue -Model $m
     $cacheTypes = Get-CacheTypeValues -Model $m
+    $runModel = $m
+    if ($SpecDraftNMaxOverride -gt 0) {
+        $runModel = @{} + $m
+        $runModel["SpecDraftNMax"] = $SpecDraftNMaxOverride
+    }
 
-    if ($m.ContainsKey("RawServerArgs") -and $null -ne $m.RawServerArgs) {
-        $serverArgs = @($m.RawServerArgs | ForEach-Object {
+    if ($runModel.ContainsKey("RawServerArgs") -and $null -ne $runModel.RawServerArgs) {
+        $serverArgs = @($runModel.RawServerArgs | ForEach-Object {
             $arg = "$_"
             $arg.Replace("{PORT}", "$Port")
         })
     } else {
         $serverArgs = @(
-            "--model", $m.Model,
+            "--model", $runModel.Model,
             "--alias", $runAlias,
             "--host", "127.0.0.1",
             "--port", "$Port",
@@ -261,23 +267,23 @@ foreach ($m in $Models) {
             "--seed", "3407",
             "-n", "32768"
         )
-        if (-not ($m.ContainsKey("OmitImageMinTokens") -and $m.OmitImageMinTokens)) {
+        if (-not ($runModel.ContainsKey("OmitImageMinTokens") -and $runModel.OmitImageMinTokens)) {
             $serverArgs += @("--image-min-tokens", $imageMinTokens)
         }
-        if (-not ($m.ContainsKey("OmitMinP") -and $m.OmitMinP)) {
+        if (-not ($runModel.ContainsKey("OmitMinP") -and $runModel.OmitMinP)) {
             $serverArgs += @("--min-p", $minP)
         }
-        if ($m.ContainsKey("Mmproj") -and $null -ne $m.Mmproj -and "$($m.Mmproj)" -ne "") {
-            $serverArgs += @("--mmproj", $m.Mmproj)
+        if ($runModel.ContainsKey("Mmproj") -and $null -ne $runModel.Mmproj -and "$($runModel.Mmproj)" -ne "") {
+            $serverArgs += @("--mmproj", $runModel.Mmproj)
         }
-        $serverArgs = Add-SpeculativeServerArgs -Model $m -ServerArgs $serverArgs
-        if ($m.ContainsKey("ExtraServerArgs") -and $null -ne $m.ExtraServerArgs) {
-            $serverArgs += $m.ExtraServerArgs
+        $serverArgs = Add-SpeculativeServerArgs -Model $runModel -ServerArgs $serverArgs
+        if ($runModel.ContainsKey("ExtraServerArgs") -and $null -ne $runModel.ExtraServerArgs) {
+            $serverArgs += $runModel.ExtraServerArgs
         }
-        if ($m.ContainsKey("GptOss") -and $m.GptOss) {
+        if ($runModel.ContainsKey("GptOss") -and $runModel.GptOss) {
             $serverArgs += @("--jinja")
         }
-        $serverArgs = Add-ReasoningServerArgs -ServerArgs $serverArgs -Reasoning $Reasoning -ModelName ([string]$m.Name)
+        $serverArgs = Add-ReasoningServerArgs -ServerArgs $serverArgs -Reasoning $Reasoning -ModelName ([string]$runModel.Name)
     }
 
     $serverProcess = $null

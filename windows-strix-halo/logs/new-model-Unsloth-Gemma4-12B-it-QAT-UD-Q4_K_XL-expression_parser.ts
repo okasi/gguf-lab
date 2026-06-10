@@ -1,104 +1,146 @@
 ﻿import * as fs from 'fs';
 
 /**
- * A simple recursive descent parser for arithmetic expressions.
- * Handles: 
- * - Addition (+), Subtraction (-)
- * - Multiplication (*), Division (/)
- * - Unary plus (+), Unary minus (-)
- * - Parentheses ()
- * - Integer literals
- * - Truncated division towards zero.
+ * A simple arithmetic expression evaluator.
+ * Supports integers, + - * /, unary + -, and parentheses.
+ * Division truncates toward zero.
  */
-class Evaluator {
-    private tokens: string[];
-    private pos: number = 0;
 
-    constructor(input: string) {
-        // Tokenize the input: matches integers, operators, and parentheses
-        this.tokens = input.match(/\d+|[+\-*/()]/g) || [];
-    }
+type Token =
+    | { type: 'Number'; value: number }
+    | { type: 'Operator'; value: string; precedence: number; isUnary: boolean }
+    | { type: 'LParen' }
+    | { type: 'RParen' };
 
-    private peek(): string | undefined {
-        return this.tokens[this.pos];
-    }
+function tokenize(input: string): Token[] {
+    const tokens: Token[] = [];
+    let i = 0;
 
-    private consume(): string {
-        return this.tokens[this.pos++];
-    }
+    while (i < input.length) {
+        const char = input[i];
 
-    public evaluate(): number {
-        const result = this.parseExpression();
-        return result;
-    }
-
-    // Grammar:
-    // Expression -> Term { (+|-) Term }
-    // Term       -> Factor { (*|/) Factor }
-    // Factor     -> (+|-) Factor | (Expression) | Number
-    
-    private parseExpression(): number {
-        let left = this.parseTerm();
-
-        while (this.peek() === '+' || this.peek() === '-') {
-            const op = this.consume();
-            const right = this.parseTerm();
-            if (op === '+') left += right;
-            else left -= right;
+        if (/\s/.test(char)) {
+            i++;
+            continue;
         }
-        return left;
+
+        if (/\d/.test(char)) {
+            let numStr = '';
+            while (i < input.length && /\d/.test(input[i])) {
+                numStr += input[i];
+                i++;
+            }
+            tokens.push({ type: 'Number', value: parseInt(numStr, 10) });
+            continue;
+        }
+
+        if (char === '(') {
+            tokens.push({ type: 'LParen' });
+            i++;
+            continue;
+        }
+
+        if (char === ')') {
+            tokens.push({ type: 'RParen' });
+            i++;
+            continue;
+        }
+
+        if (['+', '-', '*', '/'].includes(char)) {
+            // Determine if operator is unary
+            // It is unary if it's at the start or follows an operator or '('
+            const prev = tokens[tokens.length - 1];
+            const isUnary = !prev || (prev.type === 'Operator' || prev.type === 'LParen');
+            
+            let precedence = 0;
+            if (isUnary) {
+                precedence = 3; // Highest
+            } else {
+                if (char === '+' || char === '-') precedence = 1;
+                else precedence = 2;
+            }
+
+            tokens.push({ 
+                type: 'Operator', 
+                value: char, 
+                precedence, 
+                isUnary 
+            });
+            i++;
+            continue;
+        }
+
+        i++;
+    }
+    return tokens;
+}
+
+function evaluate(input: string): number {
+    const tokens = tokenize(input);
+    const outputQueue: Token[] = [];
+    const operatorStack: Token[] = [];
+
+    // Shunting-yard Algorithm
+    for (const token of tokens) {
+        if (token.type === 'Number') {
+            outputQueue.push(token);
+        } else if (token.type === 'LParen') {
+            operatorStack.push(token);
+        } else if (token.type === 'RParen') {
+            while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== 'LParen') {
+                outputQueue.push(operatorStack.pop()!);
+            }
+            operatorStack.pop(); // Remove LParen
+        } else {
+            // Operator
+            while (
+                operatorStack.length > 0 &&
+                operatorStack[operatorStack.length - 1].type === 'Operator' &&
+                operatorStack[operatorStack.length - 1].precedence >= token.precedence
+            ) {
+                outputQueue.push(operatorStack.pop()!);
+            }
+            operatorStack.push(token);
+        }
     }
 
-    private parseTerm(): number {
-        let left = this.parseFactor();
+    while (operatorStack.length > 0) {
+        outputQueue.push(operatorStack.pop()!);
+    }
 
-        while (this.peek() === '*' || this.peek() === '/') {
-            const op = this.consume();
-            const right = this.parseFactor();
-            if (op === '*') {
-                left *= right;
+    // Evaluate Postfix
+    const stack: number[] = [];
+    for (const token of outputQueue) {
+        if (token.type === 'Number') {
+            stack.push(token.value);
+        } else if (token.type === 'Operator') {
+            if (token.isUnary) {
+                const a = stack.pop()!;
+                switch (token.value) {
+                    case '+': stack.push(a); break;
+                    case '-': stack.push(-a); break;
+                }
             } else {
-                // Truncate toward zero division
-                left = Math.trunc(left / right);
+                const b = stack.pop()!;
+                const a = stack.pop()!;
+                switch (token.value) {
+                    case '+': stack.push(a + b); break;
+                    case '-': stack.push(a - b); break;
+                    case '*': stack.push(a * b); break;
+                    case '/': 
+                        // Truncate toward zero
+                        const res = a / b;
+                        stack.push(res > 0 ? Math.floor(res) : Math.ceil(res));
+                        break;
+                }
             }
         }
-        return left;
     }
 
-    private parseFactor(): number {
-        const token = this.peek();
-
-        if (token === '+') {
-            this.consume();
-            return this.parseFactor();
-        }
-
-        if (token === '-') {
-            this.consume();
-            return -this.parseFactor();
-        }
-
-        if (token === '(') {
-            this.consume(); // consume (
-            const result = this.parseExpression();
-            this.consume(); // consume )
-            return result;
-        }
-
-        const val = parseInt(this.consume()!, 10);
-        return val;
-    }
+    return stack[0];
 }
 
-function main() {
-    try {
-        const input = fs.readFileSync(0, "utf8").trim();
-        if (!input) return;
-        const evaluator = new Evaluator(input);
-        console.log(evaluator.evaluate());
-    } catch (e) {
-        // Silent error handling for malformed input
-    }
+const input = fs.readFileSync(0, "utf8").trim();
+if (input) {
+    console.log(evaluate(input));
 }
-
-main();
