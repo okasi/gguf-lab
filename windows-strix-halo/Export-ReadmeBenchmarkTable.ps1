@@ -12,9 +12,9 @@ $LogDir = Join-Path $Root "logs"
 $BenchLoop = Join-Path $Root ".venv-benchloop\Scripts\benchloop.exe"
 
 if (-not $ModelsJson) { $ModelsJson = Join-Path $Root "readme-models.json" }
-if (-not $ReasoningOnBenchExportJson) { $ReasoningOnBenchExportJson = Join-Path $LogDir "readme-refresh-benchloop-export-20260609.json" }
+if (-not $ReasoningOnBenchExportJson) { $ReasoningOnBenchExportJson = Join-Path $LogDir "readme-refresh-benchloop-export.json" }
 if (-not $ReasoningOffBenchExportJson) { $ReasoningOffBenchExportJson = Join-Path $LogDir "readme-noreason-benchloop-export.json" }
-if (-not $ReasoningOnHardTsCsv) { $ReasoningOnHardTsCsv = Join-Path $LogDir "readme-refresh-personal-20260609-results.csv" }
+if (-not $ReasoningOnHardTsCsv) { $ReasoningOnHardTsCsv = Join-Path $LogDir "readme-refresh-personal-results.csv" }
 if (-not $ReadmePath) { $ReadmePath = Join-Path (Split-Path $Root -Parent) "README.md" }
 
 function ConvertTo-PlainHashtable {
