@@ -9,7 +9,6 @@ $Download = Join-Path $Root "Download-HF-File-Parallel.ps1"
 
 $KnownSizes = @{
     "Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF|Qwopus3.6-35B-A3B-v1-MTP-IQ4_XS.gguf" = 19389003520
-    "Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF|Qwopus3.6-35B-A3B-v1-MTP-Q4_K_M.gguf" = 21712410368
     "Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF|Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf" = 25346479872
     "mradermacher/Holo-3.1-9B-GGUF|Holo-3.1-9B.Q5_K_M.gguf" = 6467970976
     "mradermacher/Holo-3.1-9B-GGUF|Holo-3.1-9B.mmproj-f16.gguf" = 918166624
@@ -67,7 +66,6 @@ function Download-HfModelFile {
 $mtpRepo = "Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF"
 $mtpFiles = @(
     "Qwopus3.6-35B-A3B-v1-MTP-IQ4_XS.gguf",
-    "Qwopus3.6-35B-A3B-v1-MTP-Q4_K_M.gguf",
     "Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf"
 )
 

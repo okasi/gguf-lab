@@ -245,7 +245,7 @@ foreach ($m in $Models) {
     if ($runModel.ContainsKey("RawServerArgs") -and $null -ne $runModel.RawServerArgs) {
         $serverArgs = @($runModel.RawServerArgs | ForEach-Object {
             $arg = "$_"
-            $arg.Replace("{PORT}", "$Port")
+            $arg.Replace("{PORT}", "$Port").Replace("{ALIAS}", $runAlias)
         })
     } else {
         $serverArgs = @(

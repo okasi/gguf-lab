@@ -171,11 +171,11 @@ if (-not $BenchLoopOnly -and ($hardModels.Count -gt 0 -or (-not $Resume))) {
     "$(Get-Date -Format o) skipping hard-ts; all models complete" | Out-File -Encoding utf8 -Append $runnerLog
 }
 
-$exportScript = Join-Path $Root "Export-ReadmeNoReasoningTable.ps1"
+$exportScript = Join-Path $Root "Export-ReadmeBenchmarkTable.ps1"
 if (Test-Path -LiteralPath $exportScript) {
     "$(Get-Date -Format o) exporting README table" | Out-File -Encoding utf8 -Append $runnerLog
     & $exportScript *>> $runnerLog
-    "$(Get-Date -Format o) Export-ReadmeNoReasoningTable.ps1 exit $LASTEXITCODE" | Out-File -Encoding utf8 -Append $runnerLog
+    "$(Get-Date -Format o) Export-ReadmeBenchmarkTable.ps1 exit $LASTEXITCODE" | Out-File -Encoding utf8 -Append $runnerLog
 }
 
 if ($benchExit -ne 0 -or $hardExit -ne 0) {

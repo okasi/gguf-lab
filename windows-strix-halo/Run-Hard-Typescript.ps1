@@ -1,4 +1,4 @@
-﻿param(
+param(
     [int]$GemmaPort = 19380,
     [int]$GptOssPort = 19381,
     [int]$TextMaxTokens = 256,
@@ -200,7 +200,14 @@ foreach ($parsedModel in $parsedModels) {
     } elseif ($model.ContainsKey("SpecDraftNMax") -and $null -ne $model.SpecDraftNMax) {
         $runArgs.SpecDraftNMax = [int]$model.SpecDraftNMax
     }
-    $Runs += New-BatchRun @runArgs
+    $run = New-BatchRun @runArgs
+    if ($model.ContainsKey("RawServerArgs") -and $null -ne $model.RawServerArgs) {
+        $port = [int]$run.Port
+        $run.Args = @($model.RawServerArgs | ForEach-Object {
+            "$_".Replace("{PORT}", "$port").Replace("{ALIAS}", $runAlias)
+        })
+    }
+    $Runs += $run
 }
 if ($OnlyModels.Count -gt 0) {
     $Runs = @($Runs | Where-Object { $OnlyModels -contains $_.Name -or $OnlyModels -contains $_.Alias })

@@ -77,16 +77,13 @@ MTP add-on, only for MTP GGUF files:
 
 Models covered by this preset:
 
-- `Jackrong/Qwopus3.5-9B-Coder-GGUF / Qwopus3.5-9B-coder-Exp-Q5_K_M.gguf`
 - `Jackrong/Qwopus3.6-27B-v2-MTP-GGUF / Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf`
-- `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF / Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf`
-- `Hcompany/Holo-3.1-35B-A3B-GGUF / q4_k_m.gguf`
-- `jcbtc/CHADROCK3.6-35B-UNCENSORED-MTP-STRIX-LEAN` (keep `--reasoning-format deepseek`)
+- **Primary 35B:** `Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF / Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf` with `--spec-draft-n-max 2`, sampler `0.85 / 0.95 / 20`, `--reasoning off`
 
 Vision:
 
 - Qwopus 27B MTP: use the matching non-MTP Qwopus 27B v2 mmproj.
-- Qwopus 35B / Holo 35B: use a compatible 35B A3B mmproj.
+- Qwopus 35B: use the Jackrong 35B `mmproj-F32.gguf`.
 - For image-heavy runs, compare with MTP off.
 
 ## Gemma 4
