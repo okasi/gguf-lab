@@ -80,7 +80,6 @@ Sampler column uses `temp / top_p / top_k`. Every row uses `presence_penalty=0` 
 | Under 14 GiB | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 11.45 GiB | 42.23 tok/s | 42.95 tok/s | 46.28 tok/s | 22/25 | 79.5 | 84.8 | 37.6 tok/s | 100.0 | 83.3 | 96.9 |
 | Over 14 GiB | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64` | auto | 18.82 GiB | 72.56 tok/s | 65.37 tok/s | 65.77 tok/s | 16/25 | 80.6 | 84.2 | 58.95 tok/s | 100.0 | 83.3 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 22.71 GiB | 69.7 tok/s | 62.27 tok/s | 60.11 tok/s | 18/25 | 79.8 | 83.8 | 54.17 tok/s | 93.8 | 90.0 | 96.9 |
-| Over 14 GiB | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 24.32 GiB | 57.54 tok/s | 72.44 tok/s | 56.65 tok/s | 15/25 | 82.2 | 87.3 | 50.23 tok/s | 100.0 | 96.7 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 27.65 GiB | 18.5 tok/s | 21.41 tok/s | 26.05 tok/s | 12/25 | 77.4 | 85.7 | 19.52 tok/s | 100.0 | 90.0 | 96.9 |
 | Over 14 GiB | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 28.25 GiB | 59 tok/s | 57.57 tok/s | 55.8 tok/s | 18/25 | 81.4 | 85.7 | 51.02 tok/s | 100.0 | 93.3 | 96.9 |
 | Over 14 GiB | **`Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (main 35B)** | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 30.02 GiB | 51.81 tok/s | 58.08 tok/s | 63.41 tok/s | 20/25 | 82.1 | 87.2 | 49.54 tok/s | 100.0 | 96.7 | 96.9 |

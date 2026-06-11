@@ -8,7 +8,6 @@ param(
 )
 
 $Mtp35BModels = @(
-    "Jackrong-Qwopus3.6-35B-A3B-v1-MTP-IQ4_XS-nmax2",
     "Jackrong-Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M-nmax2"
 )
 
