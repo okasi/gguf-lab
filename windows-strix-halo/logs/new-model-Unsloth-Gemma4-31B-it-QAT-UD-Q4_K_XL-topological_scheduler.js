@@ -73,10 +73,12 @@ class MinHeap {
             let left = 2 * index + 1;
             let right = 2 * index + 2;
             let smallest = index;
-            if (left < this.heap.length && this.compare(this.heap[left], this.heap[smallest]) < 0)
+            if (left < this.heap.length && this.compare(this.heap[left], this.heap[smallest]) < 0) {
                 smallest = left;
-            if (right < this.heap.length && this.compare(this.heap[right], this.heap[smallest]) < 0)
+            }
+            if (right < this.heap.length && this.compare(this.heap[right], this.heap[smallest]) < 0) {
                 smallest = right;
+            }
             if (smallest === index)
                 break;
             [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
@@ -85,30 +87,26 @@ class MinHeap {
     }
 }
 function solve() {
-    const input = fs.readFileSync(0, 'utf8');
-    const lines = input.split(/\s+/);
+    const input = fs.readFileSync(0, "utf8").split(/\s+/);
     let ptr = 0;
-    if (lines[ptr] === "")
-        ptr++;
-    if (ptr >= lines.length)
+    if (ptr >= input.length)
         return;
-    const N = parseInt(lines[ptr++]);
-    const M = parseInt(lines[ptr++]);
+    const N = parseInt(input[ptr++]);
+    const M = parseInt(input[ptr++]);
     if (isNaN(N))
         return;
     const tasks = [];
-    for (let i = 0; i < N; i++) {
-        tasks.push(lines[ptr++]);
-    }
-    const adj = new Map();
     const inDegree = new Map();
-    for (const task of tasks) {
-        adj.set(task, []);
+    const adj = new Map();
+    for (let i = 0; i < N; i++) {
+        const task = input[ptr++];
+        tasks.push(task);
         inDegree.set(task, 0);
+        adj.set(task, []);
     }
     for (let i = 0; i < M; i++) {
-        const u = lines[ptr++];
-        const v = lines[ptr++];
+        const u = input[ptr++];
+        const v = input[ptr++];
         adj.get(u)?.push(v);
         inDegree.set(v, (inDegree.get(v) || 0) + 1);
     }
@@ -120,21 +118,21 @@ function solve() {
     }
     const result = [];
     while (pq.size() > 0) {
-        const u = pq.pop();
-        result.push(u);
-        const neighbors = adj.get(u) || [];
-        for (const v of neighbors) {
-            inDegree.set(v, inDegree.get(v) - 1);
-            if (inDegree.get(v) === 0) {
-                pq.push(v);
+        const curr = pq.pop();
+        result.push(curr);
+        const neighbors = adj.get(curr) || [];
+        for (const next of neighbors) {
+            inDegree.set(next, inDegree.get(next) - 1);
+            if (inDegree.get(next) === 0) {
+                pq.push(next);
             }
         }
     }
     if (result.length === N) {
-        process.stdout.write(result.join(' ') + '\n');
+        process.stdout.write(result.join(" ") + "\n");
     }
     else {
-        process.stdout.write('IMPOSSIBLE\n');
+        process.stdout.write("IMPOSSIBLE\n");
     }
 }
 solve();

@@ -1,56 +1,61 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
+const fs_1 = __importDefault(require("fs"));
 class MinHeap {
     constructor() {
         this.items = [];
+    }
+    get size() {
+        return this.items.length;
     }
     push(item) {
         this.items.push(item);
         this._bubbleUp(this.items.length - 1);
     }
     pop() {
-        if (this.items.length === 0) {
+        if (this.items.length === 0)
             return undefined;
+        const top = this.items[0];
+        const last = this.items.pop();
+        if (this.items.length > 0) {
+            this.items[0] = last;
+            this._sinkDown(0);
         }
-        if (this.items.length === 1) {
-            return this.items.pop();
-        }
-        const root = this.items[0];
-        this.items[0] = this.items.pop();
-        this._sinkDown(0);
-        return root;
+        return top;
     }
-    size() {
-        return this.items.length;
+    peek() {
+        return this.items[0];
     }
-    _bubbleUp(index) {
-        while (index > 0) {
-            const parent = Math.floor((index - 1) / 2);
-            if (this.items[index] < this.items[parent]) {
-                this._swap(index, parent);
-                index = parent;
+    _bubbleUp(idx) {
+        while (idx > 0) {
+            const parentIdx = (idx - 1) >> 1;
+            if (this.items[idx] < this.items[parentIdx]) {
+                this._swap(idx, parentIdx);
+                idx = parentIdx;
             }
             else {
                 break;
             }
         }
     }
-    _sinkDown(index) {
-        const length = this.items.length;
+    _sinkDown(idx) {
+        const n = this.items.length;
         while (true) {
-            const left = 2 * index + 1;
-            const right = 2 * index + 2;
-            let smallest = index;
-            if (left < length && this.items[left] < this.items[smallest]) {
+            let smallest = idx;
+            const left = 2 * idx + 1;
+            const right = 2 * idx + 2;
+            if (left < n && this.items[left] < this.items[smallest]) {
                 smallest = left;
             }
-            if (right < length && this.items[right] < this.items[smallest]) {
+            if (right < n && this.items[right] < this.items[smallest]) {
                 smallest = right;
             }
-            if (smallest !== index) {
-                this._swap(index, smallest);
-                index = smallest;
+            if (smallest !== idx) {
+                this._swap(idx, smallest);
+                idx = smallest;
             }
             else {
                 break;
@@ -63,67 +68,53 @@ class MinHeap {
         this.items[j] = temp;
     }
 }
-function solve(input) {
-    const lines = input.trim().split(/\r?\n/);
-    if (lines.length < 2) {
-        return "IMPOSSIBLE";
-    }
-    const [nStr, mStr] = lines[0].trim().split(/\s+/).map(Number);
-    if (isNaN(nStr) || isNaN(mStr)) {
-        return "IMPOSSIBLE";
-    }
-    const N = nStr;
-    const M = mStr;
-    const taskNames = lines[1].trim().split(/\s+/);
-    if (taskNames.length !== N) {
-        return "IMPOSSIBLE";
-    }
+function solve() {
+    const input = fs_1.default.readFileSync(0, "utf8").trim();
+    const lines = input.split(/\r?\n/);
+    let idx = 0;
+    const firstLineParts = lines[idx++].trim().split(/\s+/);
+    const N = parseInt(firstLineParts[0], 10);
+    const M = parseInt(firstLineParts[1], 10);
+    const taskNames = lines[idx++].trim().split(/\s+/);
     const adj = new Map();
     const inDegree = new Map();
-    for (const name of taskNames) {
-        adj.set(name, []);
-        inDegree.set(name, 0);
+    for (const task of taskNames) {
+        adj.set(task, []);
+        inDegree.set(task, 0);
     }
     for (let i = 0; i < M; i++) {
-        if (i + 2 >= lines.length) {
-            break;
-        }
-        const parts = lines[i + 2].trim().split(/\s+/);
-        if (parts.length < 2) {
-            continue;
-        }
-        const [A, B] = parts;
-        if (!adj.has(A) || !adj.has(B)) {
-            return "IMPOSSIBLE";
-        }
-        adj.get(A).push(B);
-        inDegree.set(B, (inDegree.get(B) || 0) + 1);
+        const parts = lines[idx++].trim().split(/\s+/);
+        const from = parts[0];
+        const to = parts[1];
+        adj.get(from).push(to);
+        inDegree.set(to, inDegree.get(to) + 1);
     }
-    const heap = new MinHeap();
-    for (const [name, deg] of inDegree) {
-        if (deg === 0) {
-            heap.push(name);
+    const pq = new MinHeap();
+    for (const task of taskNames) {
+        if (inDegree.get(task) === 0) {
+            pq.push(task);
         }
     }
     const result = [];
-    while (heap.size() > 0) {
-        const current = heap.pop();
-        result.push(current);
-        const neighbors = adj.get(current);
+    while (pq.size > 0) {
+        const task = pq.pop();
+        result.push(task);
+        const neighbors = adj.get(task);
         if (neighbors) {
             for (const neighbor of neighbors) {
-                const newDeg = (inDegree.get(neighbor) || 0) - 1;
-                inDegree.set(neighbor, newDeg);
-                if (newDeg === 0) {
-                    heap.push(neighbor);
+                const newInDegree = inDegree.get(neighbor) - 1;
+                inDegree.set(neighbor, newInDegree);
+                if (newInDegree === 0) {
+                    pq.push(neighbor);
                 }
             }
         }
     }
-    if (result.length !== N) {
-        return "IMPOSSIBLE";
+    if (result.length < N) {
+        console.log("IMPOSSIBLE");
     }
-    return result.join(" ");
+    else {
+        console.log(result.join(" "));
+    }
 }
-const input = (0, fs_1.readFileSync)(0, "utf8");
-console.log(solve(input));
+solve();

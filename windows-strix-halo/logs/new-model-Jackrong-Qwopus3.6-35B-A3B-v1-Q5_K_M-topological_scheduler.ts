@@ -1,147 +1,124 @@
 ﻿import { readFileSync } from 'fs';
 
-// Min-heap implementation
-class MinHeap<T> {
-    private data: T[];
-    private compare: (a: T, b: T) => number;
+class MinHeap {
+  private heap: string[] = [];
 
-    constructor(compare: (a: T, b: T) => number) {
-        this.data = [];
-        this.compare = compare;
+  public push(item: string): void {
+    this.heap.push(item);
+    this.bubbleUp(this.heap.length - 1);
+  }
+
+  public pop(): string | undefined {
+    if (this.heap.length === 0) return undefined;
+    const min = this.heap[0];
+    const last = this.heap.pop()!;
+    if (this.heap.length > 0) {
+      this.heap[0] = last;
+      this.sinkDown(0);
     }
+    return min;
+  }
 
-    public push(item: T): void {
-        this.data.push(item);
-        this.siftUp(this.data.length - 1);
+  public get size(): number {
+    return this.heap.length;
+  }
+
+  private bubbleUp(index: number): void {
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2);
+      if (this.heap[index] < this.heap[parentIndex]) {
+        [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+        index = parentIndex;
+      } else {
+        break;
+      }
     }
+  }
 
-    public pop(): T {
-        const top = this.data[0];
-        const last = this.data.pop();
-        if (this.data.length > 0 && last !== undefined) {
-            this.data[0] = last;
-            this.siftDown(0);
-        }
-        return top;
+  private sinkDown(index: number): void {
+    const length = this.heap.length;
+    while (true) {
+      let smallest = index;
+      const left = 2 * index + 1;
+      const right = 2 * index + 2;
+
+      if (left < length && this.heap[left] < this.heap[smallest]) {
+        smallest = left;
+      }
+      if (right < length && this.heap[right] < this.heap[smallest]) {
+        smallest = right;
+      }
+
+      if (smallest !== index) {
+        [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+        index = smallest;
+      } else {
+        break;
+      }
     }
-
-    public peek(): T | undefined {
-        return this.data[0];
-    }
-
-    public isEmpty(): boolean {
-        return this.data.length === 0;
-    }
-
-    private siftUp(index: number): void {
-        while (index > 0) {
-            const parentIndex = Math.floor((index - 1) / 2);
-            if (this.compare(this.data[index], this.data[parentIndex]) >= 0) {
-                break;
-            }
-            this.swap(index, parentIndex);
-            index = parentIndex;
-        }
-    }
-
-    private siftDown(index: number): void {
-        const length = this.data.length;
-        while (true) {
-            let smallest = index;
-            const left = 2 * index + 1;
-            const right = 2 * index + 2;
-
-            if (left < length && this.compare(this.data[left], this.data[smallest]) < 0) {
-                smallest = left;
-            }
-            if (right < length && this.compare(this.data[right], this.data[smallest]) < 0) {
-                smallest = right;
-            }
-
-            if (smallest === index) {
-                break;
-            }
-
-            this.swap(index, smallest);
-            index = smallest;
-        }
-    }
-
-    private swap(i: number, j: number): void {
-        const temp = this.data[i];
-        this.data[i] = this.data[j];
-        this.data[j] = temp;
-    }
+  }
 }
 
 function main(): void {
-    const input = readFileSync(0, "utf8").trim().split('\n');
-    let lineIndex = 0;
+  const input = readFileSync(0, "utf8").trim().split('\n');
+  const firstLine = input[0].split(' ').map(Number);
+  const N = firstLine[0];
+  const M = firstLine[1];
 
-    if (lineIndex >= input.length) return;
-    const firstLine = input[lineIndex++].trim().split(/\s+/);
-    const N = parseInt(firstLine[0], 10);
-    const M = parseInt(firstLine[1], 10);
+  const tasks = input[1].split(' ');
+  const adjList: Map<string, Set<string>> = new Map();
+  const inDegree: Map<string, number> = new Map();
 
-    if (lineIndex >= input.length) return;
-    const taskNames = input[lineIndex++].trim().split(/\s+/);
+  // Initialize in-degrees and adjacency lists
+  for (const task of tasks) {
+    adjList.set(task, new Set());
+    inDegree.set(task, 0);
+  }
 
-    // Map task names to indices 0..N-1
-    const nameToIdx: Map<string, number> = new Map();
-    taskNames.forEach((name, idx) => {
-        nameToIdx.set(name, idx);
-    });
-
-    // Build adjacency list and in-degree array
-    const adj: number[][] = Array.from({ length: N }, () => []);
-    const inDegree: number[] = new Array(N).fill(0);
-
-    for (let i = 0; i < M; i++) {
-        if (lineIndex >= input.length) break;
-        const parts = input[lineIndex++].trim().split(/\s+/);
-        const fromName = parts[0];
-        const toName = parts[1];
-        const fromIdx = nameToIdx.get(fromName);
-        const toIdx = nameToIdx.get(toName);
-
-        if (fromIdx !== undefined && toIdx !== undefined) {
-            adj[fromIdx].push(toIdx);
-            inDegree[toIdx]++;
-        }
+  for (let i = 2; i < 2 + M; i++) {
+    const parts = input[i].split(' ');
+    const from = parts[0];
+    const to = parts[1];
+    
+    // Check if tasks exist (though problem statement implies valid names)
+    if (!adjList.has(from) || !adjList.has(to)) {
+      // Should not happen based on problem description, but safe to ignore or handle
+      continue;
     }
 
-    // Min-heap of task indices, ordered by task name (lexicographically)
-    const heap = new MinHeap<number>((a, b) => {
-        return taskNames[a].localeCompare(taskNames[b]);
-    });
+    adjList.get(from)!.add(to);
+    inDegree.set(to, (inDegree.get(to)! + 1));
+  }
 
-    // Add all tasks with in-degree 0 to the heap
-    for (let i = 0; i < N; i++) {
-        if (inDegree[i] === 0) {
-            heap.push(i);
-        }
+  const pq = new MinHeap();
+  
+  // Add all tasks with in-degree 0 to the priority queue
+  for (const task of tasks) {
+    if (inDegree.get(task) === 0) {
+      pq.push(task);
     }
+  }
 
-    const result: number[] = [];
+  const result: string[] = [];
 
-    while (!heap.isEmpty()) {
-        const currentIdx = heap.pop();
-        result.push(currentIdx);
+  while (pq.size > 0) {
+    const current = pq.pop()!;
+    result.push(current);
 
-        for (const neighbor of adj[currentIdx]) {
-            inDegree[neighbor]--;
-            if (inDegree[neighbor] === 0) {
-                heap.push(neighbor);
-            }
-        }
+    const neighbors = adjList.get(current)!;
+    for (const neighbor of neighbors) {
+      inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
+      if (inDegree.get(neighbor) === 0) {
+        pq.push(neighbor);
+      }
     }
+  }
 
-    if (result.length < N) {
-        console.log("IMPOSSIBLE");
-    } else {
-        const output = result.map(idx => taskNames[idx]).join(' ');
-        console.log(output);
-    }
+  if (result.length !== N) {
+    console.log("IMPOSSIBLE");
+  } else {
+    console.log(result.join(' '));
+  }
 }
 
 main();

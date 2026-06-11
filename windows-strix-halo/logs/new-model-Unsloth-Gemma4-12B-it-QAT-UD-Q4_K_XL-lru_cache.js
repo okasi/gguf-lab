@@ -1,18 +1,17 @@
 "use strict";
 const fs = require('fs');
-/**
- * LRUCache implementation using a Map to store key-value pairs and
- * a Doubly Linked List to maintain the order of usage.
- * Map provides O(1) access, Linked List provides O(1) removal/insertion.
- */
 class LRUCache {
     constructor(capacity) {
         this.capacity = capacity;
         this.map = new Map();
-        this.head = new ListNode(null, null);
-        this.tail = new ListNode(null, null);
-        this.head.next = this.tail;
-        this.tail.prev = this.head;
+        // Dummy head and tail for doubly linked list
+        // Head is most recent, Tail is least recent
+        const head = { key: null, value: null, prev: null, next: null };
+        const tail = { key: null, value: null, prev: null, next: null };
+        head.next = tail;
+        tail.prev = head;
+        this.head = head;
+        this.tail = tail;
     }
     remove(node) {
         node.prev.next = node.next;
@@ -24,15 +23,6 @@ class LRUCache {
         this.head.next.prev = node;
         this.head.next = node;
     }
-    get(key) {
-        if (!this.map.has(key)) {
-            return -1;
-        }
-        const node = this.map.get(key);
-        this.remove(node);
-        this.addToHead(node);
-        return node.value;
-    }
     put(key, value) {
         if (this.map.has(key)) {
             const node = this.map.get(key);
@@ -41,15 +31,23 @@ class LRUCache {
             this.addToHead(node);
         }
         else {
-            if (this.map.size >= this.capacity) {
+            if (this.map.size === this.capacity) {
                 const lru = this.tail.prev;
                 this.remove(lru);
                 this.map.delete(lru.key);
             }
-            const newNode = new ListNode(key, value);
-            this.addToHead(newNode);
+            const newNode = { key, value, prev: null, next: null };
             this.map.set(key, newNode);
+            this.addToHead(newNode);
         }
+    }
+    get(key) {
+        if (!this.map.has(key))
+            return -1;
+        const node = this.map.get(key);
+        this.remove(node);
+        this.addToHead(node);
+        return node.value;
     }
     del(key) {
         if (this.map.has(key)) {
@@ -68,36 +66,28 @@ class LRUCache {
         return result;
     }
 }
-class ListNode {
-    constructor(key, value, prev = null, next = null) {
-        this.key = key;
-        this.value = value;
-        this.prev = prev;
-        this.next = next;
-    }
-}
 function solve() {
     const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    let cursor = 0;
-    if (input.length < 2)
+    if (input.length === 0)
         return;
-    const capacity = parseInt(input[cursor++]);
-    const n = parseInt(input[cursor++]);
-    const cache = new LRUCache(capacity);
+    let ptr = 0;
+    const C = parseInt(input[ptr++]);
+    const N = parseInt(input[ptr++]);
+    const cache = new LRUCache(C);
     const getResults = [];
-    for (let i = 0; i < n; i++) {
-        const op = input[cursor++];
-        if (op === 'PUT') {
-            const key = input[cursor++];
-            const value = parseInt(input[cursor++]);
-            cache.put(key, value);
+    for (let i = 0; i < N; i++) {
+        const op = input[ptr++];
+        if (op === "PUT") {
+            const key = input[ptr++];
+            const val = parseInt(input[ptr++]);
+            cache.put(key, val);
         }
-        else if (op === 'GET') {
-            const key = input[cursor++];
+        else if (op === "GET") {
+            const key = input[ptr++];
             getResults.push(cache.get(key));
         }
-        else if (op === 'DEL') {
-            const key = input[cursor++];
+        else if (op === "DEL") {
+            const key = input[ptr++];
             cache.del(key);
         }
     }

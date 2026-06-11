@@ -1,61 +1,73 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const input = (0, fs_1.readFileSync)(0, "utf8").trim();
-const lines = input.split(/\n/);
-const [H, W] = lines[0].split(" ").map(Number);
-const grid = [];
-for (let i = 0; i < H; i++) {
-    grid.push(lines[i + 1].split(""));
-}
-let startR = -1, startC = -1;
-let targetR = -1, targetC = -1;
-for (let r = 0; r < H; r++) {
-    for (let c = 0; c < W; c++) {
-        if (grid[r][c] === "S") {
-            startR = r;
-            startC = c;
+const fs_1 = __importDefault(require("fs"));
+function main() {
+    const data = fs_1.default.readFileSync(0, "utf8");
+    const lines = data.trim().split("\n");
+    const [H, W] = lines[0].split(" ").map(Number);
+    const grid = [];
+    let startY = -1, startX = -1, targetY = -1, targetX = -1;
+    for (let i = 0; i < H; i++) {
+        grid[i] = lines[i + 1];
+        for (let j = 0; j < W; j++) {
+            const ch = grid[i][j];
+            if (ch === "S") {
+                startY = i;
+                startX = j;
+            }
+            else if (ch === "T") {
+                targetY = i;
+                targetX = j;
+            }
         }
-        else if (grid[r][c] === "T") {
-            targetR = r;
-            targetC = c;
+    }
+    const dist = new Array(H);
+    for (let i = 0; i < H; i++) {
+        dist[i] = new Array(W).fill(Infinity);
+    }
+    dist[startY][startX] = 0;
+    const dx = [0, 0, 1, -1];
+    const dy = [1, -1, 0, 0];
+    const pq = []; // [cost, y, x]
+    pq.push([0, startY, startX]);
+    while (pq.length > 0) {
+        // Extract min - simple linear scan for correctness (Dijkstra)
+        // For better performance, a binary heap could be used, but linear scan is fine for typical constraints
+        let minIdx = 0;
+        for (let i = 1; i < pq.length; i++) {
+            if (pq[i][0] < pq[minIdx][0]) {
+                minIdx = i;
+            }
         }
-    }
-}
-const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
-dist[startR][startC] = 0;
-const dr = [-1, 1, 0, 0];
-const dc = [0, 0, -1, 1];
-const pq = []; // [cost, r, c]
-pq.push([0, startR, startC]);
-while (pq.length > 0) {
-    pq.sort((a, b) => a[0] - b[0]);
-    const [cost, r, c] = pq.shift();
-    if (cost > dist[r][c]) {
-        continue;
-    }
-    if (r === targetR && c === targetC) {
-        process.stdout.write(cost.toString() + "\n");
-        process.exit(0);
-    }
-    for (let d = 0; d < 4; d++) {
-        const nr = r + dr[d];
-        const nc = c + dc[d];
-        if (nr < 0 || nr >= H || nc < 0 || nc >= W)
+        const [cost, y, x] = pq[minIdx];
+        pq.splice(minIdx, 1);
+        if (cost > dist[y][x])
             continue;
-        const cell = grid[nr][nc];
-        if (cell === "#")
-            continue;
-        let moveCost = 0;
-        if (cell >= "0" && cell <= "9") {
-            moveCost = parseInt(cell, 10);
+        if (y === targetY && x === targetX) {
+            console.log(cost);
+            return;
         }
-        // S and T cost 0 to enter
-        const newDist = cost + moveCost;
-        if (newDist < dist[nr][nc]) {
-            dist[nr][nc] = newDist;
-            pq.push([newDist, nr, nc]);
+        for (let d = 0; d < 4; d++) {
+            const ny = y + dy[d];
+            const nx = x + dx[d];
+            if (ny < 0 || ny >= H || nx < 0 || nx >= W)
+                continue;
+            const ch = grid[ny][nx];
+            if (ch === "#")
+                continue;
+            let newCost = cost;
+            if (ch !== "S" && ch !== "T") {
+                newCost += parseInt(ch, 10);
+            }
+            if (newCost < dist[ny][nx]) {
+                dist[ny][nx] = newCost;
+                pq.push([newCost, ny, nx]);
+            }
         }
     }
+    console.log(-1);
 }
-process.stdout.write("-1\n");
+main();

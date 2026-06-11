@@ -1,233 +1,174 @@
 ﻿import * as fs from 'fs';
 
-/**
- * CacheNode represents a node in the doubly linked list.
- */
-class CacheNode {
-    constructor(key: string, value: number) {
-        this.key = key;
-        this.value = value;
-        this.prev = null;
-        this.next = null;
-    }
+interface CacheEntry {
+    key: string;
+    value: number;
 }
 
-/**
- * LRUCache implements the Least Recently Used cache logic.
- */
 class LRUCache {
     private capacity: number;
-    private cacheMap: Map<string, CacheNode>;
-    private head: CacheNode | null;
-    private tail: CacheNode | null;
+    // Map for O(1) lookup
+    private cacheMap: Map<string, CacheEntry>;
+    // Doubly linked list structure for O(1) ordering updates
+    private nodes: Map<string, { prev: { key: string } | null, next: { key: string } | null }>;
+    private head: { key: string } | null = null; // Dummy head
+    private tail: { key: string } | null = null; // Dummy tail
 
     constructor(capacity: number) {
         this.capacity = capacity;
-        this.cacheMap = new Map<string, CacheNode>();
-        this.head = null;
-        this.tail = null;
+        this.cacheMap = new Map<string, CacheEntry>();
+        this.nodes = new Map<string, { prev: { key: string } | null, next: { key: string } | null }>();
+
+        // Initialize dummy head and tail
+        const dummyHead = { key: "HEAD" };
+        const dummyTail = { key: "TAIL" };
+        this.head = dummyHead;
+        this.tail = dummyTail;
+        dummyHead.next = dummyTail;
+        dummyTail.prev = dummyHead;
     }
 
-    /**
-     * Moves a node to the head (marking it as most recently used).
-     * Assumes the node is already in the list.
-     */
-    private moveToHead(node: CacheNode): void {
-        if (node === this.head) {
-            return; // Already the most recent
-        }
+    private removeNode(key: string): void {
+        const nodeInfo = this.nodes.get(key);
+        if (!nodeInfo) return;
 
-        // 1. Remove from current position
-        if (node.prev) {
-            node.prev.next = node.next;
-        } else {
-            // Node was the head
-            this.head = node.next;
-        }
+        const prevNode = nodeInfo.prev as { key: string };
+        const nextNode = nodeInfo.next as { key: string };
 
-        if (node.next) {
-            node.next.prev = node.prev;
-        } else {
-            // Node was the tail
-            this.tail = node.prev;
-        }
+        prevNode.next = nextNode;
+        nextNode.prev = prevNode;
 
-        // 2. Add to the head
-        node.next = this.head;
-        node.prev = null;
-        if (this.head) {
-            this.head.prev = node;
-        }
-        this.head = node;
-
-        if (!this.tail) {
-            // List was empty, the added node is both head and tail
-            this.tail = node;
-        }
+        this.nodes.delete(key);
     }
 
-    /**
-     * Adds a new node to the head of the list.
-     */
-    private addNodeToHead(node: CacheNode): void {
-        node.next = this.head;
-        node.prev = null;
+    private moveToHead(key: string): void {
+        const nodeInfo = this.nodes.get(key);
+        if (!nodeInfo) return;
 
-        if (this.head) {
-            this.head.prev = node;
-        }
-        this.head = node;
+        this.removeNode(key);
 
-        if (!this.tail) {
-            // List was empty
-            this.tail = node;
-        }
+        // Insert right after dummy head (MRU position)
+        const newNode = { key: key };
+        const headNode = this.head as { key: string };
+
+        newNode.prev = headNode;
+        newNode.next = headNode.next;
+
+        headNode.next.prev = newNode;
+        headNode.next = newNode;
+        this.nodes.set(key, { prev: headNode, next: newNode.next });
     }
 
-    /**
-     * Removes a node from the list.
-     */
-    private removeNode(node: CacheNode): void {
-        if (node.prev) {
-            node.prev.next = node.next;
-        } else {
-            // Node was the head
-            this.head = node.next;
-        }
+    private insertAtHead(key: string, value: number): void {
+        const newNode = { key: key };
+        const headNode = this.head as { key: string };
 
-        if (node.next) {
-            node.next.prev = node.prev;
-        } else {
-            // Node was the tail
-            this.tail = node.prev;
-        }
-        node.prev = null;
-        node.next = null;
+        newNode.prev = headNode;
+        newNode.next = headNode.next;
+
+        headNode.next.prev = newNode;
+        headNode.next = newNode;
+        this.nodes.set(key, { prev: headNode, next: newNode.next });
     }
 
-    /**
-     * Handles the PUT operation.
-     * @returns true if the key was inserted/updated, false if error (not applicable here).
-     */
+    private evictLRU(): string | undefined {
+        // The node before the dummy tail is the LRU
+        const lruNode = this.tail!.prev as { key: string };
+        const lruKey = lruNode.key;
+
+        this.removeNode(lruKey);
+        this.cacheMap.delete(lruKey);
+        return lruKey;
+    }
+
     public put(key: string, value: number): void {
         if (this.cacheMap.has(key)) {
             // Update existing key and move to head
-            const node = this.cacheMap.get(key)!;
-            node.value = value;
-            this.moveToHead(node);
+            const entry = this.cacheMap.get(key)!;
+            this.cacheMap.set(key, { key, value });
+            this.moveToHead(key);
         } else {
-            // New key
-            const newNode = new CacheNode(key, value);
-
+            // New insertion
             if (this.cacheMap.size >= this.capacity) {
-                // Evict LRU (the tail)
-                if (this.tail) {
-                    const lruKey = this.tail.key;
-                    this.removeNode(this.tail);
-                    this.cacheMap.delete(lruKey);
-                }
+                this.evictLRU();
             }
-
-            // Insert new node at head
-            this.addNodeToHead(newNode);
-            this.cacheMap.set(key, newNode);
+            
+            this.cacheMap.set(key, { key, value });
+            this.insertAtHead(key, value);
         }
     }
 
-    /**
-     * Handles the GET operation.
-     * @returns The value if found, otherwise -1.
-     */
     public get(key: string): number {
         if (!this.cacheMap.has(key)) {
             return -1;
         }
-        const node = this.cacheMap.get(key)!;
-        // Access makes it most recently used
-        this.moveToHead(node);
-        return node.value;
+        const entry = this.cacheMap.get(key)!;
+        // Access makes it MRU
+        this.moveToHead(key);
+        return entry.value;
     }
 
-    /**
-     * Handles the DEL operation.
-     */
-    public delete(key: string): void {
+    public del(key: string): void {
         if (this.cacheMap.has(key)) {
-            const node = this.cacheMap.get(key)!;
-            this.removeNode(node);
+            this.removeNode(key);
             this.cacheMap.delete(key);
         }
     }
 
-    /**
-     * Returns the keys from MRU to LRU.
-     * @returns Array of keys in order.
-     */
-    public getKeysOrder(): string[] {
+    public getKeysInOrder(): string[] {
         const keys: string[] = [];
-        let current = this.head;
-        while (current) {
+        let current = this.head!.next as { key: string };
+        while (current !== this.tail) {
             keys.push(current.key);
-            current = current.next;
+            current = current.next as { key: string };
         }
         return keys;
     }
 }
 
-/**
- * Main function to handle input/output.
- */
 function solve() {
-    // Read all input data from standard input
-    const input = fs.readFileSync(0, "utf8").trim().split('\n');
+    const input = fs.readFileSync(0, 'utf8').trim().split('\n');
+    if (input.length === 0 || input[0] === "") return;
 
-    if (input.length === 0 || input[0].trim() === '') return;
+    const [CStr, NStr] = input[0].split(' ').map(s => s.trim()).filter(s => s.length > 0);
+    const C = parseInt(CStr);
+    const N = parseInt(NStr);
 
-    // Parse C and N from the first line
-    const [cStr, nStr] = input[0].trim().split(/\s+/);
-    const C = parseInt(cStr);
-    const N = parseInt(nStr);
-
-    if (isNaN(C) || isNaN(N) || C < 1 || N < 1) return;
-
-    const lruCache = new LRUCache(C);
+    const cache = new LRUCache(C);
     const getResults: number[] = [];
 
-    // Process N operations starting from the second line (index 1)
     for (let i = 1; i <= N; i++) {
-        const line = input[i]?.trim();
+        const line = input[i].trim();
         if (!line) continue;
 
-        const parts = line.split(/\s+/);
+        const parts = line.split(/\s+/).filter(s => s.length > 0);
         const command = parts[0];
         const key = parts[1];
-
+        
         if (command === 'PUT') {
             const value = parseInt(parts[2]);
-            lruCache.put(key, value);
+            cache.put(key, value);
         } else if (command === 'GET') {
-            const result = lruCache.get(key);
+            const result = cache.get(key);
             getResults.push(result);
         } else if (command === 'DEL') {
-            lruCache.delete(key);
+            cache.del(key);
         }
     }
 
-    // --- Output Formatting ---
-
-    // 1. First line: all GET results separated by spaces, or EMPTY if there were no GET operations.
+    // Output 1: GET results
     if (getResults.length === 0) {
         console.log("EMPTY");
     } else {
         console.log(getResults.join(' '));
     }
 
-    // 2. Second line: remaining keys from most-recently-used to least-recently-used separated by spaces, or EMPTY if cache is empty.
-    const keysOrder = lruCache.getKeysOrder();
-    if (keysOrder.length === 0) {
+    // Output 2: Remaining keys in order (MRU to LRU)
+    const orderedKeys = cache.getKeysInOrder();
+    if (orderedKeys.length === 0) {
         console.log("EMPTY");
     } else {
-        console.log(keysOrder.join(' '));
+        console.log(orderedKeys.join(' '));
     }
 }
 

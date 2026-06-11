@@ -1,210 +1,84 @@
 ﻿import fs from 'fs';
 
 function evaluate(expression: string): number {
-  // Use a shunting-yard algorithm with explicit handling of unary operators.
-  // We first tokenise the input into numbers, operators, and parentheses.
+    let tokens = tokenize(expression);
+    let index = 0;
 
-  interface Token {
-    type: 'number' | 'op' | 'paren';
-    value?: number;
-    char?: string;
-  }
-
-  const tokens: Token[] = [];
-  let i = 0;
-  const len = expression.length;
-
-  while (i < len) {
-    const ch = expression[i];
-
-    if (ch === ' ') {
-      i++;
-      continue;
+    function parseExpression(): number {
+        let result = parseTerm();
+        while (index < tokens.length && (tokens[index] === '+' || tokens[index] === '-')) {
+            const operator = tokens[index++];
+            const right = parseTerm();
+            if (operator === '+') {
+                result += right;
+            } else {
+                result -= right;
+            }
+        }
+        return result;
     }
 
-    if (ch === '(' || ch === ')') {
-      tokens.push({ type: 'paren', char });
-      i++;
-      continue;
+    function parseTerm(): number {
+        let result = parseFactor();
+        while (index < tokens.length && (tokens[index] === '*' || tokens[index] === '/')) {
+            const operator = tokens[index++];
+            const right = parseFactor();
+            if (operator === '*') {
+                result *= right;
+            } else {
+                result = Math.trunc(result / right);
+            }
+        }
+        return result;
     }
 
-    if (ch === '-' || ch === '+') {
-      // Determine if this is unary or binary.
-      // It's unary if it's the first token, or if the previous non-space token was an operator or '('.
-      const prevToken = tokens.length > 0 ? tokens[tokens.length - 1] : null;
-      const isUnary =
-        prevToken === null ||
-        prevToken.type === 'op' ||
-        (prevToken.type === 'paren' && prevToken.char === '(');
-
-      if (isUnary) {
-        // Unary + or -. We'll treat unary - as a special operator.
-        tokens.push({ type: 'op', char });
-        i++;
-        continue;
-      } else {
-        // Binary + or -
-        tokens.push({ type: 'op', char });
-        i++;
-        continue;
-      }
+    function parseFactor(): number {
+        if (tokens[index] === '(') {
+            index++; // consume '('
+            const result = parseExpression();
+            if (tokens[index] === ')') {
+                index++; // consume ')'
+            }
+            return result;
+        }
+        if (tokens[index] === '+' || tokens[index] === '-') {
+            const sign = tokens[index] === '+' ? 1 : -1;
+            index++;
+            return sign * parseFactor();
+        }
+        const num = parseInt(tokens[index], 10);
+        index++;
+        return num;
     }
 
-    if (ch === '*' || ch === '/') {
-      tokens.push({ type: 'op', char });
-      i++;
-      continue;
-    }
+    return parseExpression();
+}
 
-    if (ch >= '0' && ch <= '9') {
-      let num = 0;
-      while (i < len && expression[i] >= '0' && expression[i] <= '9') {
-        num = num * 10 + (expression.charCodeAt(i) - 48);
-        i++;
-      }
-      tokens.push({ type: 'number', value: num });
-      continue;
-    }
-
-    throw new Error(`Unexpected character: ${ch}`);
-  }
-
-  // Now we have tokens. We need to distinguish unary operators from binary ones during parsing.
-  // Let's refine the token list to mark unary vs binary.
-  const refinedTokens: Token[] = [];
-  for (let t = 0; t < tokens.length; t++) {
-    const token = tokens[t];
-    if (token.type === 'number' || token.type === 'paren') {
-      refinedTokens.push(token);
-    } else if (token.type === 'op') {
-      // Determine if this operator is unary or binary.
-      // An operator is unary if it's at the start, or preceded by '(' or another operator.
-      const prevToken = refinedTokens.length > 0 ? refinedTokens[refinedTokens.length - 1] : null;
-      const isUnary =
-        prevToken === null ||
-        prevToken.type === 'op' ||
-        (prevToken.type === 'paren' && prevToken.char === '(');
-
-      if (isUnary) {
-        refinedTokens.push({ type: 'op', char: token.char + 'u' }); // Mark as unary
-      } else {
-        refinedTokens.push(token);
-      }
-    }
-  }
-
-  // Define precedence and associativity.
-  // Unary operators have the highest precedence.
-  // * and / have higher precedence than + and -.
-  function precedence(token: Token): number {
-    if (token.type !== 'op') return -1;
-    const c = token.char;
-    if (c === 'u+' || c === 'u-') return 3; // Unary
-    if (c === '*' || c === '/') return 2; // Multiplicative
-    if (c === '+' || c === '-') return 1; // Additive
-    return 0;
-  }
-
-  // Associativity for binary operators.
-  // Unary operators are right-associative, but we handle them differently.
-  function isLeftAssociative(token: Token): boolean {
-    if (token.type !== 'op') return false;
-    const c = token.char;
-    if (c === 'u+' || c === 'u-') return false; // Right-associative
-    return true; // All binary operators are left-associative
-  }
-
-  // Shunting-yard algorithm
-  const outputQueue: Token[] = [];
-  const opStack: Token[] = [];
-
-  for (const token of refinedTokens) {
-    if (token.type === 'number') {
-      outputQueue.push(token);
-    } else if (token.type === 'op') {
-      while (opStack.length > 0) {
-        const top = opStack[opStack.length - 1];
-        if (top.type === 'paren' && top.char === '(') break;
-
-        const tPrec = precedence(top);
-        const cPrec = precedence(token);
-
-        if (
-          (tPrec > cPrec) ||
-          (tPrec === cPrec && isLeftAssociative(token))
-        ) {
-          outputQueue.push(opStack.pop()!);
+function tokenize(expression: string): string[] {
+    const tokens: string[] = [];
+    let i = 0;
+    while (i < expression.length) {
+        const char = expression[i];
+        if (char === ' ') {
+            i++;
+            continue;
+        }
+        if (char >= '0' && char <= '9') {
+            let num = '';
+            while (i < expression.length && expression[i] >= '0' && expression[i] <= '9') {
+                num += expression[i];
+                i++;
+            }
+            tokens.push(num);
         } else {
-          break;
+            tokens.push(char);
+            i++;
         }
-      }
-      opStack.push(token);
-    } else if (token.type === 'paren') {
-      if (token.char === '(') {
-        opStack.push(token);
-      } else if (token.char === ')') {
-        while (opStack.length > 0) {
-          const top = opStack.pop()!;
-          if (top.type === 'paren' && top.char === '(') break;
-          outputQueue.push(top);
-        }
-        if (opStack.length === 0) {
-          throw new Error('Mismatched parentheses');
-        }
-      }
     }
-  }
-
-  while (opStack.length > 0) {
-    const top = opStack.pop()!;
-    if (top.type === 'paren') {
-      throw new Error('Mismatched parentheses');
-    }
-    outputQueue.push(top);
-  }
-
-  // Evaluate the RPN (Reverse Polish Notation) queue
-  const valueStack: number[] = [];
-
-  for (const token of outputQueue) {
-    if (token.type === 'number') {
-      valueStack.push(token.value!);
-    } else if (token.type === 'op') {
-      const c = token.char;
-      if (c === 'u-') {
-        const a = valueStack.pop()!;
-        valueStack.push(-a);
-      } else if (c === 'u+') {
-        const a = valueStack.pop()!;
-        valueStack.push(+a);
-      } else if (c === '+') {
-        const b = valueStack.pop()!;
-        const a = valueStack.pop()!;
-        valueStack.push(a + b);
-      } else if (c === '-') {
-        const b = valueStack.pop()!;
-        const a = valueStack.pop()!;
-        valueStack.push(a - b);
-      } else if (c === '*') {
-        const b = valueStack.pop()!;
-        const a = valueStack.pop()!;
-        valueStack.push(a * b);
-      } else if (c === '/') {
-        const b = valueStack.pop()!;
-        const a = valueStack.pop()!;
-        // Division truncates toward zero
-        const result = Math.trunc(a / b);
-        valueStack.push(result);
-      }
-    }
-  }
-
-  if (valueStack.length !== 1) {
-    throw new Error('Invalid expression');
-  }
-
-  return valueStack[0];
+    return tokens;
 }
 
 const input = fs.readFileSync(0, 'utf8').trim();
-console.log(evaluate(input));
+if (input) {
+    console.log(evaluate(input));
+}

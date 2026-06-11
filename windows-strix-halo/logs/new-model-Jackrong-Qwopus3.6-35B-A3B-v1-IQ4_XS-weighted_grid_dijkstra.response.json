@@ -5,32 +5,32 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "```typescript\nimport fs from \"fs\";\n\nfunction solve(): void {\n    const input: string = fs.readFileSync(0, \"utf8\").trim();\n    const lines: string[] = input.split(\"\\n\");\n    const [HStr, WStr]: string[] = lines[0].split(\" \");\n    const H: number = parseInt(HStr);\n    const W: number = parseInt(WStr);\n    const grid: string[] = [];\n    for (let i = 1; i \u003c= H; i++) {\n        grid.push(lines[i]);\n    }\n\n    let startX: number = -1;\n    let startY: number = -1;\n    let endX: number = -1;\n    let endY: number = -1;\n\n    for (let y = 0; y \u003c H; y++) {\n        for (let x = 0; x \u003c W; x++) {\n            const ch: string = grid[y][x];\n            if (ch === \u0027S\u0027) {\n                startX = x;\n                startY = y;\n            } else if (ch === \u0027T\u0027) {\n                endX = x;\n                endY = y;\n            }\n        }\n    }\n\n    const INF: number = Number.MAX_SAFE_INTEGER;\n    const dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(INF));\n    dist[startY][startX] = 0;\n\n    const pq: { cost: number; x: number; y: number }[] = [];\n    const push: (cost: number, x: number, y: number) =\u003e void = (cost: number, x: number, y: number) =\u003e {\n        pq.push({ cost, x, y });\n    };\n\n    const pop: () =\u003e { cost: number; x: number; y: number } | undefined = () =\u003e {\n        if (pq.length === 0) return undefined;\n        let minIdx: number = 0;\n        for (let i = 1; i \u003c pq.length; i++) {\n            if (pq[i].cost \u003c pq[minIdx].cost) {\n                minIdx = i;\n            }\n        }\n        const item: { cost: number; x: number; y: number } = pq[minIdx];\n        pq[minIdx] = pq[pq.length - 1];\n        pq.pop();\n        return item;\n    };\n\n    push(0, startX, startY);\n\n    const dx: number[] = [0, 0, -1, 1];\n    const dy: number[] = [-1, 1, 0, 0];\n\n    while (pq.length \u003e 0) {\n        const curr: { cost: number; x: number; y: number } | undefined = pop();\n        if (!curr) break;\n        const { cost, x, y } = curr;\n\n        if (cost \u003e dist[y][x]) continue;\n        if (x === endX \u0026\u0026 y === endY) {\n            console.log(cost);\n            return;\n        }\n\n        for (let i = 0; i \u003c 4; i++) {\n            const nx: number = x + dx[i];\n            const ny: number = y + dy[i];\n\n            if (nx \u003c 0 || nx \u003e= W || ny \u003c 0 || ny \u003e= H) continue;\n\n            const cell: string = grid[ny][nx];\n            if (cell === \u0027#\u0027) continue;\n\n            let weight: number = 0;\n            if (cell \u003e= \u00270\u0027 \u0026\u0026 cell \u003c= \u00279\u0027) {\n                weight = parseInt(cell);\n            }\n\n            const newCost: number = cost + weight;\n            if (newCost \u003c dist[ny][nx]) {\n                dist[ny][nx] = newCost;\n                push(newCost, nx, ny);\n            }\n        }\n    }\n\n    console.log(-1);\n}\n\nsolve();\n```"
+                                        "content":  "import * as fs from \u0027fs\u0027;\n\nfunction solve(): void {\n    const input = fs.readFileSync(0, \u0027utf8\u0027);\n    const lines = input.trim().split(\u0027\\n\u0027);\n    \n    const [H, W] = lines[0].split(\u0027 \u0027).map(Number);\n    const grid: string[][] = [];\n    let startX = 0;\n    let startY = 0;\n    let targetX = 0;\n    let targetY = 0;\n\n    for (let i = 0; i \u003c H; i++) {\n        grid[i] = lines[i + 1].split(\u0027\u0027);\n        for (let j = 0; j \u003c W; j++) {\n            if (grid[i][j] === \u0027S\u0027) {\n                startX = j;\n                startY = i;\n            } else if (grid[i][j] === \u0027T\u0027) {\n                targetX = j;\n                targetY = i;\n            }\n        }\n    }\n\n    const dist: number[][] = Array.from({ length: H }, () =\u003e Array(W).fill(Infinity));\n    dist[startY][startX] = 0;\n\n    const pq: { x: number; y: number; cost: number }[] = [];\n    pq.push({ x: startX, y: startY, cost: 0 });\n\n    const dx = [0, 0, 1, -1];\n    const dy = [1, -1, 0, 0];\n\n    while (pq.length \u003e 0) {\n        // Simple priority queue using sorting. For large grids, a proper heap would be better.\n        pq.sort((a, b) =\u003e a.cost - b.cost);\n        const curr = pq.shift()!;\n\n        if (curr.cost \u003e dist[curr.y][curr.x]) {\n            continue;\n        }\n\n        if (curr.x === targetX \u0026\u0026 curr.y === targetY) {\n            console.log(curr.cost);\n            return;\n        }\n\n        for (let i = 0; i \u003c 4; i++) {\n            const nx = curr.x + dx[i];\n            const ny = curr.y + dy[i];\n\n            if (nx \u003e= 0 \u0026\u0026 nx \u003c W \u0026\u0026 ny \u003e= 0 \u0026\u0026 ny \u003c H) {\n                const cell = grid[ny][nx];\n                if (cell !== \u0027#\u0027) {\n                    let cost = 0;\n                    if (cell \u003e= \u00270\u0027 \u0026\u0026 cell \u003c= \u00279\u0027) {\n                        cost = parseInt(cell);\n                    }\n                    \n                    if (dist[curr.y][curr.x] + cost \u003c dist[ny][nx]) {\n                        dist[ny][nx] = dist[curr.y][curr.x] + cost;\n                        pq.push({ x: nx, y: ny, cost: dist[ny][nx] });\n                    }\n                }\n            }\n        }\n    }\n\n    console.log(-1);\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1781104360,
+    "created":  1781202581,
     "model":  "jackrong-qwopus3.6-35b-a3b-v1-iq4-xs-refresh-noreason",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  880,
+                  "completion_tokens":  645,
                   "prompt_tokens":  193,
-                  "total_tokens":  1073,
+                  "total_tokens":  838,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-z7id8W9VlZMJjaM5s87wM4foW11hpGFa",
+    "id":  "chatcmpl-jEpqMNnvH3huYs9MIBuRr72Hq2OClKpj",
     "timings":  {
                     "cache_n":  0,
                     "prompt_n":  193,
-                    "prompt_ms":  349.38,
-                    "prompt_per_token_ms":  1.810259067357513,
-                    "prompt_per_second":  552.4071211861011,
-                    "predicted_n":  880,
-                    "predicted_ms":  14869.077,
-                    "predicted_per_token_ms":  16.896678409090907,
-                    "predicted_per_second":  59.18322973241715
+                    "prompt_ms":  328.012,
+                    "prompt_per_token_ms":  1.6995440414507772,
+                    "prompt_per_second":  588.3931075692353,
+                    "predicted_n":  645,
+                    "predicted_ms":  10455.388,
+                    "predicted_per_token_ms":  16.209903875968994,
+                    "predicted_per_second":  61.69068044151015
                 }
 }

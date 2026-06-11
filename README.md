@@ -75,13 +75,14 @@ Sampler column uses `temp / top_p / top_k`. Every row uses `presence_penalty=0` 
 <!-- benchmark-table-start -->
 | Mem bucket | Model / file | Max ctx | Sampler settings | Reasoning | Load mem | Text gen | Image gen | Tool gen | Hard TS | BL overall | BL quality | BL gen | BL coding | BL toolcall | BL agent |
 |---|---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Under 8 GiB | `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 3.99 GiB | 121.54 tok/s | 176.33 tok/s | 220.57 tok/s | 9/25 | 81.1 | 84.1 | 82.63 tok/s | 100.0 | 90.0 | 96.9 |
-| Under 14 GiB | `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 10.71 GiB | 87.15 tok/s | 80.87 tok/s | 105.74 tok/s | 16/25 | 77.5 | 82.9 | 44.22 tok/s | 100.0 | 75.0 | 96.9 |
-| Under 14 GiB | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 11.45 GiB | 42.23 tok/s | 42.95 tok/s | 46.28 tok/s | 22/25 | 79.5 | 84.8 | 37.6 tok/s | 100.0 | 83.3 | 96.9 |
-| Over 14 GiB | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64` | auto | 18.82 GiB | 72.56 tok/s | 65.37 tok/s | 65.77 tok/s | 16/25 | 80.6 | 84.2 | 58.95 tok/s | 100.0 | 83.3 | 96.9 |
-| Over 14 GiB | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 22.71 GiB | 69.7 tok/s | 62.27 tok/s | 60.11 tok/s | 18/25 | 79.8 | 83.8 | 54.17 tok/s | 93.8 | 90.0 | 96.9 |
-| Over 14 GiB | `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 27.65 GiB | 18.5 tok/s | 21.41 tok/s | 26.05 tok/s | 12/25 | 77.4 | 85.7 | 19.52 tok/s | 100.0 | 90.0 | 96.9 |
-| Over 14 GiB | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 28.25 GiB | 59 tok/s | 57.57 tok/s | 55.8 tok/s | 18/25 | 81.4 | 85.7 | 51.02 tok/s | 100.0 | 93.3 | 96.9 |
-| Over 14 GiB | **`Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (main 35B)** | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 30.02 GiB | 51.81 tok/s | 58.08 tok/s | 63.41 tok/s | 20/25 | 82.1 | 87.2 | 49.54 tok/s | 100.0 | 96.7 | 96.9 |
-| Over 14 GiB | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 31.68 GiB | 23.2 tok/s | 25.55 tok/s | 28.96 tok/s | 23/25 | 80.2 | 88.9 | 19.58 tok/s | 100.0 | 83.3 | 96.9 |
+| Under 8 GiB | `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64` | auto | 3.99 GiB | 135.32 tok/s | 130.9 tok/s | 130.78 tok/s | 17/25 | 81.8 | 83.9 | 100.16 tok/s | 85.4 | 78.3 | 100.0 |
+| Under 14 GiB | `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | 131072 | `1.0 / 0.95 / 64` | auto | 10.71 GiB | 87.79 tok/s | 87.95 tok/s | 94.81 tok/s | 22/25 | 80.6 | 85.4 | 53.44 tok/s | 100.0 | 78.3 | 96.9 |
+| Under 14 GiB | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 11.45 GiB | 42.56 tok/s | 41.35 tok/s | 46.24 tok/s | 19/25 | 79.5 | 84.8 | 37.6 tok/s | 100.0 | 83.3 | 96.9 |
+| Over 14 GiB | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64` | auto | 19.85 GiB | 74.73 tok/s | 76.66 tok/s | 84.13 tok/s | 15/25 | 80.6 | 84.2 | 58.95 tok/s | 100.0 | 83.3 | 96.9 |
+| Over 14 GiB | `Qwopus3.6-35B-A3B-v1-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 22.71 GiB | 71.25 tok/s | 60.04 tok/s | 61.27 tok/s | 23/25 | 79.8 | 83.8 | 54.17 tok/s | 93.8 | 90.0 | 96.9 |
+| Over 14 GiB | `Qwopus3.6-27B-v2-MTP-IQ4_XS.gguf` | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 27.65 GiB | 18.25 tok/s | 21.24 tok/s | 22.6 tok/s | 21/25 | 77.4 | 85.7 | 19.52 tok/s | 100.0 | 90.0 | 96.9 |
+| Over 14 GiB | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | 262144 | `0.85 / 0.95 / 20` | off | 28.25 GiB | 66.26 tok/s | 57.04 tok/s | 60.83 tok/s | 16/25 | 81.4 | 85.7 | 51.02 tok/s | 100.0 | 93.3 | 96.9 |
+| Over 14 GiB | **`Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (main 35B)** | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 30.02 GiB | 60.06 tok/s | 57.45 tok/s | 68.3 tok/s | 15/25 | 82.3 | 87.2 | 51.97 tok/s | 100.0 | 96.7 | 96.9 |
+| Over 14 GiB | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 31.68 GiB | 23.26 tok/s | 24.45 tok/s | 28.76 tok/s | 23/25 | 80.2 | 88.9 | 19.58 tok/s | 100.0 | 83.3 | 96.9 |
 <!-- benchmark-table-end -->
+

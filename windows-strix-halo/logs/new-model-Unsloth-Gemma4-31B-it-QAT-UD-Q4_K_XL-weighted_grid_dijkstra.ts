@@ -51,7 +51,7 @@ class PriorityQueue<T> {
 }
 
 function solve() {
-    const input = fs.readFileSync(0, 'utf8').split(/\s+/);
+    const input = fs.readFileSync(0, "utf8").split(/\s+/);
     if (input.length < 3) return;
 
     const H = parseInt(input[0]);
@@ -76,7 +76,7 @@ function solve() {
         }
     }
 
-    const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
+    const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
     const pq = new PriorityQueue<{ r: number; c: number }>();
 
     dist[startR][startC] = 0;
@@ -103,20 +103,20 @@ function solve() {
                 const char = grid[nr][nc];
                 if (char === '#') continue;
 
-                let weight = 0;
+                let cost = 0;
                 if (char >= '0' && char <= '9') {
-                    weight = parseInt(char);
+                    cost = parseInt(char);
                 }
 
-                if (dist[nr][nc] > d + weight) {
-                    dist[nr][nc] = d + weight;
+                if (dist[nr][nc] > d + cost) {
+                    dist[nr][nc] = d + cost;
                     pq.push({ r: nr, c: nc }, dist[nr][nc]);
                 }
             }
         }
     }
 
-    console.log(-1);
+    console.log("-1");
 }
 
 solve();

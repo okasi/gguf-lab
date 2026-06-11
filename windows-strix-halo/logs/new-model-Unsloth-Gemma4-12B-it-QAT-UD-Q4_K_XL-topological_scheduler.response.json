@@ -5,34 +5,34 @@
                         "index":  0,
                         "message":  {
                                         "role":  "assistant",
-                                        "content":  "import * as fs from \u0027fs\u0027;\n\n/**\n * Min-Heap implementation to satisfy the lexicographical smallest \n * requirement in O(log N) time for insertions and extractions.\n */\nclass MinHeap {\n    private heap: string[] = [];\n\n    push(val: string) {\n        this.heap.push(val);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    pop(): string | undefined {\n        if (this.size() === 0) return undefined;\n        const top = this.heap[0];\n        const last = this.heap.pop()!;\n        if (this.size() \u003e 0) {\n            this.heap[0] = last;\n            this.sinkDown(0);\n        }\n        return top;\n    }\n\n    size(): number {\n        return this.heap.length;\n    }\n\n    private bubbleUp(index: number) {\n        while (index \u003e 0) {\n            let parent = Math.floor((index - 1) / 2);\n            if (this.heap[index] \u003c this.heap[parent]) {\n                [this.heap[index], this.heap[parent]] = [this.heap[parent], this.heap[index]];\n                index = parent;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private sinkDown(index: number) {\n        while (true) {\n            let smallest = index;\n            let left = 2 * index + 1;\n            let right = 2 * index + 2;\n\n            if (left \u003c this.heap.length \u0026\u0026 this.heap[left] \u003c this.heap[smallest]) {\n                smallest = left;\n            }\n            if (right \u003c this.heap.length \u0026\u0026 this.heap[right] \u003c this.heap[smallest]) {\n                smallest = right;\n            }\n\n            if (smallest !== index) {\n                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n                index = smallest;\n            } else {\n                break;\n            }\n        }\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    if (input.length === 0 || input[0] === \"\") return;\n\n    let ptr = 0;\n    const N = parseInt(input[ptr++]);\n    const M = parseInt(input[ptr++]);\n\n    if (isNaN(N)) return;\n\n    const tasks = new Set\u003cstring\u003e();\n    const adj = new Map\u003cstring, string[]\u003e();\n    const inDegree = new Map\u003cstring, number\u003e();\n\n    for (let i = 0; i \u003c N; i++) {\n        const name = input[ptr++];\n        tasks.add(name);\n        adj.set(name, []);\n        inDegree.set(name, 0);\n    }\n\n    for (let i = 0; i \u003c M; i++) {\n        const u = input[ptr++];\n        const v = input[ptr++];\n        adj.get(u)!.push(v);\n        inDegree.set(v, (inDegree.get(v) || 0) + 1);\n    }\n\n    const pq = new MinHeap();\n    for (const task of tasks) {\n        if ((inDegree.get(task) || 0) === 0) {\n            pq.push(task);\n        }\n    }\n\n    const result: string[] = [];\n    while (pq.size() \u003e 0) {\n        const u = pq.pop()!;\n        result.push(u);\n\n        const neighbors = adj.get(u) || [];\n        for (const v of neighbors) {\n            inDegree.set(v, inDegree.get(v)! - 1);\n            if (inDegree.get(v) === 0) {\n                pq.push(v);\n            }\n        }\n    }\n\n    if (result.length === N) {\n        process.stdout.write(result.join(\" \") + \"\\n\");\n    } else {\n        process.stdout.write(\"IMPOSSIBLE\\n\");\n    }\n}\n\nsolve();"
+                                        "content":  "const fs = require(\u0027fs\u0027);\n\n/**\n * Min-Heap implementation to satisfy the lexicographical order requirement \n * and the O((N + M) log N) time complexity.\n */\nclass MinHeap {\n    private heap: string[] = [];\n\n    push(val: string) {\n        this.heap.push(val);\n        this.bubbleUp(this.heap.length - 1);\n    }\n\n    pop(): string | undefined {\n        if (this.size() === 0) return undefined;\n        const top = this.heap[0];\n        const last = this.heap.pop()!;\n        if (this.size() \u003e 0) {\n            this.heap[0] = last;\n            this.bubbleDown(0);\n        }\n        return top;\n    }\n\n    size(): number {\n        return this.heap.length;\n    }\n\n    private bubbleUp(index: number) {\n        while (index \u003e 0) {\n            let parentIndex = Math.floor((index - 1) / 2);\n            if (this.heap[index] \u003c this.heap[parentIndex]) {\n                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];\n                index = parentIndex;\n            } else {\n                break;\n            }\n        }\n    }\n\n    private bubbleDown(index: number) {\n        while (true) {\n            let smallest = index;\n            let left = 2 * index + 1;\n            let right = 2 * index + 2;\n\n            if (left \u003c this.heap.length \u0026\u0026 this.heap[left] \u003c this.heap[smallest]) {\n                smallest = left;\n            }\n            if (right \u003c this.heap.length \u0026\u0026 this.heap[right] \u003c this.heap[smallest]) {\n                smallest = right;\n            }\n\n            if (smallest !== index) {\n                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];\n                index = smallest;\n            } else {\n                break;\n            }\n        }\n    }\n}\n\nfunction solve() {\n    const input = fs.readFileSync(0, \"utf8\").split(/\\s+/);\n    if (input.length \u003c 2) return;\n\n    let ptr = 0;\n    const N = parseInt(input[ptr++]);\n    const M = parseInt(input[ptr++]);\n\n    if (isNaN(N)) return;\n\n    const tasks = [];\n    for (let i = 0; i \u003c N; i++) {\n        tasks.push(input[ptr++]);\n    }\n\n    const adj = new Map\u003cstring, string[]\u003e();\n    const inDegree = new Map\u003cstring, number\u003e();\n\n    for (const task of tasks) {\n        adj.set(task, []);\n        inDegree.set(task, 0);\n    }\n\n    for (let i = 0; i \u003c M; i++) {\n        const u = input[ptr++];\n        const v = input[ptr++];\n        adj.get(u)!.push(v);\n        inDegree.set(v, (inDegree.get(v) || 0) + 1);\n    }\n\n    const heap = new MinHeap();\n    for (const task of tasks) {\n        if (inDegree.get(task) === 0) {\n            heap.push(task);\n        }\n    }\n\n    const result: string[] = [];\n    while (heap.size() \u003e 0) {\n        const u = heap.pop()!;\n        result.push(u);\n\n        const neighbors = adj.get(u) || [];\n        for (const v of neighbors) {\n            inDegree.set(v, inDegree.get(v)! - 1);\n            if (inDegree.get(v) === 0) {\n                heap.push(v);\n            }\n        }\n    }\n\n    if (result.length === N) {\n        process.stdout.write(result.join(\" \") + \"\\n\");\n    } else {\n        process.stdout.write(\"IMPOSSIBLE\\n\");\n    }\n}\n\nsolve();"
                                     }
                     }
                 ],
-    "created":  1781103003,
-    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason",
+    "created":  1781202196,
+    "model":  "unsloth-gemma4-12b-it-qat-ud-q4-k-xl-refresh-noreason-nmax2",
     "system_fingerprint":  "b9551-379ac6673",
     "object":  "chat.completion",
     "usage":  {
-                  "completion_tokens":  977,
-                  "prompt_tokens":  217,
-                  "total_tokens":  1194,
+                  "completion_tokens":  975,
+                  "prompt_tokens":  194,
+                  "total_tokens":  1169,
                   "prompt_tokens_details":  {
                                                 "cached_tokens":  0
                                             }
               },
-    "id":  "chatcmpl-Htc9HkYYpS9gKP0OXBETGtWqsqE67yze",
+    "id":  "chatcmpl-r4DGKka6qx64HCbQxODutJCbpqvVgGk3",
     "timings":  {
                     "cache_n":  0,
-                    "prompt_n":  217,
-                    "prompt_ms":  466.561,
-                    "prompt_per_token_ms":  2.1500506912442394,
-                    "prompt_per_second":  465.10531313161624,
-                    "predicted_n":  977,
-                    "predicted_ms":  19453.758,
-                    "predicted_per_token_ms":  19.91172773797339,
-                    "predicted_per_second":  50.22165897200941,
-                    "draft_n":  680,
-                    "draft_n_accepted":  636
+                    "prompt_n":  194,
+                    "prompt_ms":  430.131,
+                    "prompt_per_token_ms":  2.2171701030927835,
+                    "prompt_per_second":  451.02538528959786,
+                    "predicted_n":  975,
+                    "predicted_ms":  19164.914,
+                    "predicted_per_token_ms":  19.656322051282054,
+                    "predicted_per_second":  50.87421733277801,
+                    "draft_n":  672,
+                    "draft_n_accepted":  638
                 }
 }

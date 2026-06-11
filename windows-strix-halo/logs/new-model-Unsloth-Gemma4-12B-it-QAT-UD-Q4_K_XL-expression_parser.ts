@@ -1,146 +1,134 @@
-﻿import * as fs from 'fs';
+﻿const fs = require('fs');
 
 /**
- * A simple arithmetic expression evaluator.
- * Supports integers, + - * /, unary + -, and parentheses.
- * Division truncates toward zero.
+ * Token types
  */
+type TokenType = 'NUMBER' | 'PLUS' | 'MINUS' | 'MUL' | 'DIV' | 'LPAREN' | 'RPAREN';
 
-type Token =
-    | { type: 'Number'; value: number }
-    | { type: 'Operator'; value: string; precedence: number; isUnary: boolean }
-    | { type: 'LParen' }
-    | { type: 'RParen' };
+interface Token {
+  type: TokenType;
+  value: string;
+}
 
 function tokenize(input: string): Token[] {
-    const tokens: Token[] = [];
-    let i = 0;
+  const tokens: Token[] = [];
+  let i = 0;
 
-    while (i < input.length) {
-        const char = input[i];
+  while (i < input.length) {
+    const char = input[i];
 
-        if (/\s/.test(char)) {
-            i++;
-            continue;
-        }
-
-        if (/\d/.test(char)) {
-            let numStr = '';
-            while (i < input.length && /\d/.test(input[i])) {
-                numStr += input[i];
-                i++;
-            }
-            tokens.push({ type: 'Number', value: parseInt(numStr, 10) });
-            continue;
-        }
-
-        if (char === '(') {
-            tokens.push({ type: 'LParen' });
-            i++;
-            continue;
-        }
-
-        if (char === ')') {
-            tokens.push({ type: 'RParen' });
-            i++;
-            continue;
-        }
-
-        if (['+', '-', '*', '/'].includes(char)) {
-            // Determine if operator is unary
-            // It is unary if it's at the start or follows an operator or '('
-            const prev = tokens[tokens.length - 1];
-            const isUnary = !prev || (prev.type === 'Operator' || prev.type === 'LParen');
-            
-            let precedence = 0;
-            if (isUnary) {
-                precedence = 3; // Highest
-            } else {
-                if (char === '+' || char === '-') precedence = 1;
-                else precedence = 2;
-            }
-
-            tokens.push({ 
-                type: 'Operator', 
-                value: char, 
-                precedence, 
-                isUnary 
-            });
-            i++;
-            continue;
-        }
-
-        i++;
+    if (/\s/.test(char)) {
+      i++;
+      continue;
     }
-    return tokens;
+
+    if (/\d/.test(char)) {
+      let numStr = '';
+      while (i < input.length && /\d/.test(input[i])) {
+        numStr += input[i];
+        i++;
+      }
+      tokens.push({ type: 'NUMBER', value: numStr });
+      continue;
+    }
+
+    if (char === '+') tokens.push({ type: 'PLUS', value: '+' });
+    else if (char === '-') tokens.push({ type: 'MINUS', value: '-' });
+    else if (char === '*') tokens.push({ type: 'MUL', value: '*' });
+    else if (char === '/') tokens.push({ type: 'DIV', value: '/' });
+    else if (char === '(') tokens.push({ type: 'LPAREN', value: '(' });
+    else if (char === ')') tokens.push({ type: 'RPAREN', value: ')' });
+    
+    i++;
+  }
+
+  return tokens;
 }
 
 function evaluate(input: string): number {
-    const tokens = tokenize(input);
-    const outputQueue: Token[] = [];
-    const operatorStack: Token[] = [];
-
-    // Shunting-yard Algorithm
-    for (const token of tokens) {
-        if (token.type === 'Number') {
-            outputQueue.push(token);
-        } else if (token.type === 'LParen') {
-            operatorStack.push(token);
-        } else if (token.type === 'RParen') {
-            while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1].type !== 'LParen') {
-                outputQueue.push(operatorStack.pop()!);
-            }
-            operatorStack.pop(); // Remove LParen
-        } else {
-            // Operator
-            while (
-                operatorStack.length > 0 &&
-                operatorStack[operatorStack.length - 1].type === 'Operator' &&
-                operatorStack[operatorStack.length - 1].precedence >= token.precedence
-            ) {
-                outputQueue.push(operatorStack.pop()!);
-            }
-            operatorStack.push(token);
-        }
+  const tokens = tokenize(input);
+  
+  // Pre-process to handle unary operators
+  // A minus or plus is unary if it's at the start or follows an operator/opening paren
+  const processedTokens: (Token | { type: 'UNARY', value: string })[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'MINUS' || token.type === 'PLUS') {
+      if (i === 0 || tokens[i - 1].type === 'MINUS' || 
+          tokens[i - 1].type === 'PLUS' || 
+          tokens[i - 1].type === 'MUL' || 
+          tokens[i - 1].type === 'DIV' || 
+          tokens[i - 1].type === 'LPAREN') {
+        processedTokens.push({ type: 'UNARY', value: token.value });
+        continue;
+      }
     }
+    processedTokens.push(token);
+  }
 
-    while (operatorStack.length > 0) {
+  const precedence: Record<string, number> = {
+    '+': 1,
+    '-': 1,
+    '*': 2,
+    '/': 2,
+    'UNARY': 3
+  };
+
+  const outputQueue: (Token | { type: 'UNARY', value: string })[] = [];
+  const operatorStack: (Token | { type: 'UNARY', value: string })[] = [];
+
+  for (const token of processedTokens) {
+    if (token.type === 'NUMBER') {
+      outputQueue.push(token);
+    } else if (token.type === 'LPAREN') {
+      operatorStack.push(token);
+    } else if (token.type === 'RPAREN') {
+      while (operatorStack.length && operatorStack[operatorStack.length - 1].type !== 'LPAREN') {
         outputQueue.push(operatorStack.pop()!);
+      }
+      operatorStack.pop();
+    } else {
+      const currentPrec = token.type === 'UNARY' ? precedence['UNARY'] : precedence[token.value];
+      while (operatorStack.length && 
+             operatorStack[operatorStack.length - 1].type !== 'LPAREN' &&
+             (operatorStack[operatorStack.length - 1].type === 'UNARY' ? precedence['UNARY'] : precedence[operatorStack[operatorStack.length - 1].value]) >= currentPrec) {
+        outputQueue.push(operatorStack.pop()!);
+      }
+      operatorStack.push(token);
     }
+  }
 
-    // Evaluate Postfix
-    const stack: number[] = [];
-    for (const token of outputQueue) {
-        if (token.type === 'Number') {
-            stack.push(token.value);
-        } else if (token.type === 'Operator') {
-            if (token.isUnary) {
-                const a = stack.pop()!;
-                switch (token.value) {
-                    case '+': stack.push(a); break;
-                    case '-': stack.push(-a); break;
-                }
-            } else {
-                const b = stack.pop()!;
-                const a = stack.pop()!;
-                switch (token.value) {
-                    case '+': stack.push(a + b); break;
-                    case '-': stack.push(a - b); break;
-                    case '*': stack.push(a * b); break;
-                    case '/': 
-                        // Truncate toward zero
-                        const res = a / b;
-                        stack.push(res > 0 ? Math.floor(res) : Math.ceil(res));
-                        break;
-                }
-            }
-        }
+  while (operatorStack.length) {
+    outputQueue.push(operatorStack.pop()!);
+  }
+
+  // Evaluation using RPN
+  const stack: number[] = [];
+  for (const token of outputQueue) {
+    if (token.type === 'NUMBER') {
+      stack.push(parseInt(token.value, 10));
+    } else if (token.type === 'UNARY') {
+      const a = stack.pop()!;
+      stack.push(token.value === '-' ? -a : a);
+    } else {
+      const b = stack.pop()!;
+      const a = stack.pop()!;
+      switch (token.type) {
+        case 'PLUS': stack.push(a + b); break;
+        case 'MINUS': stack.push(a - b); break;
+        case 'MUL': stack.push(a * b); break;
+        case 'DIV': 
+          const res = a / b;
+          stack.push(res < 0 ? Math.ceil(res) : Math.floor(res));
+          break;
+      }
     }
+  }
 
-    return stack[0];
+  return stack[0];
 }
 
 const input = fs.readFileSync(0, "utf8").trim();
 if (input) {
-    console.log(evaluate(input));
+  console.log(evaluate(input));
 }

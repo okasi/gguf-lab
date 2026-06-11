@@ -1,4 +1,4 @@
-﻿import { readFileSync } from "fs";
+﻿import fs from "fs";
 
 class MinHeap {
     private items: string[];
@@ -7,55 +7,57 @@ class MinHeap {
         this.items = [];
     }
 
-    public push(item: string): void {
+    get size(): number {
+        return this.items.length;
+    }
+
+    push(item: string): void {
         this.items.push(item);
         this._bubbleUp(this.items.length - 1);
     }
 
-    public pop(): string | undefined {
-        if (this.items.length === 0) {
-            return undefined;
+    pop(): string | undefined {
+        if (this.items.length === 0) return undefined;
+        const top = this.items[0];
+        const last = this.items.pop()!;
+        if (this.items.length > 0) {
+            this.items[0] = last;
+            this._sinkDown(0);
         }
-        if (this.items.length === 1) {
-            return this.items.pop()!;
-        }
-        const root = this.items[0];
-        this.items[0] = this.items.pop()!;
-        this._sinkDown(0);
-        return root;
+        return top;
     }
 
-    public size(): number {
-        return this.items.length;
+    peek(): string | undefined {
+        return this.items[0];
     }
 
-    private _bubbleUp(index: number): void {
-        while (index > 0) {
-            const parent = Math.floor((index - 1) / 2);
-            if (this.items[index] < this.items[parent]) {
-                this._swap(index, parent);
-                index = parent;
+    private _bubbleUp(idx: number): void {
+        while (idx > 0) {
+            const parentIdx = (idx - 1) >> 1;
+            if (this.items[idx] < this.items[parentIdx]) {
+                this._swap(idx, parentIdx);
+                idx = parentIdx;
             } else {
                 break;
             }
         }
     }
 
-    private _sinkDown(index: number): void {
-        const length = this.items.length;
+    private _sinkDown(idx: number): void {
+        const n = this.items.length;
         while (true) {
-            const left = 2 * index + 1;
-            const right = 2 * index + 2;
-            let smallest = index;
-            if (left < length && this.items[left] < this.items[smallest]) {
+            let smallest = idx;
+            const left = 2 * idx + 1;
+            const right = 2 * idx + 2;
+            if (left < n && this.items[left] < this.items[smallest]) {
                 smallest = left;
             }
-            if (right < length && this.items[right] < this.items[smallest]) {
+            if (right < n && this.items[right] < this.items[smallest]) {
                 smallest = right;
             }
-            if (smallest !== index) {
-                this._swap(index, smallest);
-                index = smallest;
+            if (smallest !== idx) {
+                this._swap(idx, smallest);
+                idx = smallest;
             } else {
                 break;
             }
@@ -69,79 +71,61 @@ class MinHeap {
     }
 }
 
-function solve(input: string): string {
-    const lines = input.trim().split(/\r?\n/);
-    if (lines.length < 2) {
-        return "IMPOSSIBLE";
-    }
+function solve(): void {
+    const input = fs.readFileSync(0, "utf8").trim();
+    const lines = input.split(/\r?\n/);
+    let idx = 0;
 
-    const [nStr, mStr] = lines[0].trim().split(/\s+/).map(Number);
-    if (isNaN(nStr) || isNaN(mStr)) {
-        return "IMPOSSIBLE";
-    }
-    const N = nStr;
-    const M = mStr;
+    const firstLineParts = lines[idx++].trim().split(/\s+/);
+    const N = parseInt(firstLineParts[0], 10);
+    const M = parseInt(firstLineParts[1], 10);
 
-    const taskNames = lines[1].trim().split(/\s+/);
-    if (taskNames.length !== N) {
-        return "IMPOSSIBLE";
-    }
+    const taskNames = lines[idx++].trim().split(/\s+/);
 
     const adj: Map<string, string[]> = new Map();
     const inDegree: Map<string, number> = new Map();
 
-    for (const name of taskNames) {
-        adj.set(name, []);
-        inDegree.set(name, 0);
+    for (const task of taskNames) {
+        adj.set(task, []);
+        inDegree.set(task, 0);
     }
 
     for (let i = 0; i < M; i++) {
-        if (i + 2 >= lines.length) {
-            break;
-        }
-        const parts = lines[i + 2].trim().split(/\s+/);
-        if (parts.length < 2) {
-            continue;
-        }
-        const [A, B] = parts;
-        if (!adj.has(A) || !adj.has(B)) {
-            return "IMPOSSIBLE";
-        }
-        adj.get(A)!.push(B);
-        inDegree.set(B, (inDegree.get(B) || 0) + 1);
+        const parts = lines[idx++].trim().split(/\s+/);
+        const from = parts[0];
+        const to = parts[1];
+        adj.get(from)!.push(to);
+        inDegree.set(to, inDegree.get(to)! + 1);
     }
 
-    const heap = new MinHeap();
-    for (const [name, deg] of inDegree) {
-        if (deg === 0) {
-            heap.push(name);
+    const pq = new MinHeap();
+    for (const task of taskNames) {
+        if (inDegree.get(task) === 0) {
+            pq.push(task);
         }
     }
 
     const result: string[] = [];
-
-    while (heap.size() > 0) {
-        const current = heap.pop()!;
-        result.push(current);
-
-        const neighbors = adj.get(current);
+    while (pq.size > 0) {
+        const task = pq.pop()!;
+        result.push(task);
+        const neighbors = adj.get(task);
         if (neighbors) {
             for (const neighbor of neighbors) {
-                const newDeg = (inDegree.get(neighbor) || 0) - 1;
-                inDegree.set(neighbor, newDeg);
-                if (newDeg === 0) {
-                    heap.push(neighbor);
+                const newInDegree = inDegree.get(neighbor)! - 1;
+                inDegree.set(neighbor, newInDegree);
+                if (newInDegree === 0) {
+                    pq.push(neighbor);
                 }
             }
         }
     }
 
-    if (result.length !== N) {
-        return "IMPOSSIBLE";
+    if (result.length < N) {
+        console.log("IMPOSSIBLE");
+    } else {
+        console.log(result.join(" "));
     }
-
-    return result.join(" ");
 }
 
-const input = readFileSync(0, "utf8");
-console.log(solve(input));
+solve();

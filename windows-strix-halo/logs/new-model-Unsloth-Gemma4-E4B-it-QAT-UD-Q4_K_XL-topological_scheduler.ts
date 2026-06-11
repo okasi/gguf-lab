@@ -1,13 +1,11 @@
-﻿import * as fs from 'fs';
-import { PriorityQueue } from './PriorityQueue';
+﻿import * as fs from "fs";
 
-class PriorityQueue<T> {
-    private heap: { value: T, priority: number }[] = [];
-    private comparator: (a: T, b: T) => number;
-
-    constructor(comparator: (a: T, b: T) => number) {
-        this.comparator = comparator;
-    }
+/**
+ * A simple Min-Priority Queue implemented using an array representation of a Binary Heap.
+ * Stores strings and prioritizes lexicographically smaller strings.
+ */
+class PriorityQueue<T extends string> {
+    private heap: T[] = [];
 
     size(): number {
         return this.heap.length;
@@ -17,9 +15,24 @@ class PriorityQueue<T> {
         return this.heap.length === 0;
     }
 
-    enqueue(value: T, priority: number): void {
-        const item = { value, priority };
-        this.heap.push(item);
+    private getParentIndex(i: number): number {
+        return Math.floor((i - 1) / 2);
+    }
+
+    private getLeftChildIndex(i: number): number {
+        return 2 * i + 1;
+    }
+
+    private getRightChildIndex(i: number): number {
+        return 2 * i + 2;
+    }
+
+    private swap(i: number, j: number): void {
+        [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];
+    }
+
+    enqueue(element: T): void {
+        this.heap.push(element);
         this.bubbleUp(this.heap.length - 1);
     }
 
@@ -28,20 +41,22 @@ class PriorityQueue<T> {
             return undefined;
         }
         if (this.heap.length === 1) {
-            return this.heap.pop()!.value;
+            return this.heap.pop() as T;
         }
-        const min = this.heap[0];
+
+        const root = this.heap[0];
         this.heap[0] = this.heap.pop()!;
         this.bubbleDown(0);
-        return min.value;
+        return root;
     }
 
     private bubbleUp(index: number): void {
         let currentIndex = index;
         while (currentIndex > 0) {
-            const parentIndex = Math.floor((currentIndex - 1) / 2);
-            if (this.comparator(this.heap[currentIndex].value, this.heap[parentIndex].value) < 0) {
-                [this.heap[currentIndex], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[currentIndex]];
+            const parentIndex = this.getParentIndex(currentIndex);
+            // Comparison: lexicographically smaller
+            if (this.heap[currentIndex] < this.heap[parentIndex]) {
+                this.swap(currentIndex, parentIndex);
                 currentIndex = parentIndex;
             } else {
                 break;
@@ -51,23 +66,25 @@ class PriorityQueue<T> {
 
     private bubbleDown(index: number): void {
         let currentIndex = index;
-        const n = this.heap.length;
+        const lastIndex = this.heap.length - 1;
 
         while (true) {
+            let left = this.getLeftChildIndex(currentIndex);
+            let right = this.getRightChildIndex(currentIndex);
             let smallest = currentIndex;
-            const leftChild = 2 * currentIndex + 1;
-            const rightChild = 2 * currentIndex + 2;
 
-            if (leftChild < n && this.comparator(this.heap[leftChild].value, this.heap[smallest].value) < 0) {
-                smallest = leftChild;
+            // Compare with left child
+            if (left <= lastIndex && this.heap[left] < this.heap[smallest]) {
+                smallest = left;
             }
 
-            if (rightChild < n && this.comparator(this.heap[rightChild].value, this.heap[smallest].value) < 0) {
-                smallest = rightChild;
+            // Compare with right child
+            if (right <= lastIndex && this.heap[right] < this.heap[smallest]) {
+                smallest = right;
             }
 
             if (smallest !== currentIndex) {
-                [this.heap[currentIndex], this.heap[smallest]] = [this.heap[smallest], this.heap[currentIndex]];
+                this.swap(currentIndex, smallest);
                 currentIndex = smallest;
             } else {
                 break;
@@ -78,89 +95,78 @@ class PriorityQueue<T> {
 
 function solve() {
     const input = fs.readFileSync(0, "utf8").trim().split('\n');
-    if (input.length === 0 || input[0] === '') {
-        console.log("IMPOSSIBLE");
+
+    if (input.length === 0 || input[0].trim() === "") {
         return;
     }
 
+    // Parse N and M
     const [N, M] = input[0].trim().split(/\s+/).map(Number);
-    if (isNaN(N) || isNaN(M)) {
-        console.log("IMPOSSIBLE");
+
+    if (N === 0) {
+        console.log("");
         return;
     }
 
+    // Parse task names
     const taskNames = input[1].trim().split(/\s+/);
-    if (taskNames.length !== N) {
-        console.log("IMPOSSIBLE");
-        return;
+    const taskMap = new Map<string, number>();
+    for (let i = 0; i < N; i++) {
+        taskMap.set(taskNames[i], i);
     }
 
-    const adj: Map<string, string[]> = new Map();
-    const inDegree: Map<string, number> = new Map();
+    // Graph representation: Adjacency list and in-degree array
+    const adj: number[][] = Array(N).fill(0).map(() => []);
+    const inDegree: number[] = Array(N).fill(0);
 
-    for (const task of taskNames) {
-        adj.set(task, []);
-        inDegree.set(task, 0);
-    }
-
-    for (let i = 2; i < 2 + M; i++) {
-        const line = input[i].trim();
+    // Parse dependencies
+    for (let i = 0; i < M; i++) {
+        const line = input[2 + i].trim();
         if (!line) continue;
-        const parts = line.split(/\s+/);
-        if (parts.length < 2) continue;
+        const [A_name, B_name] = line.split(/\s+/);
 
-        const u = parts[0];
-        const v = parts[1];
+        const u = taskMap.get(A_name);
+        const v = taskMap.get(B_name);
 
-        if (adj.has(u) && adj.has(v)) {
-            adj.get(u)!.push(v);
-            inDegree.set(v, inDegree.get(v)! + 1);
-        }
+        if (u === undefined || v === undefined) continue;
+
+        // A -> B (A must be completed before B)
+        adj[u].push(v);
+        inDegree[v]++;
     }
 
-    // Min-Heap based on lexicographical order (smaller string = higher priority)
-    // Comparator returns < 0 if a should come before b (i.e., a has higher priority)
-    const pq = new PriorityQueue<string>((a, b) => a.localeCompare(b));
+    // --- Topological Sort using Priority Queue (Kahn's Algorithm variant) ---
 
-    // Initialize queue with all nodes having in-degree 0
-    for (const [task, degree] of inDegree.entries()) {
-        if (degree === 0) {
-            pq.enqueue(task, task); // Priority is the task name itself for lexicographical ordering
+    const pq = new PriorityQueue<string>();
+    for (let i = 0; i < N; i++) {
+        if (inDegree[i] === 0) {
+            pq.enqueue(taskNames[i]);
         }
     }
 
     const buildOrder: string[] = [];
-    let count = 0;
 
     while (!pq.isEmpty()) {
-        const currentTask = pq.dequeue()!;
-        buildOrder.push(currentTask);
-        count++;
+        // Get the lexicographically smallest available task
+        const uName = pq.dequeue()!;
+        const uIndex = taskMap.get(uName)!;
 
-        const neighbors = adj.get(currentTask) || [];
+        buildOrder.push(uName);
 
-        // Sort neighbors lexicographically before processing to ensure deterministic iteration
-        // Although the queue handles selection, processing neighbors deterministically is good practice.
-        // More importantly, we must process neighbors in the order they are given IF the requirement implied
-        // that if two tasks become available, the one listed first in the input adjacency list among those
-        // becoming available should be preferred. Since the requirement is "lexicographically smallest task name"
-        // among *all* available tasks, the PQ handles the selection correctly.
-        // However, processing neighbors in lexicographical order helps maintain determinism in traversal logic if multiple
-        // neighbors become ready simultaneously, although the PQ is the primary driver.
-        neighbors.sort((a, b) => a.localeCompare(b));
-
-        for (const neighbor of neighbors) {
-            inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
-            if (inDegree.get(neighbor) === 0) {
-                pq.enqueue(neighbor, neighbor);
+        // Process neighbors
+        for (const vIndex of adj[uIndex]) {
+            inDegree[vIndex]--;
+            if (inDegree[vIndex] === 0) {
+                const vName = taskNames[vIndex];
+                pq.enqueue(vName);
             }
         }
     }
 
-    if (count === N) {
-        console.log(buildOrder.join(' '));
+    // Check for cycle
+    if (buildOrder.length === N) {
+        console.log(buildOrder.join(" "));
     } else {
-        // Cycle detected if we couldn't process all tasks
         console.log("IMPOSSIBLE");
     }
 }

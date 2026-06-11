@@ -35,123 +35,104 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class MinHeap {
-    constructor(compare) {
-        this.heap = [];
-        this.compare = compare;
+    constructor(cmp) {
+        this.data = [];
+        this.cmp = cmp;
     }
-    get size() {
-        return this.heap.length;
-    }
-    isEmpty() {
-        return this.heap.length === 0;
-    }
-    push(item) {
-        this.heap.push(item);
-        this.bubbleUp(this.heap.length - 1);
+    push(val) {
+        this.data.push(val);
+        this.bubbleUp(this.data.length - 1);
     }
     pop() {
-        if (this.heap.length === 0) {
+        if (this.data.length === 0)
             return undefined;
+        const top = this.data[0];
+        const last = this.data.pop();
+        if (this.data.length > 0 && last !== undefined) {
+            this.data[0] = last;
+            this.bubbleDown(0);
         }
-        if (this.heap.length === 1) {
-            return this.heap.pop();
-        }
-        const top = this.heap[0];
-        this.heap[0] = this.heap.pop();
-        this.sinkDown(0);
         return top;
     }
-    peek() {
-        return this.heap[0];
+    size() {
+        return this.data.length;
     }
-    bubbleUp(index) {
-        const item = this.heap[index];
-        while (index > 0) {
-            const parentIndex = Math.floor((index - 1) / 2);
-            const parent = this.heap[parentIndex];
-            if (this.compare(item, parent) >= 0) {
+    isEmpty() {
+        return this.data.length === 0;
+    }
+    bubbleUp(idx) {
+        while (idx > 0) {
+            const parent = (idx - 1) >> 1;
+            if (this.cmp(this.data[idx], this.data[parent]) >= 0)
                 break;
-            }
-            this.heap[index] = parent;
-            index = parentIndex;
+            [this.data[idx], this.data[parent]] = [this.data[parent], this.data[idx]];
+            idx = parent;
         }
-        this.heap[index] = item;
     }
-    sinkDown(index) {
-        const length = this.heap.length;
-        const item = this.heap[index];
+    bubbleDown(idx) {
+        const n = this.data.length;
         while (true) {
-            const leftIndex = 2 * index + 1;
-            const rightIndex = 2 * index + 2;
-            let swapIndex = null;
-            if (leftIndex < length) {
-                const left = this.heap[leftIndex];
-                if (this.compare(item, left) > 0) {
-                    swapIndex = leftIndex;
-                }
+            let smallest = idx;
+            const left = 2 * idx + 1;
+            const right = 2 * idx + 2;
+            if (left < n && this.cmp(this.data[left], this.data[smallest]) < 0) {
+                smallest = left;
             }
-            if (rightIndex < length) {
-                const right = this.heap[rightIndex];
-                if (swapIndex === null || this.compare(right, this.heap[swapIndex]) < 0) {
-                    swapIndex = rightIndex;
-                }
+            if (right < n && this.cmp(this.data[right], this.data[smallest]) < 0) {
+                smallest = right;
             }
-            if (swapIndex === null) {
+            if (smallest === idx)
                 break;
-            }
-            this.heap[index] = this.heap[swapIndex];
-            index = swapIndex;
+            [this.data[idx], this.data[smallest]] = [this.data[smallest], this.data[idx]];
+            idx = smallest;
         }
-        this.heap[index] = item;
     }
 }
 function solve() {
     const input = fs.readFileSync(0, "utf8").trim();
+    if (!input)
+        return;
     const lines = input.split('\n');
-    let lineIndex = 0;
-    const [N_str, M_str] = lines[lineIndex++].split(' ');
-    const N = parseInt(N_str, 10);
-    const M = parseInt(M_str, 10);
-    const tasks = lines[lineIndex++].split(' ');
-    const inDegree = new Map();
-    const adjList = new Map();
-    for (const task of tasks) {
-        inDegree.set(task, 0);
-        adjList.set(task, []);
+    const firstLine = lines[0].trim().split(/\s+/);
+    const N = parseInt(firstLine[0], 10);
+    const M = parseInt(firstLine[1], 10);
+    const taskNames = lines[1].trim().split(/\s+/);
+    const nameToIdx = new Map();
+    for (let i = 0; i < N; i++) {
+        nameToIdx.set(taskNames[i], i);
     }
+    const adj = Array.from({ length: N }, () => []);
+    const inDegree = new Array(N).fill(0);
     for (let i = 0; i < M; i++) {
-        const parts = lines[lineIndex++].split(' ');
-        const from = parts[0];
-        const to = parts[1];
-        adjList.get(from).push(to);
-        inDegree.set(to, inDegree.get(to) + 1);
+        const line = lines[2 + i].trim().split(/\s+/);
+        const u = nameToIdx.get(line[0]);
+        const v = nameToIdx.get(line[1]);
+        adj[u].push(v);
+        inDegree[v]++;
     }
-    const pq = new MinHeap((a, b) => a.localeCompare(b));
-    for (const task of tasks) {
-        if (inDegree.get(task) === 0) {
-            pq.push(task);
+    const heap = new MinHeap((a, b) => a.localeCompare(b));
+    for (let i = 0; i < N; i++) {
+        if (inDegree[i] === 0) {
+            heap.push(taskNames[i]);
         }
     }
-    const order = [];
-    let processedCount = 0;
-    while (!pq.isEmpty()) {
-        const current = pq.pop();
-        order.push(current);
-        processedCount++;
-        const neighbors = adjList.get(current);
-        for (const neighbor of neighbors) {
-            const deg = inDegree.get(neighbor) - 1;
-            inDegree.set(neighbor, deg);
-            if (deg === 0) {
-                pq.push(neighbor);
+    const result = [];
+    while (!heap.isEmpty()) {
+        const task = heap.pop();
+        result.push(task);
+        const idx = nameToIdx.get(task);
+        for (const neighbor of adj[idx]) {
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] === 0) {
+                heap.push(taskNames[neighbor]);
             }
         }
     }
-    if (processedCount !== N) {
+    if (result.length !== N) {
         console.log("IMPOSSIBLE");
     }
     else {
-        console.log(order.join(' '));
+        console.log(result.join(' '));
     }
 }
 solve();

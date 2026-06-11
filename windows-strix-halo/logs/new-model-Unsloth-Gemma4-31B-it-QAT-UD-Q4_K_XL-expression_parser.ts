@@ -40,25 +40,25 @@ class Parser {
     }
 
     public parse(): number {
-        return this.parseExpression();
+        return this.expression();
     }
 
-    private parseExpression(): number {
-        let node = this.parseTerm();
+    private expression(): number {
+        let node = this.term();
         while (this.peek() === '+' || this.peek() === '-') {
             const op = this.consume();
-            const right = this.parseTerm();
+            const right = this.term();
             if (op === '+') node += right;
             else node -= right;
         }
         return node;
     }
 
-    private parseTerm(): number {
-        let node = this.parseUnary();
+    private term(): number {
+        let node = this.unary();
         while (this.peek() === '*' || this.peek() === '/') {
             const op = this.consume();
-            const right = this.parseUnary();
+            const right = this.unary();
             if (op === '*') {
                 node *= right;
             } else {
@@ -69,22 +69,22 @@ class Parser {
         return node;
     }
 
-    private parseUnary(): number {
+    private unary(): number {
         if (this.peek() === '+') {
             this.consume();
-            return this.parseUnary();
+            return this.unary();
         }
         if (this.peek() === '-') {
             this.consume();
-            return -this.parseUnary();
+            return -this.unary();
         }
-        return this.parsePrimary();
+        return this.primary();
     }
 
-    private parsePrimary(): number {
+    private primary(): number {
         const token = this.consume();
         if (token === '(') {
-            const result = this.parseExpression();
+            const result = this.expression();
             this.consume(); // consume ')'
             return result;
         }

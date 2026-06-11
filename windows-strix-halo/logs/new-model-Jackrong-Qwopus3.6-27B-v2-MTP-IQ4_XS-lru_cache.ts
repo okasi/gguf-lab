@@ -2,105 +2,126 @@
 
 class LRUCache {
   private capacity: number;
-  private cacheMap: Map<string, number>;
-  private keyOrder: string[];
-  private keyIndex: Map<string, number>;
+  private size: number;
+  private prev: Map<string, string | null>;
+  private next: Map<string, string | null>;
+  private val: Map<string, number>;
+  private head: string | null;
+  private tail: string | null;
 
   constructor(capacity: number) {
     this.capacity = capacity;
-    this.cacheMap = new Map();
-    this.keyOrder = [];
-    this.keyIndex = new Map();
+    this.size = 0;
+    this.prev = new Map();
+    this.next = new Map();
+    this.val = new Map();
+    this.head = null;
+    this.tail = null;
   }
 
-  public get(key: string): number | null {
-    if (!this.cacheMap.has(key)) {
-      return null;
+  private remove(key: string): void {
+    const p = this.prev.get(key) ?? null;
+    const n = this.next.get(key) ?? null;
+    if (p !== null) {
+      this.next.set(p, n);
+    } else {
+      this.head = n;
     }
-    this.moveToEnd(key);
-    return this.cacheMap.get(key)!;
+    if (n !== null) {
+      this.prev.set(n, p);
+    } else {
+      this.tail = p;
+    }
+    this.prev.delete(key);
+    this.next.delete(key);
   }
 
-  public put(key: string, value: number): void {
-    if (this.cacheMap.has(key)) {
-      this.cacheMap.set(key, value);
-      this.moveToEnd(key);
-      return;
+  private pushFront(key: string): void {
+    this.prev.set(key, null);
+    if (this.head !== null) {
+      this.next.set(key, this.head);
+      this.prev.set(this.head, key);
+    } else {
+      this.next.set(key, null);
+      this.tail = key;
     }
-    if (this.cacheMap.size >= this.capacity) {
-      const leastRecentKey = this.keyOrder[0];
-      this.keyOrder.shift();
-      this.keyIndex.delete(leastRecentKey);
-      this.cacheMap.delete(leastRecentKey);
-    }
-    this.cacheMap.set(key, value);
-    this.keyOrder.push(key);
-    this.keyIndex.set(key, this.keyOrder.length - 1);
+    this.head = key;
   }
 
-  public del(key: string): void {
-    if (!this.cacheMap.has(key)) {
-      return;
-    }
-    const index = this.keyIndex.get(key)!;
-    this.keyOrder.splice(index, 1);
-    this.keyIndex.delete(key);
-    for (let i = index; i < this.keyOrder.length; i++) {
-      this.keyIndex.set(this.keyOrder[i], i);
-    }
-    this.cacheMap.delete(key);
+  get(key: string): number {
+    if (!this.val.has(key)) return -1;
+    this.moveToFront(key);
+    return this.val.get(key)!;
   }
 
-  public getKeysMostRecentToLeastRecent(): string[] {
-    return this.keyOrder.slice().reverse();
+  put(key: string, value: number): void {
+    if (this.val.has(key)) {
+      this.val.set(key, value);
+      this.moveToFront(key);
+    } else {
+      if (this.size === this.capacity) {
+        this.evict();
+      }
+      this.val.set(key, value);
+      this.pushFront(key);
+      this.size++;
+    }
   }
 
-  private moveToEnd(key: string): void {
-    const index = this.keyIndex.get(key)!;
-    if (index === this.keyOrder.length - 1) {
-      return;
+  del(key: string): void {
+    if (!this.val.has(key)) return;
+    this.remove(key);
+    this.val.delete(key);
+    this.size--;
+  }
+
+  keysMRUToLRU(): string[] {
+    const result: string[] = [];
+    let cur: string | null = this.head;
+    while (cur !== null) {
+      result.push(cur);
+      cur = this.next.get(cur) ?? null;
     }
-    this.keyOrder.splice(index, 1);
-    this.keyOrder.push(key);
-    this.keyIndex.set(key, this.keyOrder.length - 1);
-    for (let i = index; i < this.keyOrder.length - 1; i++) {
-      this.keyIndex.set(this.keyOrder[i], i);
-    }
+    return result;
+  }
+
+  private moveToFront(key: string): void {
+    if (this.head === key) return;
+    this.remove(key);
+    this.pushFront(key);
+  }
+
+  private evict(): void {
+    const t = this.tail!;
+    this.remove(t);
+    this.val.delete(t);
   }
 }
 
-function main(): void {
-  const input = fs.readFileSync(0, "utf8").trim();
-  const lines = input.split("\n");
-  const firstLine = lines[0].split(" ");
-  const C = parseInt(firstLine[0], 10);
-  const N = parseInt(firstLine[1], 10);
+const input = fs.readFileSync(0, "utf8").trim();
+const lines = input.split("\n");
+const [C, N] = lines[0].split(" ").map(Number);
 
-  const lru = new LRUCache(C);
-  const getResults: number[] = [];
+const cache = new LRUCache(C);
+const getResults: number[] = [];
 
-  for (let i = 1; i <= N; i++) {
-    const parts = lines[i].split(" ");
-    const op = parts[0];
-    const key = parts[1];
-
-    if (op === "GET") {
-      const val = lru.get(key);
-      getResults.push(val === null ? -1 : val);
-    } else if (op === "PUT") {
-      const value = parseInt(parts[2], 10);
-      lru.put(key, value);
-    } else if (op === "DEL") {
-      lru.del(key);
-    }
+for (let i = 1; i <= N; i++) {
+  const parts = lines[i].split(" ");
+  const op = parts[0];
+  const key = parts[1];
+  if (op === "GET") {
+    getResults.push(cache.get(key));
+  } else if (op === "PUT") {
+    const value = parseInt(parts[2], 10);
+    cache.put(key, value);
+  } else if (op === "DEL") {
+    cache.del(key);
   }
-
-  const getOutput = getResults.length > 0 ? getResults.join(" ") : "EMPTY";
-  const keys = lru.getKeysMostRecentToLeastRecent();
-  const keyOutput = keys.length > 0 ? keys.join(" ") : "EMPTY";
-
-  console.log(getOutput);
-  console.log(keyOutput);
 }
 
-main();
+const getLine = getResults.length > 0 ? getResults.join(" ") : "EMPTY";
+const keys = cache.keysMRUToLRU();
+const keysLine = keys.length > 0 ? keys.join(" ") : "EMPTY";
+
+console.log(getLine);
+console.log(keysLine);

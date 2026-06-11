@@ -71,13 +71,13 @@ class Parser {
         return this.tokens[this.pos++];
     }
     parse() {
-        return this.parseExpression();
+        return this.expression();
     }
-    parseExpression() {
-        let node = this.parseTerm();
+    expression() {
+        let node = this.term();
         while (this.peek() === '+' || this.peek() === '-') {
             const op = this.consume();
-            const right = this.parseTerm();
+            const right = this.term();
             if (op === '+')
                 node += right;
             else
@@ -85,11 +85,11 @@ class Parser {
         }
         return node;
     }
-    parseTerm() {
-        let node = this.parseUnary();
+    term() {
+        let node = this.unary();
         while (this.peek() === '*' || this.peek() === '/') {
             const op = this.consume();
-            const right = this.parseUnary();
+            const right = this.unary();
             if (op === '*') {
                 node *= right;
             }
@@ -100,21 +100,21 @@ class Parser {
         }
         return node;
     }
-    parseUnary() {
+    unary() {
         if (this.peek() === '+') {
             this.consume();
-            return this.parseUnary();
+            return this.unary();
         }
         if (this.peek() === '-') {
             this.consume();
-            return -this.parseUnary();
+            return -this.unary();
         }
-        return this.parsePrimary();
+        return this.primary();
     }
-    parsePrimary() {
+    primary() {
         const token = this.consume();
         if (token === '(') {
-            const result = this.parseExpression();
+            const result = this.expression();
             this.consume(); // consume ')'
             return result;
         }

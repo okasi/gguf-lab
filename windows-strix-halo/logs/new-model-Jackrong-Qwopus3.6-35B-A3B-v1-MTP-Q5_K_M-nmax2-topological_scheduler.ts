@@ -1,37 +1,44 @@
-﻿import * as fs from 'fs';
+﻿const input = fs.readFileSync(0, "utf8").trim();
+const lines = input.split('\n');
 
-class MinHeap<T> {
-    private data: T[];
+// Parse N and M
+const [N, M] = lines[0].split(' ').map(Number);
 
-    constructor(private compare: (a: T, b: T) => number) {
-        this.data = [];
-    }
+// Parse task names
+const tasks = lines[1].split(' ');
 
-    push(item: T): void {
-        this.data.push(item);
-        this.bubbleUp(this.data.length - 1);
-    }
+// Build adjacency list and in-degree array
+const adj: Map<string, string[]> = new Map();
+const inDegree: Map<string, number> = new Map();
 
-    pop(): T | undefined {
-        if (this.data.length === 0) return undefined;
-        const top = this.data[0];
-        const last = this.data.pop();
-        if (this.data.length > 0 && last !== undefined) {
-            this.data[0] = last;
-            this.sinkDown(0);
-        }
-        return top;
-    }
+// Initialize
+for (const task of tasks) {
+    adj.set(task, []);
+    inDegree.set(task, 0);
+}
 
-    isEmpty(): boolean {
-        return this.data.length === 0;
+// Parse edges
+for (let i = 0; i < M; i++) {
+    const [A, B] = lines[i + 2].split(' ');
+    adj.get(A)!.push(B);
+    inDegree.set(B, inDegree.get(B)! + 1);
+}
+
+// Binary heap implementation
+class MinHeap {
+    private data: string[] = [];
+
+    private swap(i: number, j: number): void {
+        const temp = this.data[i];
+        this.data[i] = this.data[j];
+        this.data[j] = temp;
     }
 
     private bubbleUp(index: number): void {
         while (index > 0) {
             const parentIndex = Math.floor((index - 1) / 2);
-            if (this.compare(this.data[index], this.data[parentIndex]) < 0) {
-                [this.data[index], this.data[parentIndex]] = [this.data[parentIndex], this.data[index]];
+            if (this.data[parentIndex] > this.data[index]) {
+                this.swap(parentIndex, index);
                 index = parentIndex;
             } else {
                 break;
@@ -39,91 +46,81 @@ class MinHeap<T> {
         }
     }
 
-    private sinkDown(index: number): void {
-        const length = this.data.length;
+    private bubbleDown(index: number): void {
+        const n = this.data.length;
         while (true) {
-            const leftChildIndex = 2 * index + 1;
-            const rightChildIndex = 2 * index + 2;
             let smallest = index;
+            const left = 2 * index + 1;
+            const right = 2 * index + 2;
 
-            if (leftChildIndex < length && this.compare(this.data[leftChildIndex], this.data[smallest]) < 0) {
-                smallest = leftChildIndex;
+            if (left < n && this.data[smallest] > this.data[left]) {
+                smallest = left;
             }
-
-            if (rightChildIndex < length && this.compare(this.data[rightChildIndex], this.data[smallest]) < 0) {
-                smallest = rightChildIndex;
+            if (right < n && this.data[smallest] > this.data[right]) {
+                smallest = right;
             }
 
             if (smallest !== index) {
-                [this.data[index], this.data[smallest]] = [this.data[smallest], this.data[index]];
+                this.swap(smallest, index);
                 index = smallest;
             } else {
                 break;
             }
         }
     }
-}
 
-function solve(): void {
-    const input = fs.readFileSync(0, "utf8");
-    const lines = input.trim().split('\n');
-    if (lines.length === 0) return;
-
-    const firstLine = lines[0].trim().split(/\s+/);
-    const N = parseInt(firstLine[0], 10);
-    const M = parseInt(firstLine[1], 10);
-
-    const secondLine = lines[1].trim().split(/\s+/);
-    const tasks = secondLine;
-
-    const taskIndexMap = new Map<string, number>();
-    for (let i = 0; i < N; i++) {
-        taskIndexMap.set(tasks[i], i);
+    push(item: string): void {
+        this.data.push(item);
+        this.bubbleUp(this.data.length - 1);
     }
 
-    const adjacencyList: number[][] = Array.from({ length: N }, () => []);
-    const inDegree: number[] = new Array(N).fill(0);
-
-    for (let i = 0; i < M; i++) {
-        const line = lines[2 + i].trim().split(/\s+/);
-        const A = line[0];
-        const B = line[1];
-        const aIdx = taskIndexMap.get(A);
-        const bIdx = taskIndexMap.get(B);
-        if (aIdx === undefined || bIdx === undefined) continue;
-        adjacencyList[aIdx].push(bIdx);
-        inDegree[bIdx]++;
-    }
-
-    const pq = new MinHeap<number>((a, b) => tasks[a].localeCompare(tasks[b]));
-
-    for (let i = 0; i < N; i++) {
-        if (inDegree[i] === 0) {
-            pq.push(i);
+    pop(): string | undefined {
+        if (this.data.length === 0) return undefined;
+        const min = this.data[0];
+        const last = this.data.pop()!;
+        if (this.data.length > 0) {
+            this.data[0] = last;
+            this.bubbleDown(0);
         }
+        return min;
     }
 
-    const result: string[] = [];
-    let processedCount = 0;
-
-    while (!pq.isEmpty()) {
-        const current = pq.pop()!;
-        result.push(tasks[current]);
-        processedCount++;
-
-        for (const neighbor of adjacencyList[current]) {
-            inDegree[neighbor]--;
-            if (inDegree[neighbor] === 0) {
-                pq.push(neighbor);
-            }
-        }
+    get size(): number {
+        return this.data.length;
     }
 
-    if (processedCount !== N) {
-        console.log("IMPOSSIBLE");
-    } else {
-        console.log(result.join(" "));
+    peek(): string | undefined {
+        return this.data.length > 0 ? this.data[0] : undefined;
     }
 }
 
-solve();
+// Topological sort with priority queue
+const heap = new MinHeap();
+
+// Initialize heap with nodes that have in-degree 0
+for (const task of tasks) {
+    if (inDegree.get(task) === 0) {
+        heap.push(task);
+    }
+}
+
+const result: string[] = [];
+
+while (heap.size > 0) {
+    const current = heap.pop()!;
+    result.push(current);
+
+    for (const neighbor of adj.get(current)!) {
+        const deg = inDegree.get(neighbor)! - 1;
+        inDegree.set(neighbor, deg);
+        if (deg === 0) {
+            heap.push(neighbor);
+        }
+    }
+}
+
+if (result.length !== N) {
+    console.log("IMPOSSIBLE");
+} else {
+    console.log(result.join(' '));
+}

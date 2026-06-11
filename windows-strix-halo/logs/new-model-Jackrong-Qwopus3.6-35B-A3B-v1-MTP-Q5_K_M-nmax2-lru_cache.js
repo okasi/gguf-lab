@@ -34,114 +34,130 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
-class LRUCache {
-    constructor(capacity) {
-        this.capacity = capacity;
-        this.keyNodeMap = new Map();
-        this.head = new DoublyListNode(null, null);
-        this.tail = new DoublyListNode(null, null);
+class DoubleLinkedList {
+    constructor() {
+        this.head = { key: "", value: 0, prev: null, next: null };
+        this.tail = { key: "", value: 0, prev: null, next: null };
         this.head.next = this.tail;
         this.tail.prev = this.head;
     }
-    removeFromNode(node) {
-        node.prev.next = node.next;
-        node.next.prev = node.prev;
-    }
-    addToHead(node) {
+    addAtHead(node) {
         node.next = this.head.next;
+        node.prev = this.head;
         this.head.next.prev = node;
         this.head.next = node;
-        node.prev = this.head;
+    }
+    removeNode(node) {
+        if (node.prev) {
+            node.prev.next = node.next;
+        }
+        if (node.next) {
+            node.next.prev = node.prev;
+        }
+        node.prev = null;
+        node.next = null;
     }
     removeTail() {
-        const node = this.tail.prev;
-        if (node === this.head) {
-            return null;
+        if (this.tail.prev && this.tail.prev !== this.head) {
+            const node = this.tail.prev;
+            this.removeNode(node);
+            return node;
         }
-        this.removeFromNode(node);
-        return node;
+        return null;
+    }
+    moveToHead(node) {
+        this.removeNode(node);
+        this.addAtHead(node);
+    }
+}
+class LRUCache {
+    constructor(capacity) {
+        this.capacity = capacity;
+        this.cache = new Map();
+        this.dll = new DoubleLinkedList();
     }
     get(key) {
-        const node = this.keyNodeMap.get(key);
+        const node = this.cache.get(key);
         if (!node) {
             return -1;
         }
-        this.removeFromNode(node);
-        this.addToHead(node);
+        this.dll.moveToHead(node);
         return node.value;
     }
     put(key, value) {
-        const existingNode = this.keyNodeMap.get(key);
+        const existingNode = this.cache.get(key);
         if (existingNode) {
             existingNode.value = value;
-            this.removeFromNode(existingNode);
-            this.addToHead(existingNode);
+            this.dll.moveToHead(existingNode);
+            return;
         }
-        else {
-            if (this.keyNodeMap.size >= this.capacity) {
-                const evictedNode = this.removeTail();
-                if (evictedNode) {
-                    this.keyNodeMap.delete(evictedNode.key);
-                }
+        const newNode = { key, value, prev: null, next: null };
+        this.dll.addAtHead(newNode);
+        this.cache.set(key, newNode);
+        if (this.cache.size > this.capacity) {
+            const removedNode = this.dll.removeTail();
+            if (removedNode) {
+                this.cache.delete(removedNode.key);
             }
-            const newNode = new DoublyListNode(key, value);
-            this.addToHead(newNode);
-            this.keyNodeMap.set(key, newNode);
         }
     }
     delete(key) {
-        const node = this.keyNodeMap.get(key);
+        const node = this.cache.get(key);
         if (node) {
-            this.removeFromNode(node);
-            this.keyNodeMap.delete(key);
+            this.dll.removeNode(node);
+            this.cache.delete(key);
         }
     }
-    getLRUOrder() {
-        const result = [];
-        let current = this.head.next;
-        while (current && current !== this.tail) {
-            result.push(current.key);
+    getKeysMostToLeast() {
+        const keys = [];
+        let current = this.dll.head.next;
+        while (current && current !== this.dll.tail) {
+            keys.push(current.key);
             current = current.next;
         }
-        return result;
+        return keys;
     }
-}
-class DoublyListNode {
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        this.prev = null;
-        this.next = null;
+    isEmpty() {
+        return this.cache.size === 0;
     }
 }
 function main() {
     const input = fs.readFileSync(0, "utf8").trim();
     const lines = input.split("\n");
-    const firstLine = lines[0].split(/\s+/);
+    const firstLine = lines[0].trim().split(/\s+/);
     const capacity = parseInt(firstLine[0], 10);
     const n = parseInt(firstLine[1], 10);
     const cache = new LRUCache(capacity);
     const getResults = [];
     for (let i = 1; i <= n; i++) {
-        const parts = lines[i].split(/\s+/);
+        const line = lines[i].trim();
+        const parts = line.split(/\s+/);
         const operation = parts[0];
         const key = parts[1];
-        if (operation === "GET") {
-            const result = cache.get(key);
-            getResults.push(String(result));
-        }
-        else if (operation === "PUT") {
+        if (operation === "PUT") {
             const value = parseInt(parts[2], 10);
             cache.put(key, value);
+        }
+        else if (operation === "GET") {
+            const result = cache.get(key);
+            getResults.push(result);
         }
         else if (operation === "DEL") {
             cache.delete(key);
         }
     }
-    const getOutput = getResults.length > 0 ? getResults.join(" ") : "EMPTY";
-    const keysOrder = cache.getLRUOrder();
-    const keysOutput = keysOrder.length > 0 ? keysOrder.join(" ") : "EMPTY";
-    console.log(getOutput);
-    console.log(keysOutput);
+    if (getResults.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
+        console.log(getResults.join(" "));
+    }
+    const keys = cache.getKeysMostToLeast();
+    if (keys.length === 0) {
+        console.log("EMPTY");
+    }
+    else {
+        console.log(keys.join(" "));
+    }
 }
 main();

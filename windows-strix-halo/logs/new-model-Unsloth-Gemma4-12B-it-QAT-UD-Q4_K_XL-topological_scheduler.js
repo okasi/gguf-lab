@@ -1,42 +1,8 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs = __importStar(require("fs"));
+const fs = require('fs');
 /**
- * Min-Heap implementation to satisfy the lexicographical smallest
- * requirement in O(log N) time for insertions and extractions.
+ * Min-Heap implementation to satisfy the lexicographical order requirement
+ * and the O((N + M) log N) time complexity.
  */
 class MinHeap {
     constructor() {
@@ -53,7 +19,7 @@ class MinHeap {
         const last = this.heap.pop();
         if (this.size() > 0) {
             this.heap[0] = last;
-            this.sinkDown(0);
+            this.bubbleDown(0);
         }
         return top;
     }
@@ -62,17 +28,17 @@ class MinHeap {
     }
     bubbleUp(index) {
         while (index > 0) {
-            let parent = Math.floor((index - 1) / 2);
-            if (this.heap[index] < this.heap[parent]) {
-                [this.heap[index], this.heap[parent]] = [this.heap[parent], this.heap[index]];
-                index = parent;
+            let parentIndex = Math.floor((index - 1) / 2);
+            if (this.heap[index] < this.heap[parentIndex]) {
+                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                index = parentIndex;
             }
             else {
                 break;
             }
         }
     }
-    sinkDown(index) {
+    bubbleDown(index) {
         while (true) {
             let smallest = index;
             let left = 2 * index + 1;
@@ -95,21 +61,22 @@ class MinHeap {
 }
 function solve() {
     const input = fs.readFileSync(0, "utf8").split(/\s+/);
-    if (input.length === 0 || input[0] === "")
+    if (input.length < 2)
         return;
     let ptr = 0;
     const N = parseInt(input[ptr++]);
     const M = parseInt(input[ptr++]);
     if (isNaN(N))
         return;
-    const tasks = new Set();
+    const tasks = [];
+    for (let i = 0; i < N; i++) {
+        tasks.push(input[ptr++]);
+    }
     const adj = new Map();
     const inDegree = new Map();
-    for (let i = 0; i < N; i++) {
-        const name = input[ptr++];
-        tasks.add(name);
-        adj.set(name, []);
-        inDegree.set(name, 0);
+    for (const task of tasks) {
+        adj.set(task, []);
+        inDegree.set(task, 0);
     }
     for (let i = 0; i < M; i++) {
         const u = input[ptr++];
@@ -117,21 +84,21 @@ function solve() {
         adj.get(u).push(v);
         inDegree.set(v, (inDegree.get(v) || 0) + 1);
     }
-    const pq = new MinHeap();
+    const heap = new MinHeap();
     for (const task of tasks) {
-        if ((inDegree.get(task) || 0) === 0) {
-            pq.push(task);
+        if (inDegree.get(task) === 0) {
+            heap.push(task);
         }
     }
     const result = [];
-    while (pq.size() > 0) {
-        const u = pq.pop();
+    while (heap.size() > 0) {
+        const u = heap.pop();
         result.push(u);
         const neighbors = adj.get(u) || [];
         for (const v of neighbors) {
             inDegree.set(v, inDegree.get(v) - 1);
             if (inDegree.get(v) === 0) {
-                pq.push(v);
+                heap.push(v);
             }
         }
     }

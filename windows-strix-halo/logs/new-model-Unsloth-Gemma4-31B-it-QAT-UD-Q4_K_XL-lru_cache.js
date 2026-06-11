@@ -36,10 +36,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class Node {
     constructor(key, value) {
-        this.prev = null;
-        this.next = null;
         this.key = key;
         this.value = value;
+        this.prev = null;
+        this.next = null;
+        this.prev = null;
+        this.next = null;
     }
 }
 class LRUCache {
@@ -59,17 +61,7 @@ class LRUCache {
         else
             this.tail = node.prev;
     }
-    setMRU(node) {
-        this.remove(node);
-        node.next = this.head;
-        node.prev = null;
-        if (this.head)
-            this.head.prev = node;
-        this.head = node;
-        if (!this.tail)
-            this.tail = node;
-    }
-    addToMRU(node) {
+    setMostRecent(node) {
         node.next = this.head;
         node.prev = null;
         if (this.head)
@@ -82,31 +74,33 @@ class LRUCache {
         if (this.map.has(key)) {
             const node = this.map.get(key);
             node.value = value;
-            this.setMRU(node);
+            this.remove(node);
+            this.setMostRecent(node);
         }
         else {
             if (this.map.size >= this.capacity) {
                 const lru = this.tail;
                 if (lru) {
-                    this.remove(lru);
                     this.map.delete(lru.key);
+                    this.remove(lru);
                 }
             }
             const newNode = new Node(key, value);
             this.map.set(key, newNode);
-            this.addToMRU(newNode);
+            this.setMostRecent(newNode);
         }
     }
     get(key) {
+        if (!this.map.has(key))
+            return -1;
         const node = this.map.get(key);
-        if (!node)
-            return null;
-        this.setMRU(node);
+        this.remove(node);
+        this.setMostRecent(node);
         return node.value;
     }
     del(key) {
-        const node = this.map.get(key);
-        if (node) {
+        if (this.map.has(key)) {
+            const node = this.map.get(key);
             this.remove(node);
             this.map.delete(key);
         }
@@ -121,8 +115,8 @@ class LRUCache {
         return keys;
     }
 }
-function solve() {
-    const input = fs.readFileSync(0, "utf8");
+function main() {
+    const input = fs.readFileSync(0, 'utf8');
     const lines = input.split(/\r?\n/);
     if (lines.length === 0)
         return;
@@ -131,27 +125,26 @@ function solve() {
         return;
     const C = parseInt(firstLine[0]);
     const N = parseInt(firstLine[1]);
-    const lru = new LRUCache(C);
+    const cache = new LRUCache(C);
     const getResults = [];
     for (let i = 1; i <= N; i++) {
-        const line = lines[i];
+        const line = lines[i]?.trim();
         if (!line)
             continue;
-        const parts = line.trim().split(/\s+/);
+        const parts = line.split(/\s+/);
         const op = parts[0];
         if (op === 'PUT') {
-            lru.put(parts[1], parseInt(parts[2]));
+            cache.put(parts[1], parseInt(parts[2]));
         }
         else if (op === 'GET') {
-            const val = lru.get(parts[1]);
-            getResults.push(val === null ? "-1" : val.toString());
+            getResults.push(cache.get(parts[1]));
         }
         else if (op === 'DEL') {
-            lru.del(parts[1]);
+            cache.del(parts[1]);
         }
     }
-    process.stdout.write((getResults.length > 0 ? getResults.join(" ") : "EMPTY") + "\n");
-    const finalKeys = lru.getKeys();
-    process.stdout.write((finalKeys.length > 0 ? finalKeys.join(" ") : "EMPTY") + "\n");
+    process.stdout.write((getResults.length > 0 ? getResults.join(' ') : 'EMPTY') + '\n');
+    const remainingKeys = cache.getKeys();
+    process.stdout.write((remainingKeys.length > 0 ? remainingKeys.join(' ') : 'EMPTY') + '\n');
 }
-solve();
+main();

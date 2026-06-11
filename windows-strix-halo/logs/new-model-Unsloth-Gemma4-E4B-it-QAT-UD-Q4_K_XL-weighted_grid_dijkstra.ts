@@ -1,106 +1,90 @@
 ﻿import * as fs from 'fs';
-import { PriorityQueue } from '@datastructures-js/priority-queue';
 
-/**
- * Finds the minimum cost path from 'S' to 'T' in a grid with variable movement costs.
- * Uses Dijkstra's algorithm.
- */
 function solve() {
     const input = fs.readFileSync(0, 'utf8').trim().split('\n');
-    if (input.length === 0) return;
-
-    const [hStr, wStr] = input[0].trim().split(/\s+/);
-    const H = parseInt(hStr);
-    const W = parseInt(wStr);
-
-    const grid: string[][] = [];
-    for (let i = 1; i <= H; i++) {
-        grid.push(input[i].trim().split(''));
+    if (input.length === 0 || input[0].length === 0) {
+        return;
     }
 
-    let startRow = -1, startCol = -1;
-    let targetRow = -1, targetCol = -1;
+    const [H, W] = input[0].trim().split(/\s+/).map(Number);
+    const grid = input.slice(1, H + 1).map(line => line.trim().split(''));
+
+    let start: [number, number] | null = null;
+    let target: [number, number] | null = null;
 
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
             if (grid[r][c] === 'S') {
-                startRow = r;
-                startCol = c;
+                start = [r, c];
             } else if (grid[r][c] === 'T') {
-                targetRow = r;
-                targetCol = c;
+                target = [r, c];
             }
         }
     }
 
-    if (startRow === -1 || targetRow === -1) {
+    if (!start || !target) {
         console.log(-1);
         return;
     }
 
-    // Distances initialized to infinity
     const dist: number[][] = Array(H).fill(0).map(() => Array(W).fill(Infinity));
     
-    // Priority Queue stores [cost, row, col]
-    // We use a min-heap based on cost.
-    const pq = new PriorityQueue<[number, number, number]>((a, b) => a[0] - b[0]);
+    // Priority Queue implementation using an array for simplicity since the grid size is likely small, 
+    // but for correctness and efficiency, we simulate a min-heap structure.
+    // In a real competitive programming environment, a proper Binary Heap implementation would be used.
+    // For Node.js environment, we will use a sorted array to simulate the PQ for correctness.
+    
+    // PQ stores [cost, row, col]
+    const pq: [number, number, number][] = []; 
 
-    // Initialize start node
-    dist[startRow][startCol] = 0;
-    pq.enqueue([0, startRow, startCol]);
+    const [startR, startC] = start;
+    dist[startR][startC] = 0;
+    pq.push([0, startR, startC]);
 
-    const dr = [-1, 1, 0, 0]; // Up, Down
-    const dc = [0, 0, -1, 1]; // Left, Right
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
-    while (!pq.isEmpty()) {
-        const [cost, r, c] = pq.dequeue()!;
+    while (pq.length > 0) {
+        // Simulate min-heap extraction: find the element with the minimum cost
+        pq.sort((a, b) => a[0] - b[0]);
+        const [d, r, c] = pq.shift()!;
 
-        if (cost > dist[r][c]) {
+        if (d > dist[r][c]) {
             continue;
         }
 
-        if (r === targetRow && c === targetCol) {
-            console.log(cost);
+        if (r === target[0] && c === target[1]) {
+            console.log(d);
             return;
         }
 
-        // Explore neighbors
-        for (let i = 0; i < 4; i++) {
-            const nr = r + dr[i];
-            const nc = c + dc[i];
+        for (const [dr, dc] of directions) {
+            const nr = r + dr;
+            const nc = c + dc;
 
-            // Check boundaries
-            if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
+            if (nr >= 0 && nr < H && nc >= 0 && nc < W && grid[nr][nc] !== '#') {
+                let cost = 0;
                 const cell = grid[nr][nc];
-                
-                // Check for walls
-                if (cell === '#') {
-                    continue;
-                }
 
-                let moveCost = 0;
-                
-                // Calculate cost to enter the new cell (nr, nc)
                 if (cell >= '0' && cell <= '9') {
-                    moveCost = parseInt(cell);
-                } else if (cell === 'S' || cell === 'T') {
-                    // Entering S or T costs 0, as per problem description.
-                    // Note: Start cost is handled by initialization.
-                    moveCost = 0;
+                    cost = parseInt(cell);
                 }
-                
-                const newDist = dist[r][c] + moveCost;
+                // S and T cost 0 when entered (cost of the *next* cell entered)
+
+                const newDist = dist[r][c] + cost;
 
                 if (newDist < dist[nr][nc]) {
                     dist[nr][nc] = newDist;
-                    pq.enqueue([newDist, nr, nc]);
+                    pq.push([newDist, nr, nc]);
                 }
             }
         }
     }
 
-    // If the loop finishes and target hasn't been reached
-    console.log(-1);
+    if (dist[target[0]][target[1]] === Infinity) {
+        console.log(-1);
+    } else {
+        console.log(dist[target[0]][target[1]]);
+    }
 }
 
 solve();

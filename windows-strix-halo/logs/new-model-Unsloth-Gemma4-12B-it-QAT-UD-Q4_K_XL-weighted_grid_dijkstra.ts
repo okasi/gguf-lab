@@ -1,7 +1,7 @@
 ﻿import * as fs from 'fs';
 
 function solve() {
-    const input = fs.readFileSync(0, "utf8").split(/\r?\n/);
+    const input = fs.readFileSync(0, 'utf8').split(/\r?\n/);
     if (input.length === 0) return;
 
     const firstLine = input[0].trim().split(/\s+/);
@@ -11,93 +11,45 @@ function solve() {
 
     const grid = [];
     for (let i = 1; i <= H; i++) {
-        grid.push(input[i].trim().split(/(\s+)/).filter(x => x !== ""));
+        grid.push(input[i].trim().split(/(\s+)/).filter(x => x.length > 0));
     }
 
-    // The grid might have extra whitespace due to split. 
-    // Let's clean it to ensure it's a 2D array of chars.
-    const cleanGrid: string[][] = [];
-    for (let i = 0; i < H; i++) {
-        let row: string[] = [];
-        // The split above might be messy depending on input format, 
-        // but usually, we want the actual characters.
-        // Let's re-process to be safe based on the "H lines" description.
-        const rawLine = input[i + 1].trim();
-        for (let char of rawLine) {
-            if (char !== ' ') row.push(char);
-        }
-        cleanGrid.push(row);
-    }
-
-    let start: [number, number] = [-1, -1];
-    let target: [number, number] = [-1, -1];
+    let start = null;
+    let target = null;
 
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
-            if (cleanGrid[r][c] === 'S') start = [r, c];
-            if (cleanGrid[r][c] === 'T') target = [r, c];
+            const char = grid[r][c];
+            if (char === 'S') start = [r, c];
+            if (char === 'T') target = [r, c];
         }
     }
 
-    const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
-    
-    // Min-Priority Queue Implementation (Simple Binary Heap)
-    class PriorityQueue {
-        private heap: { cost: number; r: number; c: number }[] = [];
-        push(cost: number, r: number, c: number) {
-            this.heap.push({ cost, r, c });
-            this.bubbleUp();
-        }
-        pop() {
-            if (this.size() === 0) return null;
-            const top = this.heap[0];
-            const last = this.heap.pop()!;
-            if (this.size() > 0) {
-                this.heap[0] = last;
-                this.bubbleDown();
-            }
-            return top;
-        }
-        size() { return this.heap.length; }
-        private bubbleUp() {
-            let idx = this.heap.length - 1;
-            while (idx > 0) {
-                let parentIdx = Math.floor((idx - 1) / 2);
-                if (this.heap[idx].cost < this.heap[parentIdx].cost) {
-                    [this.heap[idx], this.heap[parentIdx]] = [this.heap[parentIdx], this.heap[idx]];
-                    idx = parentIdx;
-                } else break;
-            }
-        }
-        private bubbleDown() {
-            let idx = 0;
-            while (true) {
-                let left = 2 * idx + 1;
-                let right = 2 * idx + 2;
-                let smallest = idx;
-                if (left < this.heap.length && this.heap[left].cost < this.heap[smallest].cost) smallest = left;
-                if (right < this.heap.length && this.heap[right].cost < this.heap[smallest].cost) smallest = right;
-                if (smallest !== idx) {
-                    [this.heap[idx], this.heap[smallest]] = [this.heap[smallest], this.heap[idx]];
-                    idx = smallest;
-                } else break;
-            }
-        }
+    if (!start || !target) {
+        console.log("-1");
+        return;
     }
 
-    const pq = new PriorityQueue();
+    const dist = Array.from({ length: H }, () => Array(W).fill(Infinity));
+    const visited = Array.from({ length: H }, () => Array(W).fill(false));
+
     dist[start[0]][start[1]] = 0;
-    pq.push(0, start[0], start[1]);
+
+    const pq: [number, number, number][] = [[0, start[0], start[1]]];
 
     const dr = [-1, 1, 0, 0];
     const dc = [0, 0, -1, 1];
 
-    while (pq.size() > 0) {
-        const { cost, r, c } = pq.pop()!;
+    while (pq.length > 0) {
+        // Sort to simulate a Min-Priority Queue
+        pq.sort((a, b) => a[0] - b[0]);
+        const [d, r, c] = pq.shift()!;
 
-        if (cost > dist[r][c]) continue;
+        if (visited[r][c]) continue;
+        visited[r][c] = true;
+
         if (r === target[0] && c === target[1]) {
-            console.log(cost);
+            console.log(d);
             return;
         }
 
@@ -106,23 +58,23 @@ function solve() {
             const nc = c + dc[i];
 
             if (nr >= 0 && nr < H && nc >= 0 && nc < W) {
-                const char = cleanGrid[nr][nc];
-                if (char === '#') continue;
+                const cell = grid[nr][nc];
+                if (cell === '#') continue;
 
                 let moveCost = 0;
-                if (char >= '0' && char <= '9') {
-                    moveCost = parseInt(char);
+                if (cell >= '0' && cell <= '9') {
+                    moveCost = parseInt(cell);
                 }
 
                 if (dist[r][c] + moveCost < dist[nr][nc]) {
                     dist[nr][nc] = dist[r][c] + moveCost;
-                    pq.push(dist[nr][nc], nr, nc);
+                    pq.push([dist[nr][nc], nr, nc]);
                 }
             }
         }
     }
 
-    console.log(-1);
+    console.log("-1");
 }
 
 solve();

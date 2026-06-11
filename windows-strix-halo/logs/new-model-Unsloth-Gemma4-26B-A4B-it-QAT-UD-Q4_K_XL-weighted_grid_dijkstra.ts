@@ -9,27 +9,25 @@ interface Cell {
 class MinHeap<T> {
     private heap: { priority: number; value: T }[] = [];
 
-    push(priority: number, value: T): void {
+    push(priority: number, value: T) {
         this.heap.push({ priority, value });
         this.bubbleUp();
     }
 
     pop(): T | undefined {
         if (this.size() === 0) return undefined;
+        if (this.size() === 1) return this.heap.pop()!.value;
         const top = this.heap[0].value;
-        const bottom = this.heap.pop()!;
-        if (this.size() > 0) {
-            this.heap[0] = { priority: bottom.priority, value: bottom.value };
-            this.bubbleDown();
-        }
+        this.heap[0] = this.heap.pop()!;
+        this.bubbleDown();
         return top;
     }
 
-    size(): number {
+    size() {
         return this.heap.length;
     }
 
-    private bubbleUp(): void {
+    private bubbleUp() {
         let index = this.heap.length - 1;
         while (index > 0) {
             let parentIndex = Math.floor((index - 1) / 2);
@@ -39,7 +37,7 @@ class MinHeap<T> {
         }
     }
 
-    private bubbleDown(): void {
+    private bubbleDown() {
         let index = 0;
         const length = this.heap.length;
         while (true) {
@@ -73,29 +71,28 @@ function solve() {
     const input = fs.readFileSync(0, "utf8").split(/\s+/);
     if (input.length < 2) return;
 
-    let idx = 0;
-    const H = parseInt(input[idx++]);
-    const W = parseInt(input[idx++]);
-
+    const H = parseInt(input[0]);
+    const W = parseInt(input[1]);
     const grid: string[][] = [];
-    let start: [number, number] = [-1, -1];
-    let target: [number, number] = [-1, -1];
 
+    let startPos: [number, number] = [-1, -1];
+    let targetPos: [number, number] = [-1, -1];
+
+    let idx = 2;
     for (let i = 0; i < H; i++) {
-        const rowStr = input[idx++];
-        const row: string[] = rowStr.split('');
-        grid.push(row);
+        const row = input[idx++];
+        grid.push(row.split(''));
         for (let j = 0; j < W; j++) {
-            if (row[j] === 'S') start = [i, j];
-            else if (row[j] === 'T') target = [i, j];
+            if (grid[i][j] === 'S') startPos = [i, j];
+            if (grid[i][j] === 'T') targetPos = [i, j];
         }
     }
 
     const dist: number[][] = Array.from({ length: H }, () => Array(W).fill(Infinity));
     const pq = new MinHeap<Cell>();
 
-    dist[start[0]][start[1]] = 0;
-    pq.push(0, { r: start[0], c: start[1], cost: 0 });
+    dist[startPos[0]][startPos[1]] = 0;
+    pq.push(0, { r: startPos[0], c: startPos[1], cost: 0 });
 
     const dr = [-1, 1, 0, 0];
     const dc = [0, 0, -1, 1];
@@ -105,7 +102,7 @@ function solve() {
         const { r, c } = current;
 
         if (current.cost > dist[r][c]) continue;
-        if (r === target[0] && c === target[1]) {
+        if (r === targetPos[0] && c === targetPos[1]) {
             console.log(dist[r][c]);
             return;
         }

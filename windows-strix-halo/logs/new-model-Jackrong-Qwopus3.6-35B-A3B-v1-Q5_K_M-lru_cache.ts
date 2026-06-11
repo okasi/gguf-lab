@@ -9,147 +9,173 @@ class LRUCache {
     private keyToIndex: Map<string, number>;
     private indexToKey: string[];
     private indexToValue: number[];
-    private count: number;
-    private freeList: number[];
+    private size: number;
+    private freeListHead: number;
 
     constructor(capacity: number) {
         this.capacity = capacity;
-        this.head = -1; // Points to the most recently used node
-        this.tail = -1; // Points to the least recently used node
-        this.count = 0;
+        this.size = 0;
+        this.head = 0;
+        this.tail = 0;
+        // We'll use two arrays: one for allocated nodes, one for free nodes.
+        // To handle dynamic allocation, we use a free list.
+        // However, since we know max nodes = capacity, we can pre-allocate arrays of size capacity + 2 (for sentinel nodes).
+        // Actually, simpler: use a single set of arrays of size capacity, and a free list to manage indices.
+        // But for simplicity and O(1), let's just use two pools: used and free.
+        // Even simpler: use a fixed-size array for all nodes, and a free list.
         
-        // Pre-allocate arrays for performance. Max capacity is 200000.
-        const maxSize = 200000;
-        this.next = new Array(maxSize).fill(-1);
-        this.prev = new Array(maxSize).fill(-1);
-        this.indexToKey = new Array(maxSize);
-        this.indexToValue = new Array(maxSize);
+        this.next = new Array(capacity).fill(-1);
+        this.prev = new Array(capacity).fill(-1);
+        this.indexToKey = new Array(capacity);
+        this.indexToValue = new Array(capacity);
+        this.keyToIndex = new Map<string, number>();
+        this.freeListHead = -1;
         
-        // Hash map to quickly find the index of a key
-        this.keyToIndex = new Map();
-        
-        // Free list to reuse indices
-        this.freeList = [];
-        for (let i = 0; i < maxSize; i++) {
-            this.freeList.push(i);
+        // Initialize free list
+        for (let i = 0; i < capacity; i++) {
+            this.next[i] = i + 1;
         }
+        this.next[capacity - 1] = -1;
+        
+        // Sentinel nodes for doubly linked list
+        // Index 0: head sentinel
+        // Index 1: tail sentinel
+        // This complicates things because we have capacity nodes + 2 sentinels.
+        // Let's restructure: use indices 0..capacity-1 for data nodes.
+        // Sentinels are just headRef and tailRef indices.
+        this.head = -1;
+        this.tail = -1;
     }
 
-    private allocate(): number {
-        if (this.freeList.length === 0) {
-            // Should not happen given constraints, but fallback
-            return this.indexToKey.length;
+    private removeFromList(index: number): void {
+        if (this.prev[index] !== -1) {
+            this.next[this.prev[index]] = this.next[index];
+        } else {
+            // This is the head
+            this.head = this.next[index];
         }
-        return this.freeList.pop()!;
-    }
-
-    private free(index: number): void {
+        if (this.next[index] !== -1) {
+            this.prev[this.next[index]] = this.prev[index];
+        } else {
+            // This is the tail
+            this.tail = this.prev[index];
+        }
         this.next[index] = -1;
         this.prev[index] = -1;
-        this.indexToKey[index] = undefined!;
-        this.indexToValue[index] = 0;
-        this.freeList.push(index);
-    }
-
-    private removeNode(index: number): void {
-        const prevIdx = this.prev[index];
-        const nextIdx = this.next[index];
-
-        if (prevIdx !== -1) {
-            this.next[prevIdx] = nextIdx;
-        } else {
-            // This node is the head
-            this.head = nextIdx;
-        }
-
-        if (nextIdx !== -1) {
-            this.prev[nextIdx] = prevIdx;
-        } else {
-            // This node is the tail
-            this.tail = prevIdx;
-        }
-
-        this.count--;
     }
 
     private addToHead(index: number): void {
-        this.next[index] = this.head;
         this.prev[index] = -1;
-
+        this.next[index] = this.head;
         if (this.head !== -1) {
             this.prev[this.head] = index;
         }
-
         this.head = index;
-
         if (this.tail === -1) {
             this.tail = index;
         }
-
-        this.count++;
     }
 
-    moveToHead(index: number): void {
-        if (this.head === index) {
-            return; // Already most recently used
+    private addToTail(index: number): void {
+        this.prev[index] = this.tail;
+        this.next[index] = -1;
+        if (this.tail !== -1) {
+            this.next[this.tail] = index;
         }
-
-        this.removeNode(index);
-        this.addToHead(index);
+        this.tail = index;
+        if (this.head === -1) {
+            this.head = index;
+        }
     }
 
-    get(key: string): number {
-        const index = this.keyToIndex.get(key);
-        if (index === undefined) {
+    private removeLast(): number | null {
+        if (this.tail === -1) {
+            return null;
+        }
+        const index = this.tail;
+        this.tail = this.prev[index];
+        if (this.tail !== -1) {
+            this.next[this.tail] = -1;
+        } else {
+            this.head = -1;
+        }
+        this.prev[index] = -1;
+        this.next[index] = -1;
+        return index;
+    }
+
+    public put(key: string, value: number): void {
+        if (this.keyToIndex.has(key)) {
+            const index = this.keyToIndex.get(key)!;
+            this.indexToValue[index] = value;
+            // Move to head
+            this.removeFromList(index);
+            this.addToHead(index);
+        } else {
+            // Check capacity
+            if (this.size === this.capacity) {
+                // Evict LRU (tail)
+                const evictIndex = this.removeLast();
+                if (evictIndex !== null) {
+                    this.keyToIndex.delete(this.indexToKey[evictIndex]);
+                    this.indexToKey[evictIndex] = "";
+                    this.indexToValue[evictIndex] = 0;
+                    this.size--;
+                    // Add to free list
+                    this.next[evictIndex] = this.freeListHead;
+                    this.freeListHead = evictIndex;
+                }
+            }
+            // Allocate new node
+            const index = this.freeListHead;
+            if (index === -1) {
+                // This shouldn't happen since we just evicted one
+                throw new Error("No free nodes available");
+            }
+            this.freeListHead = this.next[index];
+            this.next[index] = -1;
+            this.prev[index] = -1;
+            
+            this.indexToKey[index] = key;
+            this.indexToValue[index] = value;
+            this.keyToIndex.set(key, index);
+            this.size++;
+            this.addToHead(index);
+        }
+    }
+
+    public get(key: string): number {
+        if (!this.keyToIndex.has(key)) {
             return -1;
         }
-        
-        this.moveToHead(index);
+        const index = this.keyToIndex.get(key)!;
+        // Move to head
+        this.removeFromList(index);
+        this.addToHead(index);
         return this.indexToValue[index];
     }
 
-    put(key: string, value: number): void {
-        const index = this.keyToIndex.get(key);
-
-        if (index !== undefined) {
-            // Key exists, update value and move to head
-            this.indexToValue[index] = value;
-            this.moveToHead(index);
-        } else {
-            // Key doesn't exist
-            if (this.count >= this.capacity) {
-                // Evict least recently used
-                const lruIndex = this.tail;
-                if (lruIndex !== -1) {
-                    this.keyToIndex.delete(this.indexToKey[lruIndex]);
-                    this.free(lruIndex);
-                }
-            } else {
-                // Not full, allocate new node
-                const newIndex = this.allocate();
-                this.keyToIndex.set(key, newIndex);
-                this.indexToKey[newIndex] = key;
-                this.indexToValue[newIndex] = value;
-                this.addToHead(newIndex);
-            }
+    public del(key: string): void {
+        if (!this.keyToIndex.has(key)) {
+            return;
         }
+        const index = this.keyToIndex.get(key)!;
+        this.removeFromList(index);
+        this.keyToIndex.delete(key);
+        this.indexToKey[index] = "";
+        this.indexToValue[index] = 0;
+        this.size--;
+        // Add to free list
+        this.next[index] = this.freeListHead;
+        this.freeListHead = index;
     }
 
-    remove(key: string): void {
-        const index = this.keyToIndex.get(key);
-        if (index !== undefined) {
-            this.keyToIndex.delete(key);
-            this.removeNode(index);
-            this.free(index);
-        }
-    }
-
-    getKeysOrdered(): string[] {
+    public getKeysFromMRUToLRU(): string[] {
         const result: string[] = [];
-        let current = this.head;
-        while (current !== -1) {
-            result.push(this.indexToKey[current]);
-            current = this.next[current];
+        let curr = this.head;
+        while (curr !== -1) {
+            result.push(this.indexToKey[curr]);
+            curr = this.next[curr];
         }
         return result;
     }
@@ -157,46 +183,43 @@ class LRUCache {
 
 function main(): void {
     const input = fs.readFileSync(0, "utf8").trim();
-    if (!input) return;
-
     const lines = input.split("\n");
-    const firstLine = lines[0].trim().split(/\s+/);
-    const capacity = parseInt(firstLine[0], 10);
-    const numOperations = parseInt(firstLine[1], 10);
+    const [C_str, N_str] = lines[0].split(" ");
+    const C = parseInt(C_str);
+    const N = parseInt(N_str);
 
-    const cache = new LRUCache(capacity);
+    const cache = new LRUCache(C);
     const getResults: string[] = [];
-    let hasGet = false;
 
-    for (let i = 1; i <= numOperations; i++) {
+    for (let i = 1; i <= N; i++) {
         const line = lines[i].trim();
-        const parts = line.split(/\s+/);
-        const op = parts[0];
-        const key = parts[1];
-
-        if (op === "GET") {
-            const value = cache.get(key);
-            getResults.push(value.toString());
-            hasGet = true;
-        } else if (op === "PUT") {
-            const value = parseInt(parts[2], 10);
+        const parts = line.split(" ");
+        const operation = parts[0];
+        if (operation === "PUT") {
+            const key = parts[1];
+            const value = parseInt(parts[2]);
             cache.put(key, value);
-        } else if (op === "DEL") {
-            cache.remove(key);
+        } else if (operation === "GET") {
+            const key = parts[1];
+            const result = cache.get(key);
+            getResults.push(String(result));
+        } else if (operation === "DEL") {
+            const key = parts[1];
+            cache.del(key);
         }
     }
 
-    if (hasGet) {
-        console.log(getResults.join(" "));
-    } else {
+    if (getResults.length === 0) {
         console.log("EMPTY");
+    } else {
+        console.log(getResults.join(" "));
     }
 
-    const remainingKeys = cache.getKeysOrdered();
-    if (remainingKeys.length > 0) {
-        console.log(remainingKeys.join(" "));
-    } else {
+    const keys = cache.getKeysFromMRUToLRU();
+    if (keys.length === 0) {
         console.log("EMPTY");
+    } else {
+        console.log(keys.join(" "));
     }
 }
 

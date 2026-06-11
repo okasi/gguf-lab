@@ -35,106 +35,109 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs"));
 class MinHeap {
-    constructor(comparator) {
-        this.comparator = comparator;
+    constructor(compare) {
         this.heap = [];
+        this.compare = compare;
     }
     push(val) {
         this.heap.push(val);
-        this.siftUp(this.heap.length - 1);
+        this.bubbleUp();
     }
     pop() {
         if (this.size() === 0)
             return undefined;
         const top = this.heap[0];
-        const last = this.heap.pop();
+        const bottom = this.heap.pop();
         if (this.size() > 0) {
-            this.heap[0] = last;
-            this.siftDown(0);
+            this.heap[0] = bottom;
+            this.bubbleDown();
         }
         return top;
     }
     size() {
         return this.heap.length;
     }
-    siftUp(index) {
-        while (index > 0) {
-            const parent = (index - 1) >> 1;
-            if (this.comparator(this.heap[index], this.heap[parent]) < 0) {
-                [this.heap[index], this.heap[parent]] = [this.heap[parent], this.heap[index]];
-                index = parent;
+    bubbleUp() {
+        let idx = this.heap.length - 1;
+        while (idx > 0) {
+            let parentIdx = (idx - 1) >> 1;
+            if (this.compare(this.heap[idx], this.heap[parentIdx]) < 0) {
+                [this.heap[idx], this.heap[parentIdx]] = [this.heap[parentIdx], this.heap[idx]];
+                idx = parentIdx;
             }
-            else {
+            else
                 break;
-            }
         }
     }
-    siftDown(index) {
+    bubbleDown() {
+        let idx = 0;
+        const length = this.heap.length;
         while (true) {
-            let smallest = index;
-            const left = 2 * index + 1;
-            const right = 2 * index + 2;
-            if (left < this.heap.length && this.comparator(this.heap[left], this.heap[smallest]) < 0) {
-                smallest = left;
+            let left = (idx << 1) + 1;
+            let right = (idx << 1) + 2;
+            let swap = -1;
+            if (left < length) {
+                if (this.compare(this.heap[left], this.heap[idx]) < 0) {
+                    swap = left;
+                }
             }
-            if (right < this.heap.length && this.comparator(this.heap[right], this.heap[smallest]) < 0) {
-                smallest = right;
+            if (right < length) {
+                if ((swap === -1 && this.compare(this.heap[right], this.heap[idx]) < 0) ||
+                    (swap !== -1 && this.compare(this.heap[right], this.heap[left]) < 0)) {
+                    swap = right;
+                }
             }
-            if (smallest !== index) {
-                [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
-                index = smallest;
-            }
-            else {
+            if (swap === -1)
                 break;
-            }
+            [this.heap[idx], this.heap[swap]] = [this.heap[swap], this.heap[idx]];
+            idx = swap;
         }
     }
 }
 function solve() {
     const input = fs.readFileSync(0, "utf8");
-    const lines = input.split(/\s+/);
-    let idx = 0;
-    if (lines[idx] === "")
-        idx++;
-    if (idx >= lines.length)
+    const tokens = input.split(/\s+/);
+    let cursor = 0;
+    if (tokens[cursor] === "")
+        cursor++;
+    if (cursor >= tokens.length)
         return;
-    const N = parseInt(lines[idx++]);
-    const M = parseInt(lines[idx++]);
+    const N = parseInt(tokens[cursor++]);
+    const M = parseInt(tokens[cursor++]);
     if (isNaN(N))
         return;
-    const tasks = [];
+    const taskNames = [];
+    const nameToIndex = new Map();
     for (let i = 0; i < N; i++) {
-        tasks.push(lines[idx++]);
+        const name = tokens[cursor++];
+        taskNames.push(name);
+        nameToIndex.set(name, i);
     }
-    const adj = new Map();
-    const inDegree = new Map();
-    for (const task of tasks) {
-        adj.set(task, []);
-        inDegree.set(task, 0);
-    }
+    const adj = Array.from({ length: N }, () => []);
+    const inDegree = new Array(N).fill(0);
     for (let i = 0; i < M; i++) {
-        const u = lines[idx++];
-        const v = lines[idx++];
-        if (!adj.has(u) || !adj.has(v))
-            continue; // Should not happen per problem constraints
-        adj.get(u).push(v);
-        inDegree.set(v, (inDegree.get(v) || 0) + 1);
+        const uName = tokens[cursor++];
+        const vName = tokens[cursor++];
+        const u = nameToIndex.get(uName);
+        const v = nameToIndex.get(vName);
+        adj[u].push(v);
+        inDegree[v]++;
     }
     const pq = new MinHeap((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    for (const task of tasks) {
-        if ((inDegree.get(task) || 0) === 0) {
-            pq.push(task);
+    for (let i = 0; i < N; i++) {
+        if (inDegree[i] === 0) {
+            pq.push(taskNames[i]);
         }
     }
     const result = [];
     while (pq.size() > 0) {
-        const u = pq.pop();
-        result.push(u);
-        const neighbors = adj.get(u) || [];
-        for (const v of neighbors) {
-            inDegree.set(v, (inDegree.get(v) || 0) - 1);
-            if (inDegree.get(v) === 0) {
-                pq.push(v);
+        const uName = pq.pop();
+        result.push(uName);
+        const u = nameToIndex.get(uName);
+        for (const v of adj[u]) {
+            inDegree[v]--;
+            if (inDegree[v] === 0) {
+                pq.push(taskNames[v]);
             }
         }
     }
