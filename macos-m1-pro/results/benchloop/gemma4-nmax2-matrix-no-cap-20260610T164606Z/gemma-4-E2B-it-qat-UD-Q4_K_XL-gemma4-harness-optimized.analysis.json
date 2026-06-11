@@ -1,0 +1,287 @@
+{
+  "source": "results/benchloop/gemma4-nmax2-matrix-no-cap-20260610T164606Z/run-json/gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized.run.json",
+  "model": "gemma-4-E2B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+  "overall_score": 81.32114138576779,
+  "quality_score": 85.32166666666667,
+  "speed_score": 77.87,
+  "reliability_score": 75.28089887640449,
+  "suite_scores": {
+    "agent": 93.75,
+    "coding": 93.75,
+    "dataextract": 83.87,
+    "instructfollow": 65.56,
+    "reasonmath": 80,
+    "speed": 77.87,
+    "toolcall": 95
+  },
+  "total_failures_or_partials": 36,
+  "failure_classes": {
+    "agent_or_tool_semantic": 2,
+    "coding_semantic": 1,
+    "semantic_extraction": 12,
+    "format_or_instruction": 8,
+    "semantic_math": 3,
+    "speed_measurement": 9,
+    "tool_missing": 1
+  },
+  "failure_classes_by_suite": {
+    "agent": {
+      "agent_or_tool_semantic": 2
+    },
+    "coding": {
+      "coding_semantic": 1
+    },
+    "dataextract": {
+      "semantic_extraction": 12
+    },
+    "instructfollow": {
+      "format_or_instruction": 8
+    },
+    "reasonmath": {
+      "semantic_math": 3
+    },
+    "speed": {
+      "speed_measurement": 9
+    },
+    "toolcall": {
+      "tool_missing": 1
+    }
+  },
+  "examples": {
+    "agent_or_tool_semantic": [
+      {
+        "suite": "agent",
+        "task_id": "agent-02-stock-portfolio",
+        "score": 75,
+        "error": "",
+        "output": "Your total portfolio value is **$3,948**.\n\nHere is the breakdown of the calculation:\n1.  **AAPL Value:** 10 shares $\\times$ \\$188.43/share = \\$1,884.30\n2.  **MSFT Value:** 5 shares $\\times$ \\$412.65/share = \\$2,063.25\n3.  **Total Value:** \\"
+      },
+      {
+        "suite": "agent",
+        "task_id": "agent-05-refuse-unknown-tool",
+        "score": 75,
+        "error": "",
+        "output": "I do not have access to a tool that can provide population data. I only have tools for getting weather information and stock prices."
+      }
+    ],
+    "coding_semantic": [
+      {
+        "suite": "coding",
+        "task_id": "coding-lru-cache",
+        "score": 25,
+        "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zmdk0yva/task.py\", line 89, in <module>\n    cache.put(\"1\", 10)  # Cache: [(1, 10)]\n    ^^^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zmdk0yva/task.py\", line 70, in put\n    self._move_to_head(new_node)\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-zmdk0yva/task.py\", line 32, in _move_to_head\n    node.prev.next = node.next\n    ^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'next'",
+        "output": "class Node:\n    \"\"\"\n    A node in the doubly linked list to store key-value pairs.\n    \"\"\"\n    def __init__(self, key: str, value: int):\n        self.key = key\n        self.value = value\n        self.prev = None\n        self.next = None\n\ncl"
+      }
+    ],
+    "semantic_extraction": [
+      {
+        "suite": "dataextract",
+        "task_id": "de-03",
+        "score": 92,
+        "error": "",
+        "output": "{\"job_title\":\"Senior Frontend Engineer\",\"location\":\"Austin, TX\",\"work_model\":\"Hybrid - 3 days in office\",\"team\":\"Product Engineering\",\"reports_to\":\"VP of Engineering\",\"salary_min\":145000,\"salary_max\":185000,\"required_skills\":[\"React\",\"TypeS"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-04",
+        "score": 71,
+        "error": "meeting_name: mismatch | room: mismatch",
+        "output": "{\"meeting_name\":\"Re: Re: sprint planning??\",\"day\":\"Thursday\",\"time\":\"10am\",\"room\":\"Maple room\",\"organizer_name\":\"Lisa Park\",\"organizer_email\":\"lisa.p@company.com\",\"note\":\"bring your laptops, we're gonna do live estimation this time\"}"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-05",
+        "score": 86,
+        "error": "",
+        "output": "{\"product_name\":\"XR-7500 Pro noise-cancelling headphones\",\"product_price_paid\":279,\"product_price_original\":329,\"rating_stars\":4,\"reviewer_name\":\"TechDad_42\",\"battery_life_hours\":38,\"weight_grams\":254,\"bluetooth_version\":\"5.3\",\"charging_typ"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-06",
+        "score": 80,
+        "error": "medication_dose: mismatch | medication_duration: expected string | referral: expected null",
+        "output": "{\"patient_name\":\"Margaret Liu\",\"date_of_birth\":\"5/12/1958\",\"visit_date\":\"3-20-2026\",\"provider\":\"Dr. Patel\",\"chief_complaint\":\"persistent cough x 3 weeks, worse at night\",\"blood_pressure_systolic\":128,\"blood_pressure_diastolic\":82,\"heart_rat"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-07",
+        "score": 76,
+        "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | note: mismatch",
+        "output": "[{\"name\":\"Marcus Washington\",\"role\":\"Senior Designer\",\"location\":\"NYC office\",\"email\":\"m.washington@studio.com\",\"phone\":\"212-555-0189\",\"hourly_rate\":null,\"note\":\"taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next week"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-08",
+        "score": 90,
+        "error": "",
+        "output": "{\"event_name\":\"Annual Company Picnic\",\"date\":\"Saturday, June 14\",\"start_time\":\"11:30 AM\",\"end_time\":\"4:00 PM\",\"location_park\":\"Lincoln Park\",\"location_shelter\":\"Shelter A\",\"rsvp_deadline\":\"May 15\",\"rsvp_email\":\"events@company.com\",\"catering"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-09",
+        "score": 80,
+        "error": "date: mismatch | room: mismatch",
+        "output": "{\"requester_name\":\"Alice Wong\",\"requester_email\":\"alice@company.com\",\"room\":\"Atlas room\",\"date\":\"March 28, 2026\",\"start_time\":\"2:00 PM\",\"end_time\":\"3:30 PM\",\"attendee_count\":8,\"needs_projector\":true,\"needs_whiteboard\":true,\"needs_catering\":"
+      },
+      {
+        "suite": "dataextract",
+        "task_id": "de-10",
+        "score": 80,
+        "error": "neighborhood: expected null | visit_duration: expected string",
+        "output": "{\"restaurant_name\":\"Sakura Sushi\",\"cuisine_type\":\"Sushi\",\"neighborhood\":\"Nob Hill neighborhood\",\"street_address\":null,\"chef_name\":null,\"price_paid\":null,\"visit_duration\":2,\"rating_score\":null,\"reservation_required\":null,\"parking_available\":"
+      }
+    ],
+    "format_or_instruction": [
+      {
+        "suite": "instructfollow",
+        "task_id": "if-03",
+        "score": 0,
+        "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+        "output": "Coffee is a potent beverage enjoyed worldwide for its stimulating effects and rich flavor profile.\nThe aroma alone can elevate the mood of any morning.\nDoes the perfect cup truly exist?"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-04",
+        "score": 50,
+        "error": "reverse_alpha_order",
+        "output": "* tulip\n* zebra\n* mango\n* lemon\n* apricot\n* cedar"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-05",
+        "score": 66.7,
+        "error": "at_least_one_under_1kg",
+        "output": "Elephant - 4000 kg\nHorse - 500 kg\nDog - 20 kg\nCat - 4.5 kg\nRabbit - 2 kg"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-08",
+        "score": 50,
+        "error": "allowed_items_unique_starts",
+        "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-10",
+        "score": 66.7,
+        "error": "exactly_50_words_humanity_to_stars",
+        "output": "Humanity seeks new worlds beyond our home planet. Brave men and women push limits far out into the dark void. These grand trips bring back new facts and tools for us here. We dream of life in distant suns and vast deep space. Our quest will"
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-12",
+        "score": 0,
+        "error": "exact_impossible_line",
+        "output": "The quick brown fox jumps over the lazy dog now.  Learning new things makes your future truly brighter today.  Always remember kindness helps everyone feel very good now."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-14",
+        "score": 0,
+        "error": "two_sentences; all_caps_rain_bang",
+        "output": "THE RAIN FALLS HEAVILY UPON THE DAMP STREETS TODAY! I HOPE THE RAIN STOPS SO WE CAN GO OUT! THE SNOW IS STARTING TO FALL LATE."
+      },
+      {
+        "suite": "instructfollow",
+        "task_id": "if-15",
+        "score": 50,
+        "error": "city_constraints",
+        "output": "Osaka,Malaga,Havana,Perth"
+      }
+    ],
+    "semantic_math": [
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-08",
+        "score": 0,
+        "error": "fill_time expected 7.2, got 9 minutes",
+        "output": "Let $R_A$ be the rate of Faucet A (fraction of tub filled per minute), $R_B$ be the rate of Faucet B, and $R_D$ be the rate of the drain (fraction of tub emptied per minute).\n\n1.  **Calculate the filling rate of Faucet A ($R_A$):**\n    Fauc"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-13",
+        "score": 0,
+        "error": "amount expected 5718.96, got 5721.45; interest expected 718.96, got 721.45",
+        "output": "Here are the calculations:\n\n1.  **Identify the variables:**\n    *   Principal amount ($P$): $\\$5,000$\n    *   Annual interest rate ($r$): $4.5\\% = 0.045$\n    *   Number of times compounded per year ($n$): $12$ (monthly)\n    *   Time in year"
+      },
+      {
+        "suite": "reasonmath",
+        "task_id": "rm-15",
+        "score": 0,
+        "error": "count expected 126, got 56",
+        "output": "Let the 4-digit PIN be $d_1 d_2 d_3 d_4$. The digits must satisfy the following conditions:\n1. $d_i \\in \\{0, 1, \\ldots, 9\\}$ for $i=1, 2, 3, 4$.\n2. All 4 digits must be different ($d_i \\neq d_j$ for $i \\neq j$).\n3. The PIN must start with a"
+      }
+    ],
+    "speed_measurement": [
+      {
+        "suite": "speed",
+        "task_id": "speed-short-001",
+        "score": 70.48,
+        "error": "",
+        "output": "Hello there, how are you?"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-002",
+        "score": 76.19,
+        "error": "",
+        "output": "HTTP is the foundational protocol for communication on the World Wide Web, defining how clients (like browsers) request data and how servers respond."
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-short-003",
+        "score": 76.29,
+        "error": "",
+        "output": "{\"ok\":true,\"source\":\"example\"}"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-001",
+        "score": 79.32,
+        "error": "",
+        "output": "A database index is essentially a lookup table that helps the database engine quickly find data without having to scan every single row in a table. Think of it like an index in a book: instead of reading every page to find a specific topic,"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-002",
+        "score": 79.42,
+        "error": "",
+        "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Latency and Improves Performance:** By storing frequently accessed data in a fast, local cache, web apps can respond to user requests much quicker than hitting the pri"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-medium-003",
+        "score": 79.43,
+        "error": "",
+        "output": "Threads and processes are both fundamental concepts in operating systems and computer programming that deal with **concurrency** and **parallelism**—the ability to handle multiple tasks simultaneously. However, they operate at different lev"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-001",
+        "score": 79.78,
+        "error": "",
+        "output": "## Concise Guide to Debugging a Failing API Integration\n\nDebugging an API integration failure requires a systematic approach. Follow these steps:\n\n**Phase 1: Validate the Basics (Is it the setup?)**\n\n1. **Check Credentials & Authentication:"
+      },
+      {
+        "suite": "speed",
+        "task_id": "speed-long-002",
+        "score": 79.86,
+        "error": "",
+        "output": "Choosing between **REST** and **GraphQL** for a startup backend is a critical decision that impacts everything from development speed and frontend flexibility to long-term scalability and team velocity.\n\nHere is a detailed breakdown of the "
+      }
+    ],
+    "tool_missing": [
+      {
+        "suite": "toolcall",
+        "task_id": "tc-03",
+        "score": 25,
+        "error": "did not match any acceptable tool strategy; answered directly instead of using tools",
+        "output": "I can help with that. I need to know Sarah's contact information (email or phone number) to send the message.\n\nAlso, would you like me to send the message as an email or a text message?"
+      }
+    ]
+  },
+  "recommendations": [
+    "Reduce temp=1 rambling with tighter prompts or post-processing; avoid truncating model output.",
+    "Enable tool-call synthesis for obvious tool-use prompts."
+  ]
+}

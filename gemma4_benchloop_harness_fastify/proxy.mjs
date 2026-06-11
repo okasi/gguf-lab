@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { parse as parseJavaScriptAst } from "@babel/parser";
@@ -22,6 +23,10 @@ const BOOLEAN_KEY_RE = /(^|_)(available|boolean|catering|enabled|has|include|inc
 const NULLABLE_KEY_RE = /(^|_)(chef|neighborhood|referral)(_|$)/i;
 const PRESERVE_STRING_KEY_RE = /(^|_)(address|bluetooth_version|card|date|driver_size|email|id|invoice|linkedin|name|phone|po|postal|rating_text|sku|tax_id|tax_rate|time|url|version|zip)(_|$)/i;
 const DIRECT_TOOL_AVOID_RE = /(world war ii|15%\s+of\s+200|delete all my emails|what year did|simple math)/i;
+const DEFAULT_POLICY_PATH = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "configs/gemma4_qat_q4_optimized_policy.json",
+);
 
 export const DEFAULT_POLICY = {
   name: "gemma4-q4-optimized",
@@ -1149,6 +1154,7 @@ function parseArgs(argv) {
     host: "127.0.0.1",
     port: 8092,
     upstream: "http://127.0.0.1:8091",
+    policy: DEFAULT_POLICY_PATH,
     timeoutSec: 650,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -1175,7 +1181,7 @@ Options:
   --host HOST             Proxy listen host, default 127.0.0.1
   --port PORT             Proxy listen port, default 8092
   --upstream URL          Upstream llama.cpp endpoint, default http://127.0.0.1:8091
-  --policy FILE           JSON policy file
+  --policy FILE           JSON policy file, default configs/gemma4_qat_q4_optimized_policy.json
   --temperature VALUE     Override policy temperature
   --top-p VALUE           Override policy top_p
   --top-k VALUE           Override policy top_k

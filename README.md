@@ -8,15 +8,20 @@ The Gemma 4 optimized Fastify BenchLoop harness lives in [`gemma4_benchloop_harn
 
 ## macOS M1 Pro (Metal)
 
-Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full tables: [`macos-m1-pro/README.md`](macos-m1-pro/README.md) and [`macos-m1-pro/results/benchloop/gemma4-12b-qat-full-summary.md`](macos-m1-pro/results/benchloop/gemma4-12b-qat-full-summary.md).
+Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full macOS notes: [`macos-m1-pro/README.md`](macos-m1-pro/README.md).
 
-| config | overall | gen tok/s | runtime |
-|---|---:|---:|---:|
-| No MTP f16 (`-c 4096`) | 77.8 | 15.70 | 1477s |
-| No MTP KV Q8 (`-c 0`) | 76.9 | 14.12 | 1735s |
-| **Unsloth MTP nmax2 f16** | **78.9** | **21.65** | **957s** |
-| Unsloth MTP nmax2 + Fastify harness | **81.0** | — | ~941s |
-| Unsloth MTP nmax2 KV Q8 | 76.9 | 15.83 | 1723s |
+**Gemma 4 Unsloth MTP n-max=2, KV `q4_0`, no cap** (`-c 0`, `--fit-target 28672`, reasoning off, temp 1 / top-p 0.95 / top-k 64). Harness: [`gemma4_qat_q4_optimized_policy.json`](gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json).
+
+Artifacts: [12B KV Q4](macos-m1-pro/results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/) · [26B KV Q4](macos-m1-pro/results/benchloop/gemma4-26b-nmax2-kvq4-no-cap-20260611T083329Z/)
+
+| Model | Mode | Quality | Speed | Reliability | Value | **Overall** | Gen tok/s | Runtime | Agent | Coding | Dataextract | Instructfollow | Reasonmath | Toolcall | Load RSS | Peak cache | ≈ Peak |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 12B | raw | 86.2 | 44.7 | 80.9 | 8.0 | **76.6** | 11.50 | 2143s | 96.9 | 100.0 | 81.7 | 82.2 | 73.3 | 83.3 | 8.2 GB | 3.1 GB | ~11.3 GB |
+| 12B | harness | 89.3 | 44.3 | 85.4 | 8.5 | **79.4** | 11.17 | 2088s | 96.9 | 100.0 | 82.5 | 76.7 | 80.0 | 100.0 | 8.2 GB | 3.5 GB | ~11.7 GB |
+| 26B | raw | 82.7 | 56.2 | 75.3 | 13.5 | **75.6** | 21.69 | 1201s | 96.9 | 91.7 | 81.2 | 70.0 | 73.3 | 83.3 | 14.1 GB | 2.1 GB | ~16.2 GB |
+| 26B | harness | 89.5 | 56.3 | 84.3 | 16.5 | **81.6** | 21.89 | 1132s | 96.9 | 100.0 | 83.7 | 70.0 | 86.7 | 100.0 | 14.1 GB | 2.4 GB | ~16.5 GB |
+
+Promoted 12B daily serve: `bash macos-m1-pro/scripts/run_gemma4_12b_promoted_serve.sh` → `http://127.0.0.1:8092/v1`.
 
 ## Hardware
 

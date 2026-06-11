@@ -1,30 +1,42 @@
 # macOS M1 Pro Agent Notes
 
-## Promoted Gemma 4 12B serving — Unsloth MTP nmax2
+## Promoted Gemma 4 12B serving — Unsloth MTP nmax2, KV Q4, no cap
 
-Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, f16 KV, `-c 0`** on Apple M1 Pro 32 GB. Best all-suite BenchLoop result: overall **78.9**, **21.65 gen tok/s**, ~957s runtime. Full table: [`results/benchloop/gemma4-12b-qat-full-summary.md`](results/benchloop/gemma4-12b-qat-full-summary.md).
+Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, KV `q4_0`, `-c 0` with `--fit-target 28672`** on Apple M1 Pro 32 GB. Serve through the **Fastify BenchLoop harness proxy** on port **8092** (upstream llama-server on **8091**).
+
+Best all-suite BenchLoop result with harness: overall **79.4**, quality **89.3**, **11.17 gen tok/s**, ~2088s runtime, load RSS **~8.4 GB**. Artifacts: [`results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/`](results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/).
 
 | item | value |
 |---|---|
 | Target | `models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` |
 | MTP draft | `models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf` |
 | Sampler | `--temp 1 --top-p 0.95 --top-k 64 -n 256` |
-| Context | `-c 0` with `--fit on --fit-target 16384` (16 GB inference cap) |
+| KV cache | `--cache-type-k q4_0 --cache-type-v q4_0 --spec-draft-type-k q4_0 --spec-draft-type-v q4_0` |
+| Context | `-c 0` with `--fit on --fit-target 28672` (no 16 GB cap) |
+| Harness policy | `gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json` |
+| Model alias | `gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized` |
 
 ```bash
-# BenchLoop rerun (from macos-m1-pro/)
-SPEC_DRAFT_N_MAX=2 REASONING=off CTX_SIZE=0 \
-  bash scripts/run_gemma4_12b_qat_mtp_benchloop.sh
+# Daily serve: llama-server + harness proxy (from repo root)
+bash macos-m1-pro/scripts/run_gemma4_12b_promoted_serve.sh
+# OpenAI endpoint: http://127.0.0.1:8092/v1
 ```
 
-Direct `llama-server`:
+```bash
+# BenchLoop rerun with harness (from macos-m1-pro/)
+bash scripts/run_gemma4_12b_harness_optimized.sh
+```
+
+Direct `llama-server` (no harness):
 
 ```bash
 llama-server \
   -m models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf \
   --model-draft models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf \
-  -c 0 --fit on --fit-target 16384 \
+  -c 0 --fit on --fit-target 28672 \
   -ngl 999 -ngld 999 -fa on \
+  --cache-type-k q4_0 --cache-type-v q4_0 \
+  --spec-draft-type-k q4_0 --spec-draft-type-v q4_0 \
   --spec-type draft-mtp --spec-draft-n-max 2 \
   --reasoning off --jinja -np 1 \
   --temp 1 --top-p 0.95 --top-k 64 -n 256

@@ -4,10 +4,10 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
-CODEX_ROOT="${CODEX_ROOT:-$MACOS_DIR}"
+CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-for-unsloth-gemma-4}"
 cd "$MACOS_DIR"
 
-OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-12b-fastify-harness-nmax2}"
+OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-12b-promoted-kvq4-harness}"
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
 TARGET_MODEL="${TARGET_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
 DRAFT_MODEL="${DRAFT_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf}"
@@ -21,11 +21,22 @@ UPSTREAM_ENDPOINT="http://${HOST}:${UPSTREAM_PORT}"
 PROXY_ENDPOINT="http://${HOST}:${PROXY_PORT}"
 SUITES="${SUITES:-agent,coding,dataextract,instructfollow,reasonmath,speed,toolcall}"
 CTX_SIZE="${CTX_SIZE:-0}"
-FIT_TARGET_MIB="${FIT_TARGET_MIB:-16384}"
-MEMORY_GB="${MEMORY_GB:-16.0}"
+FIT_TARGET_MIB="${FIT_TARGET_MIB:-28672}"
+MEMORY_GB="${MEMORY_GB:-25.0}"
 SPEC_DRAFT_N_MAX="${SPEC_DRAFT_N_MAX:-2}"
 REASONING="${REASONING:-off}"
+CACHE_TYPE_K="${CACHE_TYPE_K:-q4_0}"
+CACHE_TYPE_V="${CACHE_TYPE_V:-q4_0}"
+CACHE_TYPE_K_DRAFT="${CACHE_TYPE_K_DRAFT:-q4_0}"
+CACHE_TYPE_V_DRAFT="${CACHE_TYPE_V_DRAFT:-q4_0}"
 ALIAS="${ALIAS:-gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized}"
+
+KV_ARGS=(
+  --cache-type-k "$CACHE_TYPE_K"
+  --cache-type-v "$CACHE_TYPE_V"
+  --spec-draft-type-k "$CACHE_TYPE_K_DRAFT"
+  --spec-draft-type-v "$CACHE_TYPE_V_DRAFT"
+)
 
 if [[ ! -d "$HARNESS_DIR/node_modules" ]]; then
   echo "Missing harness dependencies. Run: (cd \"$HARNESS_DIR\" && npm install)" >&2
@@ -87,7 +98,7 @@ if lsof -nP -iTCP:"$PROXY_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 {
-  echo "=== Gemma 4 12B Unsloth MTP nmax2 + Fastify harness ==="
+  echo "=== Gemma 4 12B Unsloth MTP nmax2 KV ${CACHE_TYPE_K} no-cap + Fastify harness ==="
   echo "Started: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "Target: ${TARGET_MODEL}"
   echo "Draft:  ${DRAFT_MODEL}"
@@ -106,6 +117,7 @@ echo "Starting llama-server (MTP n-max=${SPEC_DRAFT_N_MAX}, reasoning=${REASONIN
   -np 1 --jinja --reasoning "$REASONING" \
   --temp 1 --top-p 0.95 --top-k 64 -n 256 \
   --spec-type draft-mtp --spec-draft-n-max "$SPEC_DRAFT_N_MAX" \
+  "${KV_ARGS[@]}" \
   --log-file "$server_log" \
   > "${OUT_DIR}/${ALIAS}.llama-server.stdout.log" 2>&1 &
 SERVER_PID=$!
@@ -128,7 +140,7 @@ BENCHLOOP_NO_SUBMIT=1 benchloop run \
   --provider openai_compat \
   --harness raw \
   --suites "$SUITES" \
-  --hardware "Apple M1 Pro 32GB unified memory (${MEMORY_GB}GB inference cap)" \
+  --hardware "Apple M1 Pro 32GB unified memory" \
   --gpu "Apple M1 Pro" \
   --gpu-memory-gb "$MEMORY_GB" \
   > "$bench_log" 2>&1
