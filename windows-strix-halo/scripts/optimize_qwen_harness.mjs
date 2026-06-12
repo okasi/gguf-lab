@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Iterative Qwen/Qwopus harness optimizer for lan-adapter + qwen_benchloop_harness.
+ * Iterative Qwen/Qwopus harness optimizer for lan-adapter + qwen_harness.
  * Runs unit tests then BenchLoop for each policy candidate; keeps the best defensible policy.
  */
 import fs from "node:fs";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const HARNESS_DIR = path.join(REPO_ROOT, "qwen_benchloop_harness");
+const HARNESS_DIR = path.join(REPO_ROOT, "qwen_harness");
 const BASE_POLICY_PATH = path.join(HARNESS_DIR, "configs/qwopus35_optimized_policy.json");
 const RUN_PS1 = path.join(REPO_ROOT, "windows-strix-halo/Run-Qwen-Harness-BenchLoop.ps1");
 const BENCHLOOP = path.join(REPO_ROOT, "windows-strix-halo/.venv-benchloop/Scripts/benchloop.exe");

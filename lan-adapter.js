@@ -35,7 +35,7 @@ const defaultRepeatPenalty = Number(process.env.DEFAULT_REPEAT_PENALTY || 1.0);
 const defaultMaxTokens = Number(process.env.DEFAULT_MAX_TOKENS || 16384);
 const defaultThink = process.env.DEFAULT_THINK;
 const harnessPolicyPath = process.env.HARNESS_POLICY || "";
-const harnessModulePath = process.env.HARNESS_MODULE || path.join(__dirname, "qwen_benchloop_harness", "processor.mjs");
+const harnessModulePath = process.env.HARNESS_MODULE || path.join(__dirname, "qwen_harness", "processor.mjs");
 const harnessLogJsonl = process.env.HARNESS_LOG_JSONL || "";
 
 let harnessModulePromise = null;

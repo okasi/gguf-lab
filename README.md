@@ -5,7 +5,7 @@ Benchmarks run locally on Windows with llama.cpp Vulkan and on macOS with llama.
 Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
 
 The general Gemma 4 harness lives in [`gemma4_harness/`](gemma4_harness/). It is the shared OpenAI-compatible adapter for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and similar local agent clients.
-The Qwen/Qwopus LAN-adapter harness lives in [`qwen_benchloop_harness/`](qwen_benchloop_harness/). Its active policy is parser/tool-call/code/JSON cleanup only. A prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
+The Qwen/Qwopus LAN-adapter harness lives in [`qwen_harness/`](qwen_harness/). It is intended for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent clients. Its active policy is parser/tool-call/code/JSON cleanup only. A prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
 
 ## macOS M1 Pro (Metal)
 
@@ -86,7 +86,7 @@ Follow-up Q5_K_M temperature sweep used `Run-Qwen-Harness-BenchLoop.ps1` with sa
 
 ## Nex N2 Mini BenchLoop (2026-06-12)
 
-Requested run for [`bartowski/nex-agi_Nex-N2-mini-GGUF`](https://huggingface.co/bartowski/nex-agi_Nex-N2-mini-GGUF) file `nex-agi_Nex-N2-mini-IQ4_NL.gguf` (`19,861,346,304` bytes). The model card lists the prompt format with `<think>` and notes the quants were made with llama.cpp `b9590`; local run used the newer local `rocmfp4-llama` Vulkan build (`1faa48e`) because the packaged `b9551` runner predates the local Qwen3Next build. The requested `--tp 2`, `--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, and `--mamba-scheduler-strategy extra_buffer` flags are not accepted by local llama.cpp; parser behavior was mapped through `qwen_benchloop_harness/configs/nex_n2_mini_qwen3_parser_policy.json` with sampler enforcement and Qwen reasoning/tool-call cleanup.
+Requested run for [`bartowski/nex-agi_Nex-N2-mini-GGUF`](https://huggingface.co/bartowski/nex-agi_Nex-N2-mini-GGUF) file `nex-agi_Nex-N2-mini-IQ4_NL.gguf` (`19,861,346,304` bytes). The model card lists the prompt format with `<think>` and notes the quants were made with llama.cpp `b9590`; local run used the newer local `rocmfp4-llama` Vulkan build (`1faa48e`) because the packaged `b9551` runner predates the local Qwen3Next build. The requested `--tp 2`, `--reasoning-parser qwen3`, `--tool-call-parser qwen3_coder`, and `--mamba-scheduler-strategy extra_buffer` flags are not accepted by local llama.cpp; parser behavior was mapped through `qwen_harness/configs/nex_n2_mini_qwen3_parser_policy.json` with sampler enforcement and Qwen reasoning/tool-call cleanup.
 
 Server settings: `--ctx-size 262144`, `--reasoning auto`, `q8_0/q8_0` KV, no speculative decoding, request sampler `0.7 / 0.95 / 40`. Server logs confirmed `new slot, n_ctx = 262144`, `chat template, thinking = 1`, and peak prompt cache `8190.3 MiB`; saved `run.json` contained zero `<think>` / `</think>` tags after the parser pass.
 

@@ -1,8 +1,9 @@
-# Qwen/Qwopus BenchLoop Harness
+# Qwen/Qwopus Harness
 
 LAN-adapter compatible post-processor for Qwopus/Qwen OpenAI-compatible chat completions.
-It keeps the upstream prompt and BenchLoop tool schemas intact, then applies general response
-normalization after llama.cpp returns:
+It is meant for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent
+clients. It keeps upstream prompts and tool schemas intact, then applies general
+response normalization after llama.cpp returns:
 
 - sampler enforcement for the Qwopus 35B profile (`temp=0.85`, `top_p=0.95`, `top_k=20`)
 - Qwen reasoning/end-token cleanup

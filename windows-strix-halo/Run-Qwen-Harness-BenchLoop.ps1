@@ -28,9 +28,9 @@ if ($ServerOverride) {
 }
 $BenchLoop = Join-Path $Root ".venv-benchloop\Scripts\benchloop.exe"
 $Adapter = Join-Path $RepoRoot "lan-adapter.js"
-$HarnessModule = Join-Path $RepoRoot "qwen_benchloop_harness\processor.mjs"
+$HarnessModule = Join-Path $RepoRoot "qwen_harness\processor.mjs"
 if (-not $PolicyPath) {
-    $PolicyPath = Join-Path $RepoRoot "qwen_benchloop_harness\configs\qwopus35_optimized_policy.json"
+    $PolicyPath = Join-Path $RepoRoot "qwen_harness\configs\qwopus35_optimized_policy.json"
 }
 if (-not $ModelsJson) {
     $ModelsJson = Join-Path $Root "configs\qwopus35-harness-models.json"
