@@ -7,8 +7,8 @@ cd "$MACOS_DIR"
 
 OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-harness-optimized/final}"
 SERVER_BIN="${SERVER_BIN:-llama.cpp/build/bin/llama-server}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_benchloop_harness_fastify}"
+POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 if [[ ! -d "$HARNESS_DIR/node_modules" ]]; then
   echo "Missing harness dependencies. Run: (cd \"$HARNESS_DIR\" && npm install)" >&2
@@ -103,7 +103,7 @@ for entry in "${MODELS[@]}"; do
   SERVER_PID=$!
   wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server"
 
-  echo "Starting Gemma Fastify harness proxy for ${alias}"
+  echo "Starting Gemma 4 harness proxy for ${alias}"
   node "$PROXY_BIN" \
     --host "$HOST" --port "$PROXY_PORT" \
     --upstream "$UPSTREAM_ENDPOINT" \

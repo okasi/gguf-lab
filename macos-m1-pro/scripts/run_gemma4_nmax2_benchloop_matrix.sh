@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gemma 4 E2B / E4B / 12B BenchLoop matrix: raw llama-server vs optimized Fastify harness.
+# Gemma 4 E2B / E4B / 12B BenchLoop matrix: raw llama-server vs optimized Gemma 4 harness.
 # 12B uses Unsloth MTP nmax2; E2B/E4B use promoted sampler (no local MTP draft).
 set -euo pipefail
 
@@ -9,8 +9,8 @@ CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-
 cd "$MACOS_DIR"
 
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_benchloop_harness_fastify}"
+POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"

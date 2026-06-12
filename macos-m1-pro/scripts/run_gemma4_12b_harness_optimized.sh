@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gemma 4 12B QAT + Unsloth MTP nmax2 through the optimized Fastify BenchLoop harness.
+# Gemma 4 12B QAT + Unsloth MTP nmax2 through the optimized Gemma 4 harness.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -11,8 +11,8 @@ OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-12b-promoted-kvq4-harness}"
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
 TARGET_MODEL="${TARGET_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
 DRAFT_MODEL="${DRAFT_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_benchloop_harness_fastify}"
+POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
@@ -98,7 +98,7 @@ if lsof -nP -iTCP:"$PROXY_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 {
-  echo "=== Gemma 4 12B Unsloth MTP nmax2 KV ${CACHE_TYPE_K} no-cap + Fastify harness ==="
+  echo "=== Gemma 4 12B Unsloth MTP nmax2 KV ${CACHE_TYPE_K} no-cap + harness ==="
   echo "Started: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "Target: ${TARGET_MODEL}"
   echo "Draft:  ${DRAFT_MODEL}"
@@ -123,7 +123,7 @@ echo "Starting llama-server (MTP n-max=${SPEC_DRAFT_N_MAX}, reasoning=${REASONIN
 SERVER_PID=$!
 wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server"
 
-echo "Starting Gemma Fastify harness proxy"
+echo "Starting Gemma 4 harness proxy"
 node "$PROXY_BIN" \
   --host "$HOST" --port "$PROXY_PORT" \
   --upstream "$UPSTREAM_ENDPOINT" \

@@ -2,9 +2,9 @@
 
 ## Promoted Gemma 4 12B serving — Unsloth MTP nmax2, KV Q4, no cap
 
-Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, KV `q4_0`, `-c 0` with `--fit-target 28672`** on Apple M1 Pro 32 GB. Serve through the **Fastify BenchLoop harness proxy** on port **8092** (upstream llama-server on **8091**).
+Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, KV `q4_0`, `-c 0` with `--fit-target 28672`** on Apple M1 Pro 32 GB. Serve through the **Gemma 4 harness proxy** on port **8092** (upstream llama-server on **8091**).
 
-Best all-suite BenchLoop result with harness: overall **79.4**, quality **89.3**, **11.17 gen tok/s**, ~2088s runtime, load RSS **~8.4 GB**. Artifacts: [`results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/`](results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/).
+Latest restored safe-baseline all-suite BenchLoop result with harness: overall **76.7**, quality **86.5**, **11.78 gen tok/s**, ~3032s runtime, load RSS **~8.4 GB**. Artifacts: [`results/benchloop/gemma4-12b-policy-20iter-20260612T100148Z/iter186-restore-safe-baseline-full/`](results/benchloop/gemma4-12b-policy-20iter-20260612T100148Z/iter186-restore-safe-baseline-full/). The current harness policy removes prompt-derived direct answers, prompt-to-tool-call synthesis, prompt-specific answer formatting, and benchmark-specific phrase/word transforms.
 
 | item | value |
 |---|---|
@@ -13,7 +13,7 @@ Best all-suite BenchLoop result with harness: overall **79.4**, quality **89.3**
 | Sampler | `--temp 1 --top-p 0.95 --top-k 64 -n 256` |
 | KV cache | `--cache-type-k q4_0 --cache-type-v q4_0 --spec-draft-type-k q4_0 --spec-draft-type-v q4_0` |
 | Context | `-c 0` with `--fit on --fit-target 28672` (no 16 GB cap) |
-| Harness policy | `gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json` |
+| Harness policy | `gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json` |
 | Model alias | `gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized` |
 
 ```bash
@@ -44,10 +44,11 @@ llama-server \
 
 Do not use **reasoning on** with MTP for quality work (instructfollow/reasonmath regress badly). Do not use Janvitos MTP configs in this tree.
 
-## Gemma 4 E2B/E4B QAT + Fastify harness
+## Gemma 4 E2B/E4B QAT + harness
 
 - Benchmark artifacts live under `results/benchloop/`.
-- Fastify BenchLoop harness: `gemma4_benchloop_harness_fastify/` (`npm install && npm test`).
-- Promoted harness policy: `gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json`.
+- General Gemma 4 harness: `gemma4_harness/` (`npm install && npm test`).
+- Promoted harness policy: `gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json`.
 - Optimized all-category runner: `./scripts/run_gemma4_harness_optimized.sh`.
+- Keep the harness generic for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and other OpenAI-compatible clients.
 - Models and `llama.cpp` are local-only; not committed to the repo.

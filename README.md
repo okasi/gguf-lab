@@ -1,24 +1,26 @@
 ﻿# Local LLM Experiments
 
-Benchmarks run locally on Windows with llama.cpp Vulkan. New benchmark results should be added to this README when they are run.
+Benchmarks run locally on Windows with llama.cpp Vulkan and on macOS with llama.cpp Metal. New benchmark results should be added to this README when they are run.
 
 Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
 
-The Gemma 4 optimized Fastify BenchLoop harness lives in [`gemma4_benchloop_harness_fastify/`](gemma4_benchloop_harness_fastify/).
+The general Gemma 4 harness lives in [`gemma4_harness/`](gemma4_harness/). It is the shared OpenAI-compatible adapter for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and similar local agent clients.
 The Qwen/Qwopus LAN-adapter harness lives in [`qwen_benchloop_harness/`](qwen_benchloop_harness/); its promoted 35B MTP policy reached **91.66** overall / **96.66** quality after 51 improvement loops, beating the raw README main 35B MTP row by **+9.32** overall / **+9.42** quality.
 
 ## macOS M1 Pro (Metal)
 
 Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full macOS notes: [`macos-m1-pro/README.md`](macos-m1-pro/README.md).
 
-**Gemma 4 Unsloth MTP n-max=2, KV `q4_0`, no cap** (`-c 0`, `--fit-target 28672`, reasoning off, temp 1 / top-p 0.95 / top-k 64). Harness: [`gemma4_qat_q4_optimized_policy.json`](gemma4_benchloop_harness_fastify/configs/gemma4_qat_q4_optimized_policy.json).
+**Gemma 4 Unsloth MTP n-max=2, KV `q4_0`, no cap** (`-c 0`, `--fit-target 28672`, reasoning off, temp 1 / top-p 0.95 / top-k 64). Harness: [`gemma4_qat_q4_optimized_policy.json`](gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json).
 
-Artifacts: [12B KV Q4](macos-m1-pro/results/benchloop/gemma4-12b-nmax2-kvq4-no-cap-20260611T000135Z/) · [26B KV Q4](macos-m1-pro/results/benchloop/gemma4-26b-nmax2-kvq4-no-cap-20260611T083329Z/)
+Artifacts: [12B KV Q4](macos-m1-pro/results/benchloop/gemma4-12b-policy-20iter-20260612T100148Z/iter186-restore-safe-baseline-full/) · [26B KV Q4](macos-m1-pro/results/benchloop/gemma4-26b-nmax2-kvq4-no-cap-20260611T083329Z/)
+
+Latest 12B harness row is the current restored safe-baseline policy run from 2026-06-12; benchmark-specific phrase/word transforms and task-answer/tool-call synthesis remain removed.
 
 | Model | Mode | Quality | Speed | Reliability | Value | **Overall** | Gen tok/s | Runtime | Agent | Coding | Dataextract | Instructfollow | Reasonmath | Toolcall | Load RSS | Peak cache | ≈ Peak |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 12B | raw | 86.2 | 44.7 | 80.9 | 8.0 | **76.6** | 11.50 | 2143s | 96.9 | 100.0 | 81.7 | 82.2 | 73.3 | 83.3 | 8.2 GB | 3.1 GB | ~11.3 GB |
-| 12B | harness | 89.3 | 44.3 | 85.4 | 8.5 | **79.4** | 11.17 | 2088s | 96.9 | 100.0 | 82.5 | 76.7 | 80.0 | 100.0 | 8.2 GB | 3.5 GB | ~11.7 GB |
+| 12B | harness | 86.5 | 44.6 | 80.9 | 8.2 | **76.7** | 11.78 | 3032s | 96.9 | 100.0 | 81.0 | 84.5 | 73.3 | 83.3 | 8.4 GB | 3.5 GB | ~11.9 GB |
 | 26B | raw | 82.7 | 56.2 | 75.3 | 13.5 | **75.6** | 21.69 | 1201s | 96.9 | 91.7 | 81.2 | 70.0 | 73.3 | 83.3 | 14.1 GB | 2.1 GB | ~16.2 GB |
 | 26B | harness | 89.5 | 56.3 | 84.3 | 16.5 | **81.6** | 21.89 | 1132s | 96.9 | 100.0 | 83.7 | 70.0 | 86.7 | 100.0 | 14.1 GB | 2.4 GB | ~16.5 GB |
 
@@ -115,4 +117,3 @@ Sampler column uses `temp / top_p / top_k`. Every row uses `presence_penalty=0` 
 | Over 14 GiB | **`Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (main 35B)** | 262144 | `0.85 / 0.95 / 20`, `MTP draft 1-2` | off | 30.02 GiB | 60.06 tok/s | 57.45 tok/s | 68.3 tok/s | 15/25 | 82.3 | 87.2 | 51.97 tok/s | 100.0 | 96.7 | 96.9 |
 | Over 14 GiB | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | 262144 | `1.0 / 0.95 / 64`, `MTP draft 1-2` | off | 31.68 GiB | 23.26 tok/s | 24.45 tok/s | 28.76 tok/s | 23/25 | 80.2 | 88.9 | 19.58 tok/s | 100.0 | 83.3 | 96.9 |
 <!-- benchmark-table-end -->
-

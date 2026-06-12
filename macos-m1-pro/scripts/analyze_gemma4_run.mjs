@@ -4,11 +4,11 @@ import path from "node:path";
 
 const ACTIONABLE_HINTS = {
   invalid_json: "Enable JSON extraction/repair and escaped JSON parsing.",
-  numeric_string: "Enable numeric coercion for extraction JSON values.",
-  tool_missing: "Enable tool-call synthesis for obvious tool-use prompts.",
-  tool_unneeded: "Enable direct-answer guard to drop unnecessary tool calls.",
-  tool_partial_batch: "Enable missing batch-call synthesis.",
-  answer_line: "Enable answer-line canonicalization.",
+  numeric_string: "Inspect declared schemas and only coerce values when the schema permits it.",
+  tool_missing: "Inspect model tool-call fidelity and declared tool schemas; do not synthesize calls from prompts.",
+  tool_unneeded: "Inspect tool-choice behavior; do not drop or invent calls from prompt expectations.",
+  tool_partial_batch: "Inspect batch tool-call fidelity; do not synthesize missing calls.",
+  reasonmath_format: "Inspect reason/math formatting and instruction-following without rewriting expected answers.",
   format_cleanup: "Enable fence/reasoning stripping and content normalization.",
   speed_measurement: "Reduce temp=1 rambling with tighter prompts or post-processing; avoid truncating model output.",
 };
@@ -48,7 +48,7 @@ function classifyTask(suiteName, task) {
     if (error.includes("matched 1/2") || (String(metadata).toLowerCase().includes("all_required_called") && score < 100)) labels.push("tool_partial_batch");
     if (!labels.length && score < 100) labels.push("agent_or_tool_semantic");
   } else if (suiteName === "reasonmath") {
-    if (error.includes("missing answer line") || error.includes("missing switch") || error.includes("missing stay")) labels.push("answer_line");
+    if (score < 85 && error.includes("missing")) labels.push("reasonmath_format");
     else if (score < 85) labels.push("semantic_math");
   } else if (suiteName === "instructfollow") {
     if (score < 85) labels.push("format_or_instruction");

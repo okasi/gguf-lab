@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Promoted Gemma 4 12B: Unsloth MTP n-max=2, KV q4, no cap, + Fastify BenchLoop harness proxy.
+# Promoted Gemma 4 12B: Unsloth MTP n-max=2, KV q4, no cap, + Gemma 4 harness proxy.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
 CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-for-unsloth-gemma-4}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_benchloop_harness_fastify}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
 POLICY="${POLICY:-$HARNESS_DIR/configs/gemma4_qat_q4_optimized_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
@@ -97,7 +97,7 @@ echo "Starting llama-server: 12B MTP n-max=${SPEC_DRAFT_N_MAX}, KV ${CACHE_TYPE_
 SERVER_PID=$!
 wait_for_health "http://${HOST}:${UPSTREAM_PORT}/health"
 
-echo "Starting Fastify harness proxy on http://${HOST}:${PROXY_PORT}"
+echo "Starting Gemma 4 harness proxy on http://${HOST}:${PROXY_PORT}"
 node "$PROXY_BIN" \
   --host "$HOST" --port "$PROXY_PORT" \
   --upstream "http://${HOST}:${UPSTREAM_PORT}" \
