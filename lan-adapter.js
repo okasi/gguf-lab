@@ -1,4 +1,6 @@
 const http = require("http");
+const path = require("path");
+const { pathToFileURL } = require("url");
 
 const host = process.env.ADAPTER_HOST || "0.0.0.0";
 const port = Number(process.env.ADAPTER_PORT || 8080);
@@ -32,6 +34,25 @@ const defaultPresencePenalty = Number(process.env.DEFAULT_PRESENCE_PENALTY || 0.
 const defaultRepeatPenalty = Number(process.env.DEFAULT_REPEAT_PENALTY || 1.0);
 const defaultMaxTokens = Number(process.env.DEFAULT_MAX_TOKENS || 16384);
 const defaultThink = process.env.DEFAULT_THINK;
+const harnessPolicyPath = process.env.HARNESS_POLICY || "";
+const harnessModulePath = process.env.HARNESS_MODULE || path.join(__dirname, "qwen_benchloop_harness", "processor.mjs");
+const harnessLogJsonl = process.env.HARNESS_LOG_JSONL || "";
+
+let harnessModulePromise = null;
+
+async function getHarnessModule() {
+  if (!harnessPolicyPath) return null;
+  if (!harnessModulePromise) {
+    harnessModulePromise = import(pathToFileURL(harnessModulePath).href);
+  }
+  return harnessModulePromise;
+}
+
+async function getHarnessPolicy() {
+  const mod = await getHarnessModule();
+  if (!mod) return null;
+  return mod.loadPolicy(harnessPolicyPath);
+}
 
 const responses = new Map();
 
@@ -199,8 +220,21 @@ function normalizeAudioMultipartModel(buffer) {
 
 async function proxy(req, res, targetPath) {
   const body = withSamplingDefaults(await readBody(req), { tools: targetPath.includes("chat") });
+  const policy = await getHarnessPolicy();
   if (body.stream === true) {
-    return upstreamStream(targetPath, body, res);
+    if (policy && targetPath.includes("chat")) body.stream = false;
+    else return upstreamStream(targetPath, body, res);
+  }
+  if (policy && targetPath.includes("chat")) {
+    const mod = await getHarnessModule();
+    const result = await mod.runChatCompletionHarness({
+      upstreamJson,
+      requestPayload: body,
+      policy,
+      logJsonl: harnessLogJsonl,
+      path: targetPath,
+    });
+    return json(res, 200, withResponseModel(result, body.model));
   }
   const result = await upstreamJson(targetPath, body);
   json(res, 200, withResponseModel(result, body.model));
@@ -490,7 +524,8 @@ async function handleAnthropicMessages(req, res) {
 
   messages.push(...normalizeAnthropicMessages(body.messages || []));
 
-  const completion = await upstreamJson("/v1/chat/completions", withSamplingDefaults({
+  const policy = await getHarnessPolicy();
+  const chatPayload = withSamplingDefaults({
     model: body.model || defaultModel,
     messages,
     temperature: body.temperature,
@@ -503,7 +538,21 @@ async function handleAnthropicMessages(req, res) {
     tools: anthropicToolsToOpenAI(body.tools),
     tool_choice: anthropicToolChoiceToOpenAI(body.tool_choice),
     stream: false,
-  }, { tools: Array.isArray(body.tools) && body.tools.length > 0 }));
+  }, { tools: Array.isArray(body.tools) && body.tools.length > 0 });
+
+  let completion;
+  if (policy) {
+    const mod = await getHarnessModule();
+    completion = await mod.runChatCompletionHarness({
+      upstreamJson,
+      requestPayload: chatPayload,
+      policy,
+      logJsonl: harnessLogJsonl,
+      path: "/v1/chat/completions",
+    });
+  } else {
+    completion = await upstreamJson("/v1/chat/completions", chatPayload);
+  }
 
   const choice = completion.choices?.[0] || {};
   const message = choice.message || {};
@@ -548,7 +597,13 @@ const requestHandler = async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     if (req.method === "OPTIONS") return json(res, 200, {});
     if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
-      return json(res, 200, { status: "ok", upstream, model: defaultModel });
+      const policy = await getHarnessPolicy();
+      return json(res, 200, {
+        status: "ok",
+        upstream,
+        model: defaultModel,
+        harness: policy ? { name: policy.name, version: policy.version, policy: harnessPolicyPath } : null,
+      });
     }
     if (req.method === "GET" && url.pathname === "/v1/models") {
       const upstreamResponse = await fetch(`${upstream}/v1/models`);

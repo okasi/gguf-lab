@@ -477,6 +477,13 @@ try {
         Remove-Item Env:AUDIO_MODEL_ALIAS -ErrorAction SilentlyContinue
         Remove-Item Env:AUDIO_MODEL_ALIASES -ErrorAction SilentlyContinue
     }
+    if ($env:HARNESS_POLICY) {
+        Write-Host "Harness policy: $($env:HARNESS_POLICY)"
+    } else {
+        Remove-Item Env:HARNESS_POLICY -ErrorAction SilentlyContinue
+        Remove-Item Env:HARNESS_MODULE -ErrorAction SilentlyContinue
+        Remove-Item Env:HARNESS_LOG_JSONL -ErrorAction SilentlyContinue
+    }
 
     $adapterProcess = Start-Process -FilePath $Node -ArgumentList @($Adapter) -WorkingDirectory $RepoRoot -RedirectStandardOutput $AdapterOut -RedirectStandardError $AdapterErr -WindowStyle Hidden -PassThru
     Write-Host "Adapter PID $($adapterProcess.Id) listening on 0.0.0.0:$Port and 0.0.0.0:$AltPort"
