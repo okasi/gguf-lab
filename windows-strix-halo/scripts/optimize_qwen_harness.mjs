@@ -16,20 +16,15 @@ const RUN_PS1 = path.join(REPO_ROOT, "windows-strix-halo/Run-Qwen-Harness-BenchL
 const BENCHLOOP = path.join(REPO_ROOT, "windows-strix-halo/.venv-benchloop/Scripts/benchloop.exe");
 const DEFAULT_OUT = path.join(REPO_ROOT, "windows-strix-halo/logs/qwen-harness-optimization");
 
-/** 31 general-purpose policy iterations (no benchmark-specific answer injection). */
+/** General-purpose policy iterations (no benchmark-specific answer injection). */
 const CANDIDATES = [
   ["01-baseline", {}],
   ["01b-minimal-repair", {
-    synthesize_obvious_tool_calls: false,
-    synthesize_missing_batch_calls: false,
     extract_python_code: false,
     extract_javascript_code: false,
-    direct_answer_guard: false,
-    canonicalize_reasonmath_answer_line: false,
     normalize_tool_args: false,
   }],
   ["02-coerce-scalar-json", { coerce_scalar_json_values: true }],
-  ["03-clarification-tools", { synthesize_tool_calls_from_prompt_on_clarification: true }],
   ["04-retry-empty", { retry_empty: true, max_retries: 1 }],
   ["05-retry-json", { retry_malformed_json: true, max_retries: 1 }],
   ["06-retry-missing-tool", { retry_missing_tool_call: true, max_retries: 1 }],
@@ -39,24 +34,19 @@ const CANDIDATES = [
   ["10-tool-reason-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
   ["11-code-retry-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, max_retries: 2 }],
   ["12-full-code-retry", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["13-clarify-plus-json", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, max_retries: 2 }],
   ["14-normalize-tool-args-off", { normalize_tool_args: false }],
   ["15-dedupe-off", { dedupe_tool_calls: false }],
-  ["16-no-synthesize-obvious", { synthesize_obvious_tool_calls: false }],
-  ["17-no-batch-synthesize", { synthesize_missing_batch_calls: false }],
-  ["18-no-direct-guard", { direct_answer_guard: false }],
-  ["19-no-reasonmath-canonical", { canonicalize_reasonmath_answer_line: false }],
   ["20-max-retries-2-baseline", { max_retries: 2 }],
   ["21-max-retries-3-json", { retry_empty: true, retry_malformed_json: true, max_retries: 3 }],
-  ["22-forensic-shared", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true }],
-  ["23-forensic-json-agent", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, max_retries: 2 }],
-  ["24-forensic-tool-reason", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
+  ["22-forensic-shared", { coerce_scalar_json_values: true }],
+  ["23-forensic-json-agent", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, max_retries: 2 }],
+  ["24-forensic-tool-reason", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
   ["25-forensic-code", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["26-forensic-full", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["27-promoted-lean", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2, normalize_tool_args: true, dedupe_tool_calls: true }],
-  ["28-promoted-code", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, max_retries: 2 }],
-  ["29-promoted-full", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["30-promoted-full-plus", { coerce_scalar_json_values: true, synthesize_tool_calls_from_prompt_on_clarification: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 3, dedupe_tool_calls: true }],
+  ["26-forensic-full", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["27-promoted-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2, normalize_tool_args: true, dedupe_tool_calls: true }],
+  ["28-promoted-code", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, max_retries: 2 }],
+  ["29-promoted-full", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["30-promoted-full-plus", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 3, dedupe_tool_calls: true }],
 ];
 
 function parseArgs(argv) {

@@ -1,6 +1,6 @@
 {
-  "name": "qwopus35-optimized",
-  "version": "lan-adapter-iter-51-50-extraction-full",
+  "name": "qwopus35-parser-tooling",
+  "version": "lan-adapter-no-answer-rewrite",
   "temperature": 0.85,
   "top_p": 0.95,
   "top_k": 20,
@@ -18,21 +18,12 @@
   "parse_escaped_json": true,
   "normalize_tool_args": true,
   "dedupe_tool_calls": true,
-  "direct_answer_guard": true,
-  "synthesize_obvious_tool_calls": true,
-  "synthesize_tool_calls_from_prompt_on_clarification": true,
-  "synthesize_missing_batch_calls": true,
-  "canonicalize_reasonmath_answer_line": true,
   "repair_only_when_needed": true,
   "retry_empty": true,
   "retry_malformed_json": true,
   "retry_malformed_python": true,
   "retry_malformed_javascript": true,
   "retry_missing_tool_call": true,
-  "normalize_instruction_constraints": true,
-  "normalize_extraction_values": true,
-  "repair_python_class_names": true,
-  "normalize_final_numeric_answers": true,
   "max_retries": 2,
   "metadata": {
     "target_models": [
@@ -41,25 +32,21 @@
     ],
     "sampler": "temp=0.85, top_p=0.95, top_k=20",
     "benchloop_harness": "lan-adapter with qwen_benchloop_harness processor",
-    "prompt_policy": "Do not modify BenchLoop messages or tool schemas.",
-    "clawbench_note": "General response normalization only; no dataset-specific shortcuts.",
+    "prompt_policy": "Do not modify BenchLoop messages, tool schemas, or answer content beyond parser/format cleanup.",
+    "clawbench_note": "Parser/code/JSON cleanup and conversion of model-emitted tool-call syntax only; answer/action synthesis removed.",
     "optimizer": "windows-strix-halo/scripts/optimize_qwen_harness.mjs",
     "optimizer_iteration": 51,
     "optimizer_candidate": "50-extraction-full",
-    "manual_iteration": "post-51-extraction-full-promoted",
+    "manual_iteration": "answer-and-action-synthesis-removed",
     "patch": {
       "coerce_scalar_json_values": true,
-      "synthesize_tool_calls_from_prompt_on_clarification": true,
       "retry_empty": true,
       "retry_malformed_json": true,
       "retry_missing_tool_call": true,
       "retry_malformed_python": true,
       "retry_malformed_javascript": true,
-      "normalize_instruction_constraints": true,
-      "normalize_extraction_values": true,
-      "repair_python_class_names": true,
-      "normalize_final_numeric_answers": true,
       "max_retries": 2
-    }
+    },
+    "previous_promoted_result_invalidated": true
   }
 }

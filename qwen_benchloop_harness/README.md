@@ -10,9 +10,11 @@ normalization after llama.cpp returns:
 - generic Python/JavaScript/TypeScript fence extraction
 - OpenAI tool-call normalization from tags, JSON blobs, function syntax, and active tool schemas
 - bounded retries for empty, malformed structured output, or missing tool-call responses
-- opt-in prompt-derived repairs for explicit instruction constraints, Python class names,
-  obvious contact lookup tool calls, compact extraction values, final numeric answers, and
-  canonical `ANSWER:` lines
+
+The harness intentionally does **not** perform answer-changing post-processing such as
+instruction-constraint solving, extraction value rewriting, reason/math answer
+canonicalization, final numeric answer injection, direct-answer injection, prompt-only
+tool-call synthesis, missing batch-call synthesis, or code-answer alias repair.
 
 The active policy is [`configs/qwopus35_optimized_policy.json`](configs/qwopus35_optimized_policy.json).
 
@@ -36,12 +38,17 @@ For optimizer loops:
 node .\windows-strix-halo\scripts\optimize_qwen_harness.mjs
 ```
 
-## Current Evidence
+## Current Status
 
 Target: `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf`, context `262144`, sampler
 `0.85 / 0.95 / 20`, reasoning off, MTP draft `1-2`.
 
-Best kept policy: `lan-adapter-iter-51-50-extraction-full`.
+Active policy: `lan-adapter-no-answer-rewrite`.
+
+The previous promoted policy, `lan-adapter-iter-51-50-extraction-full`, is now
+invalidated because it included answer-changing normalizers that are not allowed under
+the current no-cheating standard. The table below is historical evidence only; do not
+report it as the current fair harness score without rerunning the cleaned policy.
 
 | Iteration | Overall | Quality | Speed | Gen tok/s | Toolcall | Coding | Dataextract | Instructfollow | Reasonmath | Agent |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -53,19 +60,15 @@ Best kept policy: `lan-adapter-iter-51-50-extraction-full`.
 | 42 extraction full | 91.16 | 96.36 | 70.02 | 47.10 | 100.00 | 100.00 | 91.48 | 100.00 | 86.67 | 100.00 |
 | 51 promoted | 91.66 | 96.66 | 70.28 | 47.84 | 100.00 | 100.00 | 93.30 | 100.00 | 86.67 | 100.00 |
 
-Full loop artifacts are under
+Historical loop artifacts are under
 [`windows-strix-halo/logs/qwen-harness-optimization/`](../windows-strix-halo/logs/qwen-harness-optimization/).
-The corrected summary uses the saved BenchLoop `run.json` for each iteration. The promoted
-full run is
+The invalidated promoted full run is
 `C:\Users\Admin\.bench-loop\runs\20260612-143329-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-qwen-harness-noreason-mtp2-local-openai_compat\run.json`.
 
-Compared with the README raw/MTP row for the same 35B model (`82.34` overall, `87.25`
-quality), the promoted harness is **+9.32 overall** and **+9.42 quality**.
+The cleaned active policy has not yet been rerun after removing the answer-changing
+normalizers.
 
 ## Limitations
 
 Keep this harness opt-in for clients that benefit from adapter-level normalization and
-tool-call cleanup. `dataextract` now passes 15/15 but still has partial-score field
-mismatches. The remaining failed tasks are two `reasonmath` cases where the suite expected
-answers conflict with prompt-derived arithmetic (`rm-08` bathtub fill/drain and `rm-13`
-compound interest). Those were not patched with benchmark-specific answer injection.
+tool-call cleanup. The current policy should be evaluated again before claiming a score.

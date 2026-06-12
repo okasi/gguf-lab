@@ -90,11 +90,11 @@ await test("04 strip im_end token", () => {
   assert.equal(message.content, "Done answer");
 });
 
-await test("05 direct math guard", () => {
+await test("05 no direct answer injection", () => {
   const call = { function: { name: "calculator", arguments: '{"expression":"200 * 0.15"}' } };
   const { message } = processed("", request("What is 15% of 200?"), [call]);
-  assert.deepEqual(message.tool_calls, []);
-  assert.equal(message.content, "30");
+  assert.equal(message.tool_calls[0].function.name, "calculator");
+  assert.equal(message.content, "");
 });
 
 await test("06 json numeric coercion", () => {
@@ -110,34 +110,35 @@ await test("07 no answer key injection for coding", () => {
   assert.equal(result.stats.repairs.includes("synthesized_benchloop_coding_solution"), false);
 });
 
-await test("08 prompt-derived reverse closed set", () => {
+await test("08 removed instruction normalizer stays inert", () => {
   const req = request("Using only these six words - zebra, mango, lemon, apricot, tulip, cedar - list all six in reverse alphabetical order. Present each as a bullet point.", {
     tools: [],
     system: "Follow the user's instructions precisely.",
   });
-  const { message } = processed("* tulip\n* mango\n* lemon\n* cedar\n* apricot\n* zebra", req, [], loadPolicy(null, { normalize_instruction_constraints: true }));
-  assert.equal(message.content, "* zebra\n* tulip\n* mango\n* lemon\n* cedar\n* apricot");
+  const original = "* tulip\n* mango\n* lemon\n* cedar\n* apricot\n* zebra";
+  const { message } = processed(original, req);
+  assert.equal(message.content, original);
 });
 
-await test("09 prompt-derived impossible word conflict", () => {
-  const req = request("Write exactly 3 sentences. Each sentence must be exactly 10 words. The total response must be exactly 25 words. If the request is impossible, output exactly one line starting with \"IMPOSSIBLE -\" and explain why.", {
+await test("09 removed reasonmath canonicalizer stays inert", () => {
+  const req = request("Faucet A fills a tub in 12 minutes. Faucet B fills it in 18 minutes. The drain empties it in 36 minutes but is closed. Return the final line exactly as ANSWER: fill_time=<minutes> minutes.", {
     tools: [],
-    system: "Follow the user's instructions precisely.",
+    system: "Return the final line exactly.",
   });
-  const { message } = processed("I cannot do that.", req, [], loadPolicy(null, { normalize_instruction_constraints: true }));
-  assert.match(message.content, /^IMPOSSIBLE -/);
-  assert.match(message.content, /30/);
-  assert.match(message.content, /25/);
+  const { message } = processed("ANSWER: fill_time=9 minutes", req, [], loadPolicy(null, {
+    repair_only_when_needed: false,
+  }));
+  assert.equal(message.content, "ANSWER: fill_time=9 minutes");
 });
 
-await test("10 python class alias repair", () => {
+await test("10 no python class alias repair", () => {
   const req = request("Write a Python class `LRUCache` with get and put.", { tools: [], system: "You are a coding assistant." });
   const code = "class LRU_Cache:\n    pass";
-  const { message } = processed(code, req, [], loadPolicy(null, { repair_python_class_names: true, repair_only_when_needed: false }));
-  assert.match(message.content, /LRUCache = LRU_Cache/);
+  const { message } = processed(code, req, [], loadPolicy(null, { repair_only_when_needed: false }));
+  assert.equal(message.content, code);
 });
 
-await test("11 implicit contact lookup", () => {
+await test("11 no implicit contact lookup synthesis", () => {
   const tools = TOOLS.concat([{
     type: "function",
     function: {
@@ -152,163 +153,47 @@ await test("11 implicit contact lookup", () => {
   }]);
   const req = request("I need to let Sarah know the meeting moved to 3pm.", { tools });
   const { message } = processed("I need Sarah's contact information first.", req, [], loadPolicy(null, {
-    synthesize_tool_calls_from_prompt_on_clarification: true,
+    repair_only_when_needed: false,
   }));
-  assert.equal(message.tool_calls[0].function.name, "get_contacts");
+  assert.deepEqual(message.tool_calls, []);
+  assert.equal(message.content, "I need Sarah's contact information first.");
 });
 
-await test("12 compact extraction values", () => {
+await test("12 removed extraction normalizer stays inert", () => {
   const req = request("Extract product fields. Fields: product_name, product_type, colors, restaurant_name, cuisine_type, location", {
     tools: [],
     system: "Output valid JSON.",
   });
   const content = JSON.stringify({
     product_name: "XR-7500 Pro noise-cancelling headphones",
-    product_type: "ワイヤレスイヤホン / Wireless Earbuds",
-    colors: ["ミッドナイトブラック (Midnight Black)"],
-    restaurant_name: "Sakura Sushi",
+    product_type: "Japanese label / Wireless Earbuds",
+    colors: ["Midnight Black"],
+    restaurant_name: "Kumo Sushi",
     cuisine_type: null,
     location: "Chicago to the LA office",
   });
   const { message } = processed(content, req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
     repair_only_when_needed: false,
   }));
   const data = JSON.parse(message.content);
-  assert.equal(data.product_name, "XR-7500 Pro");
-  assert.equal(data.product_type, "Wireless Earbuds");
-  assert.deepEqual(data.colors, ["Midnight Black"]);
-  assert.equal(data.cuisine_type, "Sushi");
-  assert.equal(data.location, "LA");
+  assert.equal(data.product_name, "XR-7500 Pro noise-cancelling headphones");
+  assert.equal(data.product_type, "Japanese label / Wireless Earbuds");
+  assert.equal(data.cuisine_type, null);
+  assert.equal(data.location, "Chicago to the LA office");
 });
 
-await test("13 medical extraction normalization", () => {
-  const req = request("Extract clinical fields. Fields: medication_dose, medication_duration, referral, location", {
+await test("13 removed final numeric normalizer stays inert", () => {
+  const req = {
+    model: "qwopus3.6-35b-a3b-v1",
+    messages: [
+      { role: "system", content: "You are helpful." },
+      { role: "user", content: "What is the final portfolio value?" },
+      { role: "tool", content: "{\"cash\":100,\"portfolio_value\":3948}" },
+    ],
     tools: [],
-    system: "Output valid JSON.",
-  });
-  const content = JSON.stringify({
-    medication_dose: "50mcg",
-    medication_duration: "30 days",
-    referral: "none at this time",
-    location: "NYC office, Chicago",
-  });
-  const { message } = processed(content, req, [], loadPolicy(null, {
-    coerce_numeric_json_values: true,
-    coerce_scalar_json_values: true,
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.medication_dose, "50 mcg");
-  assert.equal(data.medication_duration, "30 days");
-  assert.equal(data.referral, null);
-  assert.equal(data.location, "NYC");
-});
-
-await test("14 prompt-evidence over-extraction guard", () => {
-  const req = request("Source note: We ate near Nob Hill and stayed about 2 hours. Extract fields: neighborhood, visit_duration. Use null when a field is only implied or approximate.", {
-    tools: [],
-    system: "Output valid JSON.",
-  });
-  const content = JSON.stringify({ neighborhood: "Nob Hill", visit_duration: "2 hours" });
-  const { message } = processed(content, req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.neighborhood, null);
-  assert.equal(data.visit_duration, "about 2 hours");
-});
-
-await test("15 prompt-derived fill drain answer", () => {
-  const req = request("Faucet A fills a tub in 12 minutes. Faucet B fills it in 18 minutes. The drain empties it in 36 minutes but is closed. Return the final line exactly as ANSWER: fill_time=<minutes> minutes.", {
-    tools: [],
-    system: "Return the final line exactly.",
-  });
-  const { message } = processed("ANSWER: fill_time=9 minutes", req, [], loadPolicy(null, {
-    canonicalize_reasonmath_answer_line: true,
-    repair_only_when_needed: false,
-  }));
-  assert.match(message.content, /ANSWER: fill_time=7\.2 minutes/);
-});
-
-await test("16 prompt-derived compound interest answer", () => {
-  const req = request("Calculate compound interest for $5,000 at 4.5% annual interest for 3 years, compounded quarterly. Return the final line exactly as ANSWER: amount=<amount>; interest=<interest>.", {
-    tools: [],
-    system: "Return the final line exactly.",
-  });
-  const { message } = processed("ANSWER: amount=5721.24; interest=721.24", req, [], loadPolicy(null, {
-    canonicalize_reasonmath_answer_line: true,
-    repair_only_when_needed: false,
-  }));
-  assert.match(message.content, /ANSWER: amount=5718\.37; interest=718\.37/);
-});
-
-await test("17 room and city-state extraction cleanup", () => {
-  const req = request("Job location: Austin, TX. Meeting room: atlas room. Extract fields: location, room.", {
-    tools: [],
-    system: "Output valid JSON.",
-  });
-  const { message } = processed(JSON.stringify({ location: "Austin", room: "atlas room" }), req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.location, "Austin, TX");
-  assert.equal(data.room, "Atlas Room");
-});
-
-await test("18 product suffix and mixed-language spec cleanup", () => {
-  const req = request("Extract fields: product_name, driver_size.", {
-    tools: [],
-    system: "Output valid JSON.",
-  });
-  const content = JSON.stringify({
-    product_name: "ZenBook Pro 15 laptop",
-    driver_size: "10mm ダイナミック / 10mm Dynamic",
-  });
-  const { message } = processed(content, req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.product_name, "ZenBook Pro 15");
-  assert.equal(data.driver_size, "10mm Dynamic");
-});
-
-await test("19 dose qualifier and payment method cleanup", () => {
-  const req = request("Medication: fluticasone 50 mcg/spray. Payment method: ACH transfer. Extract fields: medication_dose, payment_method.", {
-    tools: [],
-    system: "Output valid JSON.",
-  });
-  const content = JSON.stringify({ medication_dose: "50 mcg", payment_method: "ACH transfer" });
-  const { message } = processed(content, req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.medication_dose, "50 mcg/spray");
-  assert.equal(data.payment_method, "ACH");
-});
-
-await test("20 entity note deduplicates structured fields", () => {
-  const req = request("Extract people fields: name, location, email, note.", {
-    tools: [],
-    system: "Output valid JSON.",
-  });
-  const content = JSON.stringify({
-    name: "Sarah Kim",
-    location: "LA",
-    email: "sarah@example.com",
-    note: "Transitioning to the Globex account. She's relocating from Chicago to the LA office. Use her email sarah@example.com.",
-  });
-  const { message } = processed(content, req, [], loadPolicy(null, {
-    normalize_extraction_values: true,
-    repair_only_when_needed: false,
-  }));
-  const data = JSON.parse(message.content);
-  assert.equal(data.note, "Transitioning to the Globex account.");
+  };
+  const { message } = processed("The total is about $3.9k.", req);
+  assert.equal(message.content, "The total is about $3.9k.");
 });
 
 console.log("All qwen harness tests passed.");
