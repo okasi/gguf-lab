@@ -29,14 +29,14 @@ cd C:\Users\Admin\Documents\Developer\local-llm\qwen_harness
 npm test
 ```
 
-Twenty-loop optimizer pass:
+Thirty-loop optimizer pass:
 
 ```powershell
 node C:\Users\Admin\Documents\Developer\local-llm\windows-strix-halo\scripts\optimize_qwen_harness.mjs `
   --out-dir C:\Users\Admin\Documents\Developer\local-llm\windows-strix-halo\logs\qwen-harness-optimization-fair-toolcall-20260613 `
   --suites toolcall `
-  --end 20 `
-  --promote-policy C:\Users\Admin\Documents\Developer\local-llm\windows-strix-halo\logs\qwen-harness-optimization-fair-toolcall-20260613\promoted-policy.json
+  --end 30 `
+  --promote-policy C:\Users\Admin\Documents\Developer\local-llm\windows-strix-halo\logs\qwen-harness-optimization-fair-toolcall-20260613\promoted-policy-21-30.json
 ```
 
 Final full BenchLoop run:
@@ -64,12 +64,12 @@ node C:\Users\Admin\Documents\Developer\local-llm\windows-strix-halo\scripts\run
 
 Artifacts: `windows-strix-halo/logs/qwen-harness-optimization-fair-toolcall-20260613/`
 
-The optimizer ran 20 candidate policies over both target models on the `toolcall` suite. Every run kept raw logs, adapter JSONL, policy/model snapshots, copied `run.json`, and per-run summaries.
+The optimizer ran 30 candidate policies over both target models on the `toolcall` suite. Every run kept raw logs, adapter JSONL, policy/model snapshots, copied `run.json`, and per-run summaries.
 
 | Result | Iterations |
 |---|---|
 | Kept | `01-baseline`, overall `65.83425`, quality/toolcall `83.335` |
-| Rejected ties | `02-no-code-extraction`, `03-no-tool-arg-normalize`, `04-no-dedupe`, `05-tagged-tools-only`, `06-json-tools-only`, `07-no-function-syntax`, `08-no-escaped-json`, `09-no-markdown-fence-strip`, `10-json-repair-off`, `11-retry-empty-1`, `12-retry-json-1`, `13-retry-missing-tool-1`, `14-retry-python-1`, `15-retry-typescript-1`, `16-retry-json-tool-2`, `17-retry-code-2`, `18-retry-full-2`, `19-retry-full-3`, `20-parser-full-retry-1` |
+| Rejected ties | `02-no-code-extraction`, `03-no-tool-arg-normalize`, `04-no-dedupe`, `05-tagged-tools-only`, `06-json-tools-only`, `07-no-function-syntax`, `08-no-escaped-json`, `09-no-markdown-fence-strip`, `10-json-repair-off`, `11-retry-empty-1`, `12-retry-json-1`, `13-retry-missing-tool-1`, `14-retry-python-1`, `15-retry-typescript-1`, `16-retry-json-tool-2`, `17-retry-code-2`, `18-retry-full-2`, `19-retry-full-3`, `20-parser-full-retry-1`, `21-parser-full-retry-2`, `22-parser-full-retry-2-no-code-extract`, `23-parser-full-retry-2-no-tool-normalize`, `24-parser-full-retry-2-no-dedupe`, `25-no-truncated-reasoning-retry`, `26-truncated-reasoning-cap-2048`, `27-truncated-reasoning-cap-8192`, `28-retry-full-2-no-missing-tool-retry`, `29-parser-full-retry-2-json-strict`, `30-parser-full-retry-2-no-function-syntax` |
 
 No candidate beat the cleaned baseline, so no extra optimizer-generated policy was promoted.
 

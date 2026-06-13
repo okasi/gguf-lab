@@ -43,6 +43,12 @@ const CANDIDATES = [
   ["22-parser-full-retry-2-no-code-extract", { extract_python_code: false, extract_javascript_code: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
   ["23-parser-full-retry-2-no-tool-normalize", { normalize_tool_args: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
   ["24-parser-full-retry-2-no-dedupe", { dedupe_tool_calls: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["25-no-truncated-reasoning-retry", { retry_truncated_reasoning: false }],
+  ["26-truncated-reasoning-cap-2048", { retry_truncated_reasoning: true, retry_max_tokens_cap: 2048, max_retries: 2 }],
+  ["27-truncated-reasoning-cap-8192", { retry_truncated_reasoning: true, retry_max_tokens_cap: 8192, max_retries: 2 }],
+  ["28-retry-full-2-no-missing-tool-retry", { retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: false, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["29-parser-full-retry-2-json-strict", { parse_tagged_tool_calls: true, parse_json_tool_calls: true, parse_function_syntax: true, parse_escaped_json: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["30-parser-full-retry-2-no-function-syntax", { parse_tagged_tool_calls: true, parse_json_tool_calls: true, parse_function_syntax: false, parse_escaped_json: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
 ];
 
 function parseArgs(argv) {

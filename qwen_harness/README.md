@@ -87,7 +87,7 @@ Current fair evidence:
   `toolcall` smoke with copied `run.json`, policy snapshots, model snapshots, and adapter JSONL
   for both target models.
 - `windows-strix-halo/logs/qwen-harness-optimization-fair-toolcall-20260613/`:
-  20 fair optimization loops over both target models on `toolcall`; the cleaned baseline
+  30 fair optimization loops over both target models on `toolcall`; the cleaned baseline
   stayed best and all other candidates tied, so no additional policy was promoted.
 - `windows-strix-halo/logs/qwen-harness-final-full-20260613/`:
   full BenchLoop run for both target models with copied `run.json`, policy snapshots,
