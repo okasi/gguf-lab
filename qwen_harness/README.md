@@ -81,17 +81,26 @@ Historical loop artifacts are under
 The invalidated promoted full run is
 `C:\Users\Admin\.bench-loop\runs\20260612-143329-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-qwen-harness-noreason-mtp2-local-openai_compat\run.json`.
 
-The cleaned active policies have not yet completed a full BenchLoop optimization run.
-Current fair smoke evidence:
+Current fair evidence:
 
 - `windows-strix-halo/logs/qwen-harness-live-smoke-20260613-final/`:
   `toolcall` smoke with copied `run.json`, policy snapshots, model snapshots, and adapter JSONL
   for both target models.
+- `windows-strix-halo/logs/qwen-harness-optimization-fair-toolcall-20260613/`:
+  20 fair optimization loops over both target models on `toolcall`; the cleaned baseline
+  stayed best and all other candidates tied, so no additional policy was promoted.
+- `windows-strix-halo/logs/qwen-harness-final-full-20260613/`:
+  full BenchLoop run for both target models with copied `run.json`, policy snapshots,
+  model snapshots, adapter JSONL, and summaries.
 - `windows-strix-halo/logs/qwen-real-use-validation-20260613/`:
   OpenClaw-style validation prompts; latest current-policy summaries passed 4/4 for both
   `qwopus3.6-27b-coder-mtp-q4` and `qwopus3.6-35b-a3b-v1-mtp-q5`.
+- [`OPTIMIZATION_REPORT.md`](OPTIMIZATION_REPORT.md):
+  iteration results, final full-suite scores, failure audit, validation evidence, and
+  explicit anti-cheating audit.
 
 ## Limitations
 
 Keep this harness opt-in for clients that benefit from adapter-level normalization and
-tool-call cleanup. The current policy should be evaluated again before claiming a score.
+tool-call cleanup. Numeric extraction coercion and instruction/math answer repair remain
+excluded even when they would improve benchmark scores.

@@ -5,7 +5,7 @@ Benchmarks run locally on Windows with llama.cpp Vulkan and on macOS with llama.
 Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
 
 The general Gemma 4 harness lives in [`gemma4_harness/`](gemma4_harness/). It is the shared OpenAI-compatible adapter for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and similar local agent clients.
-The Qwen/Qwopus LAN-adapter harness lives in [`qwen_harness/`](qwen_harness/). It is intended for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent clients. Its active policies are parser/tool-call/code/JSON-envelope cleanup only, with extraction value coercion and answer-changing repairs disabled. Current fair evidence is limited to toolcall smoke runs and real-use validation; a prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
+The Qwen/Qwopus LAN-adapter harness lives in [`qwen_harness/`](qwen_harness/). It is intended for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent clients. Its active policies are parser/tool-call/code/JSON-envelope cleanup only, with extraction value coercion and answer-changing repairs disabled. Current fair evidence includes a 20-loop toolcall optimization pass, a full two-model BenchLoop run, and real-use validation; see [`qwen_harness/OPTIMIZATION_REPORT.md`](qwen_harness/OPTIMIZATION_REPORT.md). A prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
 
 ## macOS M1 Pro (Metal)
 
@@ -64,6 +64,15 @@ Notes:
 - Gemma4 QAT rows used `--temp 1.0 --top-p 0.95 --top-k 64` and `q8_0/q8_0` KV cache. Per the [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4), E2B/E4B native context is 128K (`131072`); 12B, 26B A4B, and 31B native context is 256K (`262144`). Local Unsloth QAT GGUFs match those `n_ctx_train` values. The 12B, 26B, and 31B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
 - Qwopus rows use native `262144` context per the [Qwen3.6](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) model card and matching GGUF `n_ctx_train`.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the 2026-06-06 sampler sweep used `mmproj-F32.gguf` from the MTP repo snapshot.
+
+## Qwen/Qwopus Harness Fair BenchLoop (2026-06-13)
+
+These rows use the cleaned `qwen_harness/` LAN-adapter policies with answer-changing normalizers removed. BenchLoop ran through the adapter with `--harness raw`, suites `speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent`, copied `run.json` files, adapter JSONL, policy/model snapshots, and summaries under `windows-strix-halo/logs/qwen-harness-final-full-20260613/`. See `qwen_harness/OPTIMIZATION_REPORT.md` for the 20-loop optimization summary, failure audit, real-use validation, and anti-cheating audit.
+
+| Model / file | Max ctx | BL overall | BL quality | BL speed | Reliability | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `Qwopus3.6-27B-Coder-MTP-Q4_K_M.gguf` | 32768 | 74.59 | 82.28 | 52.59 | 75.28 | 17.80 tok/s | 93.75 | 75.00 | 96.88 | 86.92 | 67.78 | 73.33 |
+| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (MTP Q5 weights) | 262144 | 76.95 | 81.64 | 70.36 | 71.91 | 48.25 tok/s | 93.75 | 91.67 | 96.88 | 83.07 | 51.11 | 73.33 |
 
 ## Qwopus 27B Coder MTP BenchLoop (2026-06-12)
 
