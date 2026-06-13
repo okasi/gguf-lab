@@ -15,11 +15,61 @@ const TOOL_BLOCK_PATTERNS = [
   /<function_call>\s*([\s\S]*?)\s*<\/function_call>/gi,
   /<tool_code>\s*([\s\S]*?)\s*<\/tool_code>/gi,
 ];
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_TIME_RE = /^(\d{4}-\d{2}-\d{2})[Tt](\d{2}:\d{2}:\d{2}(?:\.\d+)?)([Zz]|[+-]\d{2}:\d{2})$/;
+const TIME_RE = /^(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?([Zz]|[+-]\d{2}:\d{2})?$/;
+const TIMEZONE_OFFSET_RE = /^([+-])(\d{2}):(\d{2})$/;
+const HOSTNAME_LABEL_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const JSON_POINTER_RE = /(^|[^~])~([^01]|$)/;
+const URI_TEMPLATE_OPERATOR_RE = /^[+#./;?&]/;
+const URI_TEMPLATE_PART_RE = /^[A-Za-z0-9_][A-Za-z0-9_.%-]*(?::[1-9][0-9]{0,3}|\*)?$/;
+const RELATIVE_JSON_POINTER_RE = /^(0|[1-9][0-9]*)(?:#|(?:\/(?:[^~/]|~[01])*)*)?$/;
+const BASE64_RE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+const BASE64URL_RE = /^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}(?:==)?|[A-Za-z0-9_-]{3}=?)?$/;
+const HEX_RE = /^[0-9a-f]*$/i;
+const DURATION_RE = /^P(?:\d+W|(?=\d|T\d)(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?)$/;
+const WHITESPACE_RE = /\s/;
+const IDENTIFIER_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const LEADING_TRAILING_QUOTE_RE = /^["']|["']$/g;
+const FRACTION_RE = /(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)/;
+const NUMBER_RE = /-?\d+(?:\.\d+)?/;
 const FENCE_RE = /(?<fence>```|~~~)(?:json|jsonc|json5|python|javascript|js|typescript|ts|jsx|tsx|text)?\s*(?<body>[\s\S]*?)\k<fence>/gi;
 const CODE_FENCE_RE = /(?<fence>```|~~~)(?<lang>[A-Za-z0-9_+-]*)\s*(?<code>[\s\S]*?)\k<fence>/g;
+const OPENING_FENCE_RE = /(?:```|~~~)(?<lang>[A-Za-z0-9_+-]*)/g;
 const JSON_FENCE_RE = /(?:```|~~~)json(?:c|5)?\b/i;
 const THINK_RE = /<think>[\s\S]*?<\/think>/gi;
 const FUNCTION_CALL_RE = /\b([A-Za-z_][A-Za-z0-9_]*)\s*\(([\s\S]*?)\)/g;
+const PYTHON_FENCE_LANGS = new Set(["python", "py"]);
+const JAVASCRIPT_FENCE_LANGS = new Set(["javascript", "js", "jsx", "mjs", "cjs"]);
+const TYPESCRIPT_FENCE_LANGS = new Set(["typescript", "ts", "tsx", "mts", "cts"]);
+const CHAT_ROLES = new Set(["system", "developer", "user", "assistant"]);
+const JAVASCRIPT_PARSER_PLUGINS = ["jsx", "decorators-legacy", "classProperties", "classPrivateProperties", "classPrivateMethods", "dynamicImport", "importMeta", "topLevelAwait", "optionalChaining", "nullishCoalescingOperator"];
+const JSON_SCHEMA_KEYS = [
+  "$ref", "$defs", "definitions", "type", "properties", "patternProperties", "items", "prefixItems",
+  "additionalProperties", "unevaluatedProperties", "unevaluatedItems", "anyOf", "oneOf", "allOf",
+  "not", "if", "then", "else", "const", "enum", "contains", "dependentRequired", "dependentSchemas",
+  "dependencies", "propertyNames", "required", "minProperties", "maxProperties", "minItems", "maxItems",
+  "uniqueItems", "minContains", "maxContains", "minLength", "maxLength", "pattern", "format", "minimum",
+  "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "contentEncoding", "contentMediaType",
+  "contentSchema", "nullable", "default",
+];
+const ARRAY_VALIDATION_KEYS = ["minItems", "maxItems", "uniqueItems", "contains", "minContains", "maxContains", "unevaluatedItems"];
+const NUMBER_VALIDATION_KEYS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "format"];
+const STRING_VALIDATION_KEYS = ["minLength", "maxLength", "pattern", "format", "contentEncoding", "contentMediaType", "contentSchema"];
+const OBJECT_VALIDATION_KEYS = ["properties", "patternProperties", "propertyNames", "required", "additionalProperties", "unevaluatedProperties", "dependentRequired", "dependentSchemas", "dependencies", "minProperties", "maxProperties"];
+const OBJECT_COMPOSITION_KEYS = ["type", "properties", "patternProperties", "required", "additionalProperties", "unevaluatedProperties", "propertyNames", "dependentRequired", "dependentSchemas", "dependencies", "minProperties", "maxProperties", "$defs", "definitions", "title", "description"];
+const RESPONSES_PASSTHROUGH_KEYS = ["temperature", "top_p", "stream", "stop", "metadata", "user", "parallel_tool_calls", "frequency_penalty", "presence_penalty", "seed", "logprobs", "top_logprobs", "service_tier", "modalities", "audio", "prediction", "store", "truncation", "include", "background", "safety_identifier"];
+const RESPONSES_REASONING_KEYS = [["effort", "reasoning_effort"], ["summary", "reasoning_summary"], ["generate_summary", "reasoning_generate_summary"]];
+const COMPLETIONS_PASSTHROUGH_KEYS = ["temperature", "top_p", "stop", "user", "n", "frequency_penalty", "presence_penalty", "seed", "logprobs", "top_logprobs", "response_format"];
+const RESPONSES_MAX_TOKEN_KEYS = ["max_output_tokens", "max_completion_tokens", "max_tokens"];
+const COMPLETIONS_MAX_TOKEN_KEYS = ["max_tokens", "max_completion_tokens", "max_output_tokens"];
+const CONTENT_TEXT_KEYS = ["text", "input_text", "output_text", "output", "content"];
+const MEDIA_REF_KEYS = ["file_id", "url", "audio_url", "video_url", "data"];
+const TOOL_CALL_CONTAINER_KEYS = ["tool_calls", "toolCalls", "tool_uses", "tools", "calls", "function_calls", "functionCalls"];
+const RESPONSE_FUNCTION_TOOL_KEYS = ["description", "parameters", "strict"];
+const JSON_CONTENT_TYPE = "application/json";
+const EVENT_STREAM_CONTENT_TYPE = "text/event-stream";
 const DEFAULT_POLICY_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "configs/gemma4_qat_q4_optimized_policy.json",
@@ -52,6 +102,92 @@ export const DEFAULT_POLICY = {
   metadata: {},
 };
 
+function uuidPart(length) { return randomUUID().replaceAll("-", "").slice(0, length); }
+function shortId(prefix, length = 12) { return `${prefix}_${uuidPart(length)}`; }
+function longId(prefix) { return shortId(prefix, 24); }
+function elapsedMs(started) { return Number((performance.now() - started).toFixed(3)); }
+function nowSeconds() { return Math.floor(Date.now() / 1000); }
+function responseContentType(headers, fallback = JSON_CONTENT_TYPE) { return headers?.["content-type"] ?? headers?.["Content-Type"] ?? fallback; }
+function badJsonBody(reply) { reply.code(400); return { error: { message: "request body must be a JSON object" } }; }
+function maxAttempts(policy) { return Math.max(1, Number(policy.max_retries) + 1); }
+function canRetry(attempt, policy) { return attempt < policy.max_retries; }
+function unique(values) { return [...new Set(values)]; }
+function uniqueTrimmed(values) { return unique(values.map((value) => value.trim()).filter(Boolean)); }
+function isArray(value) { return Array.isArray(value); }
+function arrayValues(value) { return isArray(value) ? value : []; }
+function firstArrayValue(value, fallback = undefined) { return arrayValues(value)[0] ?? fallback; }
+function mergeUniqueArray(left, right) { return unique([...arrayValues(left), ...arrayValues(right)]); }
+function mergeAllOfValue(left, right) { return left ? { allOf: [left, right] } : right; }
+function hasOwn(value, key) { return Object.prototype.hasOwnProperty.call(value, key); }
+function hasAnyOwn(value, keys) { return keys.some((key) => hasOwn(value, key)); }
+function objectKeys(value) { return isObjectLike(value) ? Object.keys(value) : []; }
+function keyCount(value) { return objectKeys(value).length; }
+function objectEntries(value) { return isObjectLike(value) ? Object.entries(value) : []; }
+function objectValues(value) { return isObjectLike(value) ? Object.values(value) : []; }
+function entriesObject(entries) { return Object.fromEntries(entries); }
+function hasKeys(value) { return keyCount(value) > 0; }
+function deleteIfEmpty(object, key) { if (!hasKeys(object[key])) delete object[key]; }
+function isDefined(value) { return value !== undefined; }
+function isNil(value) { return value === null || value === undefined; }
+function isString(value) { return typeof value === "string"; }
+function isObjectLike(value) { return Boolean(value) && typeof value === "object"; }
+function isNumber(value) { return typeof value === "number"; }
+function isBoolean(value) { return typeof value === "boolean"; }
+function isFiniteNumber(value) { return typeof value === "number" && Number.isFinite(value); }
+function isQuote(value) { return value === "\"" || value === "'"; }
+function isArgOpen(value) { return value === "{" || value === "[" || value === "("; }
+function isArgClose(value) { return value === "}" || value === "]" || value === ")"; }
+function isJsonOpen(value) { return value === "{" || value === "["; }
+function isJsonClose(value) { return value === "}" || value === "]"; }
+function jsonCloseFor(value) { return value === "{" ? "}" : "]"; }
+function hasWhitespace(value) { return WHITESPACE_RE.test(value); }
+function schemaProperties(schema) { return schema?.properties ?? {}; }
+function schemaPropertySet(schema) { return new Set(objectKeys(schemaProperties(schema))); }
+function startsJson(value) { return value.startsWith("{") || value.startsWith("["); }
+function schemaArrayLike(schema, root = schema) { return schemaTypeIncludes(schema, "array", root) || schema?.items || isArray(schema?.prefixItems); }
+function schemaObjectLike(schema, root = schema) { return schemaTypeIncludes(schema, "object", root) || schema?.properties || schema?.patternProperties; }
+function schemaUnion(schema) { return isArray(schema?.anyOf) ? schema.anyOf : isArray(schema?.oneOf) ? schema.oneOf : null; }
+function schemaAnyOf(schema) { return isArray(schema?.anyOf) ? schema.anyOf : null; }
+function schemaOneOf(schema) { return isArray(schema?.oneOf) ? schema.oneOf : null; }
+function schemaAllOf(schema) { return isArray(schema?.allOf) ? schema.allOf : null; }
+function schemaEnum(schema) { return isArray(schema?.enum) ? schema.enum : null; }
+function firstDefined(value, keys) {
+  for (const key of keys) if (isDefined(value[key])) return value[key];
+  return undefined;
+}
+function firstPresent(value, keys) {
+  for (const key of keys) if (!isNil(value[key])) return value[key];
+  return undefined;
+}
+function copyDefined(from, to, keys) {
+  for (const key of keys) if (isDefined(from[key])) to[key] = from[key];
+}
+function definedField(key, value) { return isDefined(value) ? { [key]: value } : {}; }
+function jsonText(value) { return JSON.stringify(value); }
+function jsonBuffer(value) { return Buffer.from(jsonText(value)); }
+function emptyBuffer() { return Buffer.alloc(0); }
+function serializedArgs(value) { return isString(value) ? value : jsonText(value ?? {}); }
+function parseJsonBuffer(buffer) { return JSON.parse(buffer.toString("utf8")); }
+function attemptInfo(attempt, status) { return { attempt: attempt + 1, status }; }
+function singleAttempt(status) { return [{ attempt: 1, status, retry_reason: "" }]; }
+function retryableUpstream5xx(attempts, info, status) {
+  if (!isServerErrorStatus(status)) return false;
+  attempts.push({ ...info, retry_reason: "upstream_5xx" });
+  return true;
+}
+function recordInvalidJsonAttempt(attempts, info, error) {
+  attempts.push({ ...info, retry_reason: `invalid_upstream_json:${error.message}` });
+}
+function recordProcessedAttempt(attempts, info, retryReason) {
+  attempts.push({ ...info, retry_reason: retryReason ?? "" });
+}
+function responseStreamBody(upstream, payload) {
+  return isErrorStatus(upstream.status) ? upstream.body : chatCompletionStreamToResponsesSse(upstream.body, payload);
+}
+function isServerErrorStatus(status) { return status >= 500; }
+function isErrorStatus(status) { return status >= 400; }
+function isStreamingRequest(payload) { return payload.stream === true; }
+
 export function loadPolicy(path, overrides = {}) {
   const filePolicy = path ? JSON.parse(fs.readFileSync(path, "utf8")) : {};
   return { ...DEFAULT_POLICY, ...filePolicy, ...overrides };
@@ -59,24 +195,24 @@ export function loadPolicy(path, overrides = {}) {
 
 export function prepareUpstreamPayload(payload, policy) {
   const outgoing = structuredClone(payload ?? {});
-  if (outgoing.max_tokens === undefined && outgoing.max_completion_tokens !== undefined) {
+  if (!isDefined(outgoing.max_tokens) && isDefined(outgoing.max_completion_tokens)) {
     outgoing.max_tokens = outgoing.max_completion_tokens;
     delete outgoing.max_completion_tokens;
   }
-  if (Array.isArray(outgoing.messages)) outgoing.messages = normalizeChatMessagesForUpstream(outgoing.messages);
-  if (outgoing.tool_choice !== undefined) outgoing.tool_choice = responsesToolChoiceToChatToolChoice(outgoing.tool_choice);
+  if (isArray(outgoing.messages)) outgoing.messages = normalizeChatMessagesForUpstream(outgoing.messages);
+  if (isDefined(outgoing.tool_choice)) outgoing.tool_choice = responsesToolChoiceToChatToolChoice(outgoing.tool_choice);
   if (policy.enforce_sampler) {
     outgoing.temperature = Number(policy.temperature);
     outgoing.top_p = Number(policy.top_p);
     outgoing.top_k = Number(policy.top_k);
   }
-  if (outgoing.stream === undefined) outgoing.stream = false;
+  if (!isDefined(outgoing.stream)) outgoing.stream = false;
   return outgoing;
 }
 
 function normalizeChatMessagesForUpstream(messages) {
   return messages.map((message) => {
-    if (!message || typeof message !== "object" || Array.isArray(message)) return message;
+    if (!isPlainObject(message)) return message;
     if (message.role !== "developer") return message;
     return { ...message, role: "system" };
   });
@@ -93,19 +229,19 @@ export function processChatCompletion(body, requestPayload, policy) {
     tool_calls_after: 0,
   };
   const result = structuredClone(body ?? {});
-  if (!Array.isArray(result.choices)) {
+  if (!isArray(result.choices)) {
     stats.error = "choices_not_list";
     return { body: result, stats };
   }
   for (const choice of result.choices) {
-    if (!choice || typeof choice !== "object" || !choice.message || typeof choice.message !== "object") continue;
+    if (!isPlainObject(choice) || !isPlainObject(choice.message)) continue;
     const { message, stats: messageStats } = normalizeMessage(choice.message, requestPayload, policy);
     stats.repairs.push(...messageStats.repairs);
     stats.tool_calls_before += Number(messageStats.tool_calls_before ?? 0);
     stats.tool_calls_after += Number(messageStats.tool_calls_after ?? 0);
     choice.message = message;
   }
-  stats.elapsed_ms = Number((performance.now() - started).toFixed(3));
+  stats.elapsed_ms = elapsedMs(started);
   result.gemma_harness = stats;
   return { body: result, stats };
 }
@@ -117,8 +253,8 @@ function normalizeMessage(message, requestPayload, policy) {
   const rawContent = content;
   const toolMap = toolSchemaMap(requestPayload?.tools ?? []);
 
-  const legacyFunctionCalls = out.function_call && typeof out.function_call === "object" ? [out.function_call] : [];
-  const existingCalls = normalizeToolCalls([...(Array.isArray(out.tool_calls) ? out.tool_calls : []), ...legacyFunctionCalls], toolMap, policy, stats);
+  const legacyFunctionCalls = isPlainObject(out.function_call) ? [out.function_call] : [];
+  const existingCalls = normalizeToolCalls([...arrayValues(out.tool_calls), ...legacyFunctionCalls], toolMap, policy, stats);
   if (legacyFunctionCalls.length) delete out.function_call;
   stats.tool_calls_before = existingCalls.length;
 
@@ -167,22 +303,24 @@ function normalizeMessage(message, requestPayload, policy) {
 }
 
 function normalizeContentValue(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) {
-    return value.map(contentPartText).filter(Boolean).join("\n");
+  if (isNil(value)) return "";
+  if (isString(value)) return value;
+  if (isArray(value)) {
+    return contentPartsText(value);
   }
   return contentPartText(value) || String(value);
 }
 
+function contentPartsText(parts) { return parts.map(contentPartText).filter(Boolean).join("\n"); }
+
 function contentPartText(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value.map(contentPartText).filter(Boolean).join("\n");
-  if (!value || typeof value !== "object") return "";
-  for (const key of ["text", "input_text", "output_text", "output", "content"]) {
-    if (typeof value[key] === "string") return value[key];
-    if (Array.isArray(value[key])) return value[key].map(contentPartText).filter(Boolean).join("\n");
+  if (isNil(value)) return "";
+  if (isString(value)) return value;
+  if (isArray(value)) return contentPartsText(value);
+  if (!isPlainObject(value)) return "";
+  for (const key of CONTENT_TEXT_KEYS) {
+    if (isString(value[key])) return value[key];
+    if (isArray(value[key])) return contentPartsText(value[key]);
   }
   const imageUrl = imageContentUrl(value);
   if (imageUrl) return `[image: ${imageUrl}]`;
@@ -190,36 +328,36 @@ function contentPartText(value) {
   if (mediaRef) return `[${mediaRef.kind}: ${mediaRef.ref}]`;
   const fileRef = fileContentRef(value);
   if (fileRef) return `[file: ${fileRef}]`;
-  if (typeof value.refusal === "string") return value.refusal;
+  if (isString(value.refusal)) return value.refusal;
   return "";
 }
 
 function imageContentUrl(value) {
-  if (typeof value.image_url === "string") return value.image_url;
-  if (value.image_url && typeof value.image_url === "object" && typeof value.image_url.url === "string") return value.image_url.url;
-  if (typeof value.url === "string" && (value.type === "input_image" || value.type === "output_image" || value.type === "image_url")) return value.url;
-  if (typeof value.file_id === "string" && value.type === "input_image") return value.file_id;
-  if (value.source && typeof value.source === "object") {
-    if (typeof value.source.url === "string") return value.source.url;
-    if (typeof value.source.data === "string") return value.source.media_type ? `${value.source.media_type};base64,${value.source.data}` : value.source.data;
+  if (isString(value.image_url)) return value.image_url;
+  if (isPlainObject(value.image_url) && isString(value.image_url.url)) return value.image_url.url;
+  if (isString(value.url) && (value.type === "input_image" || value.type === "output_image" || value.type === "image_url")) return value.url;
+  if (isString(value.file_id) && value.type === "input_image") return value.file_id;
+  if (isPlainObject(value.source)) {
+    if (isString(value.source.url)) return value.source.url;
+    if (isString(value.source.data)) return value.source.media_type ? `${value.source.media_type};base64,${value.source.data}` : value.source.data;
   }
   return "";
 }
 
 function fileContentRef(value) {
-  if (typeof value.filename === "string" && typeof value.file_id === "string") return `${value.filename} (${value.file_id})`;
-  if (typeof value.file_id === "string" && (value.type === "input_file" || value.type === "file")) return value.file_id;
-  if (typeof value.file_data === "string" && (value.type === "input_file" || value.type === "file")) return value.filename ? `${value.filename} (${value.file_data})` : value.file_data;
-  if (typeof value.file_url === "string" && (value.type === "input_file" || value.type === "file")) return value.filename ? `${value.filename} (${value.file_url})` : value.file_url;
-  if (typeof value.filename === "string" && (value.type === "input_file" || value.type === "file")) return value.filename;
+  if (isString(value.filename) && isString(value.file_id)) return `${value.filename} (${value.file_id})`;
+  if (isString(value.file_id) && (value.type === "input_file" || value.type === "file")) return value.file_id;
+  if (isString(value.file_data) && (value.type === "input_file" || value.type === "file")) return value.filename ? `${value.filename} (${value.file_data})` : value.file_data;
+  if (isString(value.file_url) && (value.type === "input_file" || value.type === "file")) return value.filename ? `${value.filename} (${value.file_url})` : value.file_url;
+  if (isString(value.filename) && (value.type === "input_file" || value.type === "file")) return value.filename;
   return "";
 }
 
 function mediaContentRef(value) {
   const kind = value.type === "input_audio" || value.type === "audio" ? "audio" : value.type === "input_video" || value.type === "video" ? "video" : "";
   if (!kind) return null;
-  for (const key of ["file_id", "url", "audio_url", "video_url", "data"]) {
-    if (typeof value[key] === "string") return { kind, ref: value[key] };
+  for (const key of MEDIA_REF_KEYS) {
+    if (isString(value[key])) return { kind, ref: value[key] };
   }
   return null;
 }
@@ -241,18 +379,17 @@ function stripEndTokens(text) {
 
 function toolSchemaMap(tools) {
   const mapping = new Map();
-  for (const tool of Array.isArray(tools) ? tools : []) {
-    if (!tool || typeof tool !== "object") continue;
-    const fn = tool.function && typeof tool.function === "object" ? tool.function : tool;
-    if (typeof fn.name === "string" && fn.name) mapping.set(fn.name, fn);
+  for (const tool of arrayValues(tools)) {
+    if (!isPlainObject(tool)) continue;
+    const fn = isPlainObject(tool.function) ? tool.function : tool;
+    if (isString(fn.name) && fn.name) mapping.set(fn.name, fn);
   }
   return mapping;
 }
 
 function normalizeToolCalls(calls, toolMap, policy, stats) {
   const normalized = [];
-  if (!Array.isArray(calls)) return normalized;
-  for (const call of calls) {
+  for (const call of arrayValues(calls)) {
     const item = normalizeOneToolCall(call, toolMap, policy);
     if (item) normalized.push(item);
   }
@@ -261,18 +398,18 @@ function normalizeToolCalls(calls, toolMap, policy, stats) {
 }
 
 function normalizeOneToolCall(call, toolMap, policy) {
-  if (!call || typeof call !== "object") return null;
-  const fn = call.function && typeof call.function === "object" ? call.function : call;
+  if (!isPlainObject(call)) return null;
+  const fn = isPlainObject(call.function) ? call.function : call;
   const rawName = fn.name ?? fn.tool_name ?? fn.recipient_name ?? fn.tool ?? fn.function;
-  if (typeof rawName !== "string" || !rawName) return null;
+  if (!isString(rawName) || !rawName) return null;
   const name = canonicalToolName(rawName, toolMap);
   if (toolMap.size && !toolMap.has(name)) return null;
   let args = parseArgsValue(fn.arguments ?? fn.arguments_json ?? fn.args ?? fn.tool_input ?? fn.input_json ?? fn.input ?? fn.parameters ?? fn.payload ?? {});
   if (policy.normalize_tool_args) args = normalizeArgsForSchema(args, toolMap.get(name) ?? {});
   return {
-    id: String(call.id ?? call.call_id ?? `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`),
+    id: String(call.id ?? call.call_id ?? shortId("call")),
     type: "function",
-    function: { name, arguments: JSON.stringify(args) },
+    function: { name, arguments: jsonText(args) },
   };
 }
 
@@ -287,12 +424,12 @@ function canonicalToolName(name, toolMap) {
 }
 
 function parseArgsValue(value) {
-  if (value && typeof value === "object" && !Array.isArray(value)) return value;
-  if (value === null || value === undefined || typeof value !== "string") return {};
+  if (isPlainObject(value)) return value;
+  if (isNil(value) || !isString(value)) return {};
   const text = value.trim();
   if (!text) return {};
   const parsed = parseLooseJson(text);
-  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+  if (isPlainObject(parsed)) return parsed;
   return parseKeyValueArgs(text);
 }
 
@@ -302,7 +439,7 @@ function parseKeyValueArgs(text) {
     const index = topLevelAssignmentIndex(part);
     if (index < 0) continue;
     const key = part.slice(0, index).trim();
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+    if (!IDENTIFIER_RE.test(key)) continue;
     args[key] = parseKeyValueArgValue(part.slice(index + 1));
   }
   return args;
@@ -323,13 +460,13 @@ function splitTopLevelArgs(text) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       continue;
     }
-    if (char === "{" || char === "[" || char === "(") depth += 1;
-    else if ((char === "}" || char === "]" || char === ")") && depth > 0) depth -= 1;
+    if (isArgOpen(char)) depth += 1;
+    else if (isArgClose(char) && depth > 0) depth -= 1;
     else if (char === "," && depth === 0) {
       parts.push(text.slice(start, i).trim());
       start = i + 1;
@@ -352,13 +489,13 @@ function topLevelAssignmentIndex(text) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       continue;
     }
-    if (char === "{" || char === "[" || char === "(") depth += 1;
-    else if ((char === "}" || char === "]" || char === ")") && depth > 0) depth -= 1;
+    if (isArgOpen(char)) depth += 1;
+    else if (isArgClose(char) && depth > 0) depth -= 1;
     else if ((char === "=" || char === ":") && depth === 0) return i;
   }
   return -1;
@@ -368,21 +505,21 @@ function parseKeyValueArgValue(value) {
   const trimmed = value.trim();
   const parsed = parseLooseJson(trimmed);
   if (parsed !== null) return parsed;
-  return coerceScalar(trimmed.replace(/^["']|["']$/g, ""));
+  return coerceScalar(trimmed.replace(LEADING_TRAILING_QUOTE_RE, ""));
 }
 
 function resolveJsonSchema(schema, root = schema, seen = new Set()) {
-  if (!schema || typeof schema !== "object" || Array.isArray(schema) || typeof schema.$ref !== "string") return schema;
+  if (!isPlainObject(schema) || !isString(schema.$ref)) return schema;
   const ref = schema.$ref;
   if (!ref.startsWith("#") || seen.has(ref)) return schema;
   const target = resolveJsonPointer(root, ref);
-  if (!target || typeof target !== "object" || Array.isArray(target)) return schema;
+  if (!isPlainObject(target)) return schema;
   const nextSeen = new Set(seen);
   nextSeen.add(ref);
   const resolved = resolveJsonSchema(target, root, nextSeen);
   const siblings = { ...schema };
   delete siblings.$ref;
-  return Object.keys(siblings).length ? { ...resolved, ...siblings } : resolved;
+  return hasKeys(siblings) ? { ...resolved, ...siblings } : resolved;
 }
 
 function resolveJsonPointer(root, pointer) {
@@ -392,30 +529,30 @@ function resolveJsonPointer(root, pointer) {
   let current = root;
   for (const rawToken of pointer.slice(2).split("/")) {
     const token = decodeURIComponent(rawToken).replace(/~1/g, "/").replace(/~0/g, "~");
-    if (!current || typeof current !== "object" || !(token in current)) return null;
+    if (!isObjectLike(current) || !(token in current)) return null;
     current = current[token];
   }
   return current;
 }
 
 function findJsonSchemaAnchor(value, anchor, seen = new Set()) {
-  if (!anchor || !value || typeof value !== "object" || seen.has(value)) return null;
+  if (!anchor || !isObjectLike(value) || seen.has(value)) return null;
   seen.add(value);
-  if (!Array.isArray(value)) {
+  if (!isArray(value)) {
     if (value.$anchor === anchor) return value;
-    if (typeof value.$id === "string" && value.$id.split("#").at(-1) === anchor) return value;
+    if (isString(value.$id) && value.$id.split("#").at(-1) === anchor) return value;
   }
-  for (const child of Object.values(value)) {
+  for (const child of objectValues(value)) {
     const found = findJsonSchemaAnchor(child, anchor, seen);
     if (found) return found;
   }
   return null;
 }
 
-function objectAllowsProperty(schema, key, allowed = new Set(Object.keys(schema?.properties ?? {})), root = schema) {
+function objectAllowsProperty(schema, key, allowed = schemaPropertySet(schema), root = schema) {
   if (!propertyNameAllowed(schema, key, root)) return false;
-  const properties = schema?.properties ?? {};
-  if (Object.prototype.hasOwnProperty.call(properties, key) && properties[key] === false) return false;
+  const properties = schemaProperties(schema);
+  if (hasOwn(properties, key) && properties[key] === false) return false;
   const patternSchemas = matchingPatternPropertySchemas(schema, key);
   if (patternSchemas.some((prop) => prop === false)) return false;
   if (allowed.has(key)) return true;
@@ -431,29 +568,25 @@ function objectPropertySchema(schema, key) {
 
 function objectPropertySchemas(schema, key) {
   const schemas = [];
-  const properties = schema?.properties ?? {};
-  if (Object.prototype.hasOwnProperty.call(properties, key)) schemas.push(properties[key]);
+  const properties = schemaProperties(schema);
+  if (hasOwn(properties, key)) schemas.push(properties[key]);
   schemas.push(...matchingPatternPropertySchemas(schema, key));
   if (!schemas.length) {
     const additional = schema?.additionalProperties;
-    if (additional && typeof additional === "object" && !Array.isArray(additional)) schemas.push(additional);
+    if (isPlainObject(additional)) schemas.push(additional);
     else if (additional !== true) {
       const unevaluated = schema?.unevaluatedProperties;
-      if (unevaluated && typeof unevaluated === "object" && !Array.isArray(unevaluated)) schemas.push(unevaluated);
+      if (isPlainObject(unevaluated)) schemas.push(unevaluated);
     }
   }
   return schemas;
 }
 
-function patternPropertySchema(schema, key) {
-  return matchingPatternPropertySchemas(schema, key)[0] ?? null;
-}
-
 function matchingPatternPropertySchemas(schema, key) {
   const patterns = schema?.patternProperties;
-  if (!patterns || typeof patterns !== "object" || Array.isArray(patterns)) return [];
+  if (!isPlainObject(patterns)) return [];
   const schemas = [];
-  for (const [pattern, prop] of Object.entries(patterns)) {
+  for (const [pattern, prop] of objectEntries(patterns)) {
     try {
       if (new RegExp(pattern).test(key)) schemas.push(prop);
     } catch {}
@@ -462,7 +595,7 @@ function matchingPatternPropertySchemas(schema, key) {
 }
 
 function propertyNameAllowed(schema, key, root = schema) {
-  if (!schema || !Object.prototype.hasOwnProperty.call(schema, "propertyNames")) return true;
+  if (!schema || !hasOwn(schema, "propertyNames")) return true;
   return schemaValueMatches(key, schema.propertyNames, root);
 }
 
@@ -474,8 +607,9 @@ function normalizeArgsForSchema(args, schema) {
 
 function coerceForJsonSchema(value, prop, root = prop) {
   prop = resolveJsonSchema(prop, root);
-  if (prop && typeof prop === "object" && Array.isArray(prop.allOf)) {
-    return prop.allOf.reduce((current, option) => coerceForJsonSchema(current, option, root), value);
+  const allOf = schemaAllOf(prop);
+  if (isPlainObject(prop) && allOf) {
+    return allOf.reduce((current, option) => coerceForJsonSchema(current, option, root), value);
   }
   const conditional = conditionalBranchForValue(prop, value, root);
   if (conditional !== null) {
@@ -484,8 +618,8 @@ function coerceForJsonSchema(value, prop, root = prop) {
     const base = schemaWithoutConditionals(prop, root);
     return base ? coerceForJsonSchema(branchValue, base, root) : branchValue;
   }
-  const union = prop && typeof prop === "object" && (Array.isArray(prop.anyOf) ? prop.anyOf : Array.isArray(prop.oneOf) ? prop.oneOf : null);
-  const isOneOf = prop && typeof prop === "object" && Array.isArray(prop.oneOf) && union === prop.oneOf;
+  const union = isPlainObject(prop) && schemaUnion(prop);
+  const isOneOf = isPlainObject(prop) && union === schemaOneOf(prop);
   if (union) {
     const discriminatorOption = discriminatorOptionForValue(prop, value, union, root);
     if (discriminatorOption) {
@@ -502,29 +636,29 @@ function coerceForJsonSchema(value, prop, root = prop) {
     const exactMatches = oneOfMatches.filter((coerced) => countMatchingSchemasAfterCoercion(value, coerced, union, root) === 1);
     if (exactMatches.length) return exactMatches[0];
   }
-  if (prop && typeof prop === "object" && "const" in prop) {
+  if (isPlainObject(prop) && "const" in prop) {
     const constValue = coerceConstForJsonSchema(value, prop.const);
-    if (constValue !== undefined && schemaValueMatches(constValue, prop, root)) return constValue;
+    if (isDefined(constValue) && schemaValueMatches(constValue, prop, root)) return constValue;
   }
   const enumValue = coerceEnumForJsonSchema(value, prop);
-  if (enumValue !== undefined && schemaValueMatches(enumValue, prop, root)) return enumValue;
-  if (schemaTypeIncludes(prop, "null", root) && typeof value === "string" && nullishFromText(value)) return null;
+  if (isDefined(enumValue) && schemaValueMatches(enumValue, prop, root)) return enumValue;
+  if (schemaTypeIncludes(prop, "null", root) && isString(value) && nullishFromText(value)) return null;
   if (schemaTypeIncludes(prop, "integer", root)) {
     const number = firstNumber(value);
-    if (number === null || !Number.isFinite(number) || !Number.isInteger(number)) return value;
+    if (!isFiniteNumber(number) || !Number.isInteger(number)) return value;
     return schemaValueMatches(number, prop, root) ? number : value;
   }
   if (schemaTypeIncludes(prop, "number", root)) {
     const number = firstNumber(value);
-    if (number === null || !Number.isFinite(number)) return value;
+    if (!isFiniteNumber(number)) return value;
     return schemaValueMatches(number, prop, root) ? number : value;
   }
-  if (schemaTypeIncludes(prop, "boolean", root) && typeof value === "string") {
+  if (schemaTypeIncludes(prop, "boolean", root) && isString(value)) {
     const bool = booleanFromText(value);
     return bool !== null && schemaValueMatches(bool, prop, root) ? bool : value;
   }
-  if (schemaTypeIncludes(prop, "array", root) || Array.isArray(prop?.prefixItems) || prop?.items) return coerceArrayForJsonSchema(value, prop, root);
-  if (schemaTypeIncludes(prop, "string", root) && value !== null && value !== undefined) {
+  if (schemaArrayLike(prop, root)) return coerceArrayForJsonSchema(value, prop, root);
+  if (schemaTypeIncludes(prop, "string", root) && !isNil(value)) {
     const text = String(value);
     return schemaValueMatches(text, prop, root) ? text : value;
   }
@@ -533,14 +667,14 @@ function coerceForJsonSchema(value, prop, root = prop) {
 
 function coerceArrayForJsonSchema(value, prop, root = prop) {
   prop = resolveJsonSchema(prop, root);
-  const parsed = typeof value === "string" && schemaTypeIncludes(prop, "array", root) ? parseLooseJson(value) : null;
-  const array = Array.isArray(value)
+  const parsed = isString(value) && schemaTypeIncludes(prop, "array", root) ? parseLooseJson(value) : null;
+  const array = isArray(value)
     ? value
-    : Array.isArray(parsed)
+    : isArray(parsed)
       ? parsed
-    : schemaTypeIncludes(prop, "array", root) && typeof value === "string"
+    : schemaTypeIncludes(prop, "array", root) && isString(value)
       ? value.split(/[,\n;]/).map((part) => part.trim()).filter(Boolean)
-      : schemaTypeIncludes(prop, "array", root) && value !== null && value !== undefined
+    : schemaTypeIncludes(prop, "array", root) && !isNil(value)
         ? [value]
         : null;
   if (!array) return value;
@@ -550,72 +684,61 @@ function coerceArrayForJsonSchema(value, prop, root = prop) {
 
 function arrayItemSchema(prop, index, root = prop) {
   prop = resolveJsonSchema(prop, root);
-  if (prop && typeof prop === "object" && Array.isArray(prop.prefixItems) && prop.prefixItems[index]) return prop.prefixItems[index];
-  if (prop && typeof prop === "object" && Array.isArray(prop.items) && prop.items[index]) return prop.items[index];
-  if (prop && typeof prop === "object" && Array.isArray(prop.items)) return prop.additionalItems ?? {};
-  if (prop && typeof prop === "object" && prop.items === undefined && prop.unevaluatedItems !== undefined) return prop.unevaluatedItems;
+  if (isPlainObject(prop) && isArray(prop.prefixItems) && prop.prefixItems[index]) return prop.prefixItems[index];
+  if (isPlainObject(prop) && isArray(prop.items) && prop.items[index]) return prop.items[index];
+  if (isPlainObject(prop) && isArray(prop.items)) return prop.additionalItems ?? {};
+  if (isPlainObject(prop) && prop.items === undefined && prop.unevaluatedItems !== undefined) return prop.unevaluatedItems;
   return prop?.items ?? {};
-}
-
-function coerceArrayItemForJsonSchema(item, prop, index, root = prop) {
-  const itemSchema = arrayItemSchema(prop, index, root);
-  if (isEmptyJsonSchema(itemSchema)) {
-    const contains = containsItemSchema(prop);
-    if (contains) {
-      const coerced = coerceForJsonSchema(item, contains, root);
-      if (schemaValueMatches(coerced, contains, root)) return coerced;
-    }
-  }
-  return coerceForJsonSchema(item, itemSchema, root);
 }
 
 function containsItemSchema(prop) {
   prop = resolveJsonSchema(prop, prop);
   const contains = prop?.contains;
-  return contains && typeof contains === "object" && !Array.isArray(contains) ? contains : null;
+  return isPlainObject(contains) ? contains : null;
 }
 
 function isEmptyJsonSchema(schema) {
-  return !schema || (typeof schema === "object" && !Array.isArray(schema) && Object.keys(schema).length === 0);
+  return !schema || (isPlainObject(schema) && !hasKeys(schema));
 }
 
 function coerceConstForJsonSchema(value, expected) {
   if (Object.is(value, expected)) return value;
-  if ((isPlainObject(expected) || Array.isArray(expected)) && typeof value === "string") {
+  if ((isPlainObject(expected) || isArray(expected)) && isString(value)) {
     const parsed = parseLooseJson(value);
     if (jsonValuesEqual(parsed, expected)) return expected;
   }
-  if (typeof expected === "string" && typeof value === "string" && value.trim().toLowerCase() === expected.toLowerCase()) return expected;
-  if (typeof expected === "number") {
+  if (isString(expected) && isString(value) && value.trim().toLowerCase() === expected.toLowerCase()) return expected;
+  if (isNumber(expected)) {
     const number = firstNumber(value);
-    if (number !== null && Number.isFinite(number) && Object.is(number, expected)) return expected;
+    if (isFiniteNumber(number) && Object.is(number, expected)) return expected;
   }
-  if (typeof expected === "boolean" && typeof value === "string") {
+  if (isBoolean(expected) && isString(value)) {
     const bool = booleanFromText(value);
     if (bool === expected) return expected;
   }
-  if (expected === null && typeof value === "string" && nullishFromText(value)) return null;
+  if (expected === null && isString(value) && nullishFromText(value)) return null;
   return undefined;
 }
 
 function coerceEnumForJsonSchema(value, prop) {
-  if (!prop || typeof prop !== "object" || !Array.isArray(prop.enum)) return undefined;
-  if (prop.enum.some((item) => jsonValuesEqual(item, value))) return value;
-  for (const item of prop.enum) {
+  const values = schemaEnum(prop);
+  if (!isPlainObject(prop) || !values) return undefined;
+  if (values.some((item) => jsonValuesEqual(item, value))) return value;
+  for (const item of values) {
     const coerced = coerceConstForJsonSchema(value, item);
-    if (coerced !== undefined) return coerced;
+    if (isDefined(coerced)) return coerced;
   }
-  if (typeof value !== "string") return undefined;
+  if (!isString(value)) return undefined;
   const clean = value.trim().toLowerCase();
-  const match = prop.enum.find((item) => typeof item === "string" && item.toLowerCase() === clean);
-  return match === undefined ? undefined : match;
+  const match = values.find((item) => isString(item) && item.toLowerCase() === clean);
+  return isDefined(match) ? match : undefined;
 }
 
 function schemaTypeIncludes(prop, type, root = prop) {
   prop = resolveJsonSchema(prop, root);
-  if (!prop || typeof prop !== "object") return false;
+  if (!isPlainObject(prop)) return false;
   if (type === "null" && prop.nullable === true) return true;
-  return Array.isArray(prop.type) ? prop.type.includes(type) : prop.type === type;
+  return isArray(prop.type) ? prop.type.includes(type) : prop.type === type;
 }
 
 function parseToolCallsFromContent(content, toolMap, policy, stats) {
@@ -626,7 +749,7 @@ function parseToolCallsFromContent(content, toolMap, policy, stats) {
   if (policy.parse_tagged_tool_calls) {
     for (const pattern of TOOL_BLOCK_PATTERNS) {
       pattern.lastIndex = 0;
-      for (const match of [...stripped.matchAll(pattern)]) {
+      for (const match of stripped.matchAll(pattern)) {
         const parsed = parseToolCallBlob(match[1], toolMap, policy);
         if (parsed.length) {
           calls.push(...parsed);
@@ -652,7 +775,7 @@ function parseToolCallsFromContent(content, toolMap, policy, stats) {
   if (policy.parse_function_syntax) {
     const before = calls.length;
     FUNCTION_CALL_RE.lastIndex = 0;
-    for (const match of [...stripped.matchAll(FUNCTION_CALL_RE)]) {
+    for (const match of stripped.matchAll(FUNCTION_CALL_RE)) {
       const name = canonicalToolName(match[1], toolMap);
       if (!toolMap.has(name)) continue;
       const args = parseArgsValue(match[2].trim());
@@ -673,27 +796,27 @@ function parseToolCallBlob(blob, toolMap, policy) {
 
 function toolCallsFromObject(obj, toolMap, policy) {
   const calls = [];
-  if (Array.isArray(obj)) {
+  if (isArray(obj)) {
     for (const item of obj) calls.push(...toolCallsFromObject(item, toolMap, policy));
     return calls;
   }
-  if (!obj || typeof obj !== "object") return calls;
-  for (const key of ["tool_calls", "toolCalls", "tool_uses", "tools", "calls", "function_calls", "functionCalls"]) {
-    if (Array.isArray(obj[key])) {
-      for (const item of obj[key]) calls.push(...toolCallsFromObject(item, toolMap, policy));
+  if (!isPlainObject(obj)) return calls;
+  for (const key of TOOL_CALL_CONTAINER_KEYS) {
+    if (isArray(obj[key])) {
+      for (const item of arrayValues(obj[key])) calls.push(...toolCallsFromObject(item, toolMap, policy));
       return calls;
     }
-    if (obj[key] && typeof obj[key] === "object") {
+    if (isPlainObject(obj[key])) {
       calls.push(...toolCallsFromObject(obj[key], toolMap, policy));
       return calls;
     }
   }
-  if (obj.tool_call && typeof obj.tool_call === "object") return toolCallsFromObject(obj.tool_call, toolMap, policy);
-  if (obj.tool_use && typeof obj.tool_use === "object") return toolCallsFromObject(obj.tool_use, toolMap, policy);
-  if (obj.function_call && typeof obj.function_call === "object") return toolCallsFromObject(obj.function_call, toolMap, policy);
-  const fn = obj.function && typeof obj.function === "object" ? obj.function : obj;
+  if (isPlainObject(obj.tool_call)) return toolCallsFromObject(obj.tool_call, toolMap, policy);
+  if (isPlainObject(obj.tool_use)) return toolCallsFromObject(obj.tool_use, toolMap, policy);
+  if (isPlainObject(obj.function_call)) return toolCallsFromObject(obj.function_call, toolMap, policy);
+  const fn = isPlainObject(obj.function) ? obj.function : obj;
   const rawName = fn.name ?? fn.tool_name ?? fn.recipient_name ?? fn.tool ?? fn.function;
-  if (typeof rawName !== "string" || !rawName) return calls;
+  if (!isString(rawName) || !rawName) return calls;
   const name = canonicalToolName(rawName, toolMap);
   if (!toolMap.has(name)) return calls;
   let args = parseArgsValue(fn.arguments ?? fn.arguments_json ?? fn.args ?? fn.tool_input ?? fn.input_json ?? fn.input ?? fn.parameters ?? fn.payload ?? {});
@@ -704,9 +827,9 @@ function toolCallsFromObject(obj, toolMap, policy) {
 
 function toolCall(name, args, id = null) {
   return {
-    id: id ? String(id) : `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`,
+    id: id ? String(id) : shortId("call"),
     type: "function",
-    function: { name, arguments: JSON.stringify(args ?? {}) },
+    function: { name, arguments: jsonText(args ?? {}) },
   };
 }
 
@@ -724,13 +847,13 @@ function jsonCandidates(text, includeEscaped = true) {
       candidates.push(...extractBalancedJsonBlocks(unescaped));
     }
   }
-  return [...new Set(candidates.map((candidate) => candidate.trim()).filter(Boolean))];
+  return uniqueTrimmed(candidates);
 }
 
 function extractBalancedJsonBlocks(text) {
   const blocks = [];
   for (let i = 0; i < text.length; i += 1) {
-    if (text[i] === "{" || text[i] === "[") {
+    if (isJsonOpen(text[i])) {
       const block = balancedJsonFrom(text, i);
       if (block) blocks.push(block);
     }
@@ -739,7 +862,7 @@ function extractBalancedJsonBlocks(text) {
 }
 
 function balancedJsonFrom(text, start) {
-  const stack = [text[start] === "{" ? "}" : "]"];
+  const stack = [jsonCloseFor(text[start])];
   let inString = false;
   let escape = false;
   let quote = "";
@@ -751,13 +874,13 @@ function balancedJsonFrom(text, start) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       continue;
     }
-    if (char === "{" || char === "[") stack.push(char === "{" ? "}" : "]");
-    else if (char === "}" || char === "]") {
+    if (isJsonOpen(char)) stack.push(jsonCloseFor(char));
+    else if (isJsonClose(char)) {
       if (char !== stack.at(-1)) return null;
       stack.pop();
       if (!stack.length) return text.slice(start, i + 1);
@@ -770,7 +893,7 @@ function parseLooseJson(text) {
   for (const candidate of repairJsonCandidates(text)) {
     try {
       const parsed = JSON.parse(candidate);
-      if (typeof parsed === "string") {
+      if (isString(parsed)) {
         const nested = parseLooseJson(parsed);
         return nested === null ? parsed : nested;
       }
@@ -803,7 +926,7 @@ function quoteBareJsonKeys(text) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       out += char;
@@ -864,7 +987,7 @@ function repairJsonCandidates(text) {
     repaired += "}".repeat((repaired.match(/{/g) ?? []).length - (repaired.match(/}/g) ?? []).length);
     candidates.push(repaired);
   }
-  return [...new Set(candidates.filter(Boolean))];
+  return unique(candidates.filter(Boolean));
 }
 
 function fenceBody(match) {
@@ -886,18 +1009,18 @@ function balanceJsonDelimiters(text) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       out += char;
       continue;
     }
-    if (char === "{" || char === "[") {
-      stack.push(char === "{" ? "}" : "]");
+    if (isJsonOpen(char)) {
+      stack.push(jsonCloseFor(char));
       out += char;
       continue;
     }
-    if (char === "}" || char === "]") {
+    if (isJsonClose(char)) {
       if (stack.at(-1) === char) {
         stack.pop();
         out += char;
@@ -931,7 +1054,7 @@ function stripJsonComments(text) {
       else if (char === quote) inString = false;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (isQuote(char)) {
       inString = true;
       quote = char;
       out += char;
@@ -977,7 +1100,7 @@ function likelyJsonTask(requestPayload, content) {
   if (explicitNonJsonFormatRequest(requestPayload)) return false;
   if (jsonFormatRequest(requestPayload)) return true;
   const stripped = content.trimStart();
-  return stripped.startsWith("{") || stripped.startsWith("[") || JSON_FENCE_RE.test(stripped) || JSON_FENCE_RE.test(content);
+  return startsJson(stripped) || JSON_FENCE_RE.test(stripped) || JSON_FENCE_RE.test(content);
 }
 
 function jsonFormatRequest(payload) {
@@ -985,16 +1108,16 @@ function jsonFormatRequest(payload) {
 }
 
 function formatMentionsJson(format) {
-  if (!format || typeof format !== "object" || Array.isArray(format)) return false;
+  if (!isPlainObject(format)) return false;
   return format.type === "json_object"
     || format.type === "json_schema"
-    || Object.prototype.hasOwnProperty.call(format, "json_schema")
-    || Object.prototype.hasOwnProperty.call(format, "schema");
+    || hasOwn(format, "json_schema")
+    || hasOwn(format, "schema");
 }
 
 function explicitNonJsonFormatRequest(payload) {
   const format = payload?.response_format ?? payload?.text?.format;
-  return !!format && typeof format === "object" && !Array.isArray(format) && typeof format.type === "string" && !formatMentionsJson(format);
+  return isPlainObject(format) && isString(format.type) && !formatMentionsJson(format);
 }
 
 function normalizeJsonResponse(content, policy, stats, context = {}) {
@@ -1002,10 +1125,10 @@ function normalizeJsonResponse(content, policy, stats, context = {}) {
   for (const candidate of jsonCandidates(content, policy.parse_escaped_json)) {
     let parsed = parseLooseJson(candidate);
     const schema = jsonResponseSchema(context?.requestPayload);
-    if ((parsed && typeof parsed === "object") || (schema && parsed !== null)) {
+    if (isObjectLike(parsed) || (schema && parsed !== null)) {
       if (schema) parsed = coerceJsonForSchema(parsed, schema);
       stats.repairs.push("repaired_json_content");
-      return JSON.stringify(parsed);
+      return jsonText(parsed);
     }
   }
   return null;
@@ -1013,79 +1136,32 @@ function normalizeJsonResponse(content, policy, stats, context = {}) {
 
 function jsonResponseSchema(payload) {
   const format = payload?.response_format ?? payload?.text?.format;
-  if (!format || typeof format !== "object" || Array.isArray(format)) return null;
+  if (!isPlainObject(format)) return null;
   if (format.type !== "json_schema") return null;
-  if (format.json_schema && typeof format.json_schema === "object") {
-    if (format.json_schema.schema && typeof format.json_schema.schema === "object") return format.json_schema.schema;
+  if (isPlainObject(format.json_schema)) {
+    if (isPlainObject(format.json_schema.schema)) return format.json_schema.schema;
     if (isJsonSchemaObject(format.json_schema)) return format.json_schema;
   }
-  if (format.schema && typeof format.schema === "object") return format.schema;
+  if (isPlainObject(format.schema)) return format.schema;
   return null;
 }
 
 function isJsonSchemaObject(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  return [
-    "$ref",
-    "$defs",
-    "definitions",
-    "type",
-    "properties",
-    "patternProperties",
-    "items",
-    "prefixItems",
-    "additionalProperties",
-    "unevaluatedProperties",
-    "unevaluatedItems",
-    "anyOf",
-    "oneOf",
-    "allOf",
-    "not",
-    "if",
-    "then",
-    "else",
-    "const",
-    "enum",
-    "contains",
-    "dependentRequired",
-    "dependentSchemas",
-    "dependencies",
-    "propertyNames",
-    "required",
-    "minProperties",
-    "maxProperties",
-    "minItems",
-    "maxItems",
-    "uniqueItems",
-    "minContains",
-    "maxContains",
-    "minLength",
-    "maxLength",
-    "pattern",
-    "format",
-    "minimum",
-    "maximum",
-    "exclusiveMinimum",
-    "exclusiveMaximum",
-    "multipleOf",
-    "contentEncoding",
-    "contentMediaType",
-    "contentSchema",
-    "nullable",
-    "default",
-  ].some((key) => Object.prototype.hasOwnProperty.call(value, key));
+  if (!isPlainObject(value)) return false;
+  return hasAnyOwn(value, JSON_SCHEMA_KEYS);
 }
 
 function coerceJsonForSchema(value, schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!schema || typeof schema !== "object") return value;
-  if (Array.isArray(schema.allOf)) {
+  if (!isObjectLike(schema)) return value;
+  const allOf = schemaAllOf(schema);
+  if (allOf) {
     const merged = mergeAllOfObjectSchema(schema, root);
-    if (merged && (isPlainObject(value) || typeof value === "string")) return coerceJsonForSchema(value, merged, root);
-    return schema.allOf.reduce((current, option) => coerceJsonForSchema(current, option, root), value);
+    if (merged && (isPlainObject(value) || isString(value))) return coerceJsonForSchema(value, merged, root);
+    return allOf.reduce((current, option) => coerceJsonForSchema(current, option, root), value);
   }
-  const union = Array.isArray(schema.anyOf) ? schema.anyOf : Array.isArray(schema.oneOf) ? schema.oneOf : null;
-  const isOneOf = Array.isArray(schema.oneOf) && union === schema.oneOf;
+  const union = schemaUnion(schema);
+  const isOneOf = union === schemaOneOf(schema);
   if (union) {
     const discriminatorOption = discriminatorOptionForValue(schema, value, union, root);
     if (discriminatorOption) {
@@ -1110,46 +1186,46 @@ function coerceJsonForSchema(value, schema, root = schema) {
     const base = schemaWithoutConditionals(schema, root);
     return base ? coerceJsonForSchema(value, base, root) : value;
   }
-  if (schemaTypeIncludes(schema, "object", root) || schema.properties || schema.patternProperties) {
-    if (typeof value === "string") {
+  if (schemaObjectLike(schema, root)) {
+    if (isString(value)) {
       const parsed = parseLooseJson(value);
       if (isPlainObject(parsed)) value = parsed;
     }
     if (!isPlainObject(value)) return value;
-    const properties = schema.properties ?? {};
-    const allowed = new Set(Object.keys(properties));
-    const entries = Object.entries(value).filter(([key]) => objectAllowsProperty(schema, key, allowed, root));
-    let normalized = Object.fromEntries(
+    const properties = schemaProperties(schema);
+    const allowed = schemaPropertySet(schema);
+    const entries = objectEntries(value).filter(([key]) => objectAllowsProperty(schema, key, allowed, root));
+    let normalized = entriesObject(
       entries.map(([key, item]) => [key, coerceJsonForSchema(item, objectPropertySchema(schema, key), root)]),
     );
-    for (const [key, prop] of Object.entries(properties)) {
+    for (const [key, prop] of objectEntries(properties)) {
       const resolvedProp = resolveJsonSchema(prop, root);
-      if (!(key in normalized) && resolvedProp && typeof resolvedProp === "object" && "default" in resolvedProp) {
+      if (!(key in normalized) && isObjectLike(resolvedProp) && "default" in resolvedProp) {
         normalized[key] = coerceJsonForSchema(resolvedProp.default, resolvedProp, root);
       }
     }
-    for (const [key, dependent] of Object.entries(schema.dependentSchemas ?? {})) {
-      if (key in normalized && dependent && typeof dependent === "object" && !Array.isArray(dependent)) {
+    for (const [key, dependent] of objectEntries(schema.dependentSchemas ?? {})) {
+      if (key in normalized && isPlainObject(dependent)) {
         const withDependent = coerceJsonForSchema(normalized, dependent, root);
         if (isPlainObject(withDependent)) normalized = withDependent;
       }
     }
-    for (const [key, dependent] of Object.entries(schema.dependencies ?? {})) {
-      if (key in normalized && dependent && typeof dependent === "object" && !Array.isArray(dependent)) {
+    for (const [key, dependent] of objectEntries(schema.dependencies ?? {})) {
+      if (key in normalized && isPlainObject(dependent)) {
         const withDependent = coerceJsonForSchema(normalized, dependent, root);
         if (isPlainObject(withDependent)) normalized = withDependent;
       }
     }
     return normalized;
   }
-  if (schemaTypeIncludes(schema, "array", root) || schema.items || Array.isArray(schema.prefixItems)) {
-    if (Array.isArray(value)) {
+  if (schemaArrayLike(schema, root)) {
+    if (isArray(value)) {
       const coerced = value.map((item, index) => coerceJsonArrayItemForSchema(item, schema, index, root));
       return schemaValueMatches(coerced, schema, root) ? coerced : value;
     }
     if (schemaTypeIncludes(schema, "array", root)) {
       const coerced = coerceForJsonSchema(value, schema, root);
-      if (Array.isArray(coerced)) return coerced.map((item, index) => coerceJsonArrayItemForSchema(item, schema, index, root));
+      if (isArray(coerced)) return coerced.map((item, index) => coerceJsonArrayItemForSchema(item, schema, index, root));
     }
     return value;
   }
@@ -1174,23 +1250,26 @@ function schemaValueMatches(value, schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
   if (schema === true) return true;
   if (schema === false) return false;
-  if (!schema || typeof schema !== "object") return true;
+  if (!isObjectLike(schema)) return true;
   if (schema.not && schemaValueMatches(value, schema.not, root)) return false;
-  if (Array.isArray(schema.allOf)) {
+  const allOf = schemaAllOf(schema);
+  if (allOf) {
     const merged = mergeAllOfObjectSchema(schema, root);
     if (merged && isPlainObject(value)) return schemaValueMatches(value, merged, root);
-    return schema.allOf.every((option) => schemaValueMatches(value, option, root));
+    return allOf.every((option) => schemaValueMatches(value, option, root));
   }
-  if (Array.isArray(schema.anyOf)) {
-    const option = discriminatorOptionForValue(schema, value, schema.anyOf, root);
-    const unionMatches = option ? schemaValueMatches(value, option, root) : schema.anyOf.some((candidate) => schemaValueMatches(value, candidate, root));
+  const anyOf = schemaAnyOf(schema);
+  if (anyOf) {
+    const option = discriminatorOptionForValue(schema, value, anyOf, root);
+    const unionMatches = option ? schemaValueMatches(value, option, root) : anyOf.some((candidate) => schemaValueMatches(value, candidate, root));
     if (!unionMatches) return false;
     const base = schemaWithoutUnion(schema, root);
     return base ? schemaValueMatches(value, base, root) : true;
   }
-  if (Array.isArray(schema.oneOf)) {
-    const option = discriminatorOptionForValue(schema, value, schema.oneOf, root);
-    const unionMatches = option ? schemaValueMatches(value, option, root) : countMatchingSchemas(value, schema.oneOf, root) === 1;
+  const oneOf = schemaOneOf(schema);
+  if (oneOf) {
+    const option = discriminatorOptionForValue(schema, value, oneOf, root);
+    const unionMatches = option ? schemaValueMatches(value, option, root) : countMatchingSchemas(value, oneOf, root) === 1;
     if (!unionMatches) return false;
     const base = schemaWithoutUnion(schema, root);
     return base ? schemaValueMatches(value, base, root) : true;
@@ -1198,82 +1277,71 @@ function schemaValueMatches(value, schema, root = schema) {
   const conditional = conditionalBranchForValue(schema, value, root);
   if (conditional !== null && !schemaValueMatches(value, conditional, root)) return false;
   if ("const" in schema && !jsonValuesEqual(value, schema.const)) return false;
-  if (Array.isArray(schema.enum) && !schema.enum.some((item) => jsonValuesEqual(item, value))) return false;
+  const enumValues = schemaEnum(schema);
+  if (enumValues && !enumValues.some((item) => jsonValuesEqual(item, value))) return false;
   if (schemaTypeIncludes(schema, "null", root) && value === null) return true;
-  if (Array.isArray(value) && hasArrayValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "array", root)) return arraySchemaMatches(value, schema, root);
+  if (isArray(value) && hasArrayValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "array", root)) return arraySchemaMatches(value, schema, root);
   if (isPlainObject(value) && hasObjectValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "object", root)) return objectSchemaMatches(value, schema, root);
-  if (typeof value === "number" && Number.isFinite(value) && hasNumberValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "number", root)) return numberSchemaMatches(value, schema);
-  if (typeof value === "string" && hasStringValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "string", root)) return stringSchemaMatches(value, schema);
-  if ((schemaTypeIncludes(schema, "array", root) || schema.items || Array.isArray(schema.prefixItems)) && Array.isArray(value)) return arraySchemaMatches(value, schema, root);
-  if ((schemaTypeIncludes(schema, "object", root) || schema.properties || schema.patternProperties) && isPlainObject(value)) return objectSchemaMatches(value, schema, root);
+  if (isFiniteNumber(value) && hasNumberValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "number", root)) return numberSchemaMatches(value, schema);
+  if (isString(value) && hasStringValidationKeywords(schema) && schemaValidationAppliesToKind(schema, "string", root)) return stringSchemaMatches(value, schema);
+  if (schemaArrayLike(schema, root) && isArray(value)) return arraySchemaMatches(value, schema, root);
+  if (schemaObjectLike(schema, root) && isPlainObject(value)) return objectSchemaMatches(value, schema, root);
   if (schemaTypeIncludes(schema, "integer", root) && Number.isInteger(value)) return numberSchemaMatches(value, schema);
-  if (schemaTypeIncludes(schema, "number", root) && typeof value === "number" && Number.isFinite(value)) return numberSchemaMatches(value, schema);
-  if (schemaTypeIncludes(schema, "boolean", root) && typeof value === "boolean") return true;
-  if (schemaTypeIncludes(schema, "string", root) && typeof value === "string") return stringSchemaMatches(value, schema);
+  if (schemaTypeIncludes(schema, "number", root) && isFiniteNumber(value)) return numberSchemaMatches(value, schema);
+  if (schemaTypeIncludes(schema, "boolean", root) && isBoolean(value)) return true;
+  if (schemaTypeIncludes(schema, "string", root) && isString(value)) return stringSchemaMatches(value, schema);
   return !schema.type;
 }
 
 function hasArrayValidationKeywords(schema) {
-  return ["minItems", "maxItems", "uniqueItems", "contains", "minContains", "maxContains", "unevaluatedItems"].some((key) => Object.prototype.hasOwnProperty.call(schema, key));
+  return hasAnyOwn(schema, ARRAY_VALIDATION_KEYS);
 }
 
 function hasObjectValidationKeywords(schema) {
-  return [
-    "properties",
-    "patternProperties",
-    "propertyNames",
-    "required",
-    "additionalProperties",
-    "unevaluatedProperties",
-    "dependentRequired",
-    "dependentSchemas",
-    "dependencies",
-    "minProperties",
-    "maxProperties",
-  ].some((key) => Object.prototype.hasOwnProperty.call(schema, key));
+  return hasAnyOwn(schema, OBJECT_VALIDATION_KEYS);
 }
 
 function hasNumberValidationKeywords(schema) {
-  return ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "format"].some((key) => Object.prototype.hasOwnProperty.call(schema, key));
+  return hasAnyOwn(schema, NUMBER_VALIDATION_KEYS);
 }
 
 function hasStringValidationKeywords(schema) {
-  return ["minLength", "maxLength", "pattern", "format", "contentEncoding", "contentMediaType", "contentSchema"].some((key) => Object.prototype.hasOwnProperty.call(schema, key));
+  return hasAnyOwn(schema, STRING_VALIDATION_KEYS);
 }
 
 function schemaValidationAppliesToKind(schema, kind, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!schema || typeof schema !== "object" || schema.type === undefined) return true;
+  if (!isObjectLike(schema) || schema.type === undefined) return true;
   if (kind === "number") return schemaTypeIncludes(schema, "number", root) || schemaTypeIncludes(schema, "integer", root);
   return schemaTypeIncludes(schema, kind, root);
 }
 
 function conditionalBranchForValue(schema, value, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!schema || typeof schema !== "object" || Array.isArray(schema) || !Object.prototype.hasOwnProperty.call(schema, "if")) return null;
+  if (!isPlainObject(schema) || !hasOwn(schema, "if")) return null;
   const branch = schemaValueMatches(value, schema.if, root) ? schema.then : schema.else;
   if (branch === true || branch === false) return branch;
-  return branch && typeof branch === "object" && !Array.isArray(branch) ? branch : null;
+  return isPlainObject(branch) ? branch : null;
 }
 
 function schemaWithoutConditionals(schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return null;
+  if (!isPlainObject(schema)) return null;
   const base = { ...schema };
   delete base.if;
   delete base.then;
   delete base.else;
-  return Object.keys(base).length ? base : null;
+  return hasKeys(base) ? base : null;
 }
 
 function schemaWithoutUnion(schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return null;
+  if (!isPlainObject(schema)) return null;
   const base = { ...schema };
   delete base.anyOf;
   delete base.oneOf;
   delete base.discriminator;
-  return Object.keys(base).length ? base : null;
+  return hasKeys(base) ? base : null;
 }
 
 function coerceUnionOptionForSchema(value, option, schema, root, coerceFn) {
@@ -1292,19 +1360,22 @@ function schemaValueMatchesAfterCoercion(original, coerced, schema, root = schem
   schema = resolveJsonSchema(schema, root);
   if (schema === true) return true;
   if (schema === false) return false;
-  if (!schema || typeof schema !== "object") return true;
+  if (!isObjectLike(schema)) return true;
   if (schema.not && schemaValueMatchesAfterCoercion(original, coerced, schema.not, root)) return false;
-  if (Array.isArray(schema.allOf)) return schema.allOf.every((option) => schemaValueMatchesAfterCoercion(original, coerced, option, root));
-  if (Array.isArray(schema.anyOf)) {
-    const option = discriminatorOptionForValue(schema, original, schema.anyOf, root);
-    const unionMatches = option ? schemaValueMatchesAfterCoercion(original, coerced, option, root) : schema.anyOf.some((candidate) => schemaValueMatchesAfterCoercion(original, coerced, candidate, root));
+  const allOf = schemaAllOf(schema);
+  if (allOf) return allOf.every((option) => schemaValueMatchesAfterCoercion(original, coerced, option, root));
+  const anyOf = schemaAnyOf(schema);
+  if (anyOf) {
+    const option = discriminatorOptionForValue(schema, original, anyOf, root);
+    const unionMatches = option ? schemaValueMatchesAfterCoercion(original, coerced, option, root) : anyOf.some((candidate) => schemaValueMatchesAfterCoercion(original, coerced, candidate, root));
     if (!unionMatches) return false;
     const base = schemaWithoutUnion(schema, root);
     return base ? schemaValueMatchesAfterCoercion(original, coerced, base, root) : true;
   }
-  if (Array.isArray(schema.oneOf)) {
-    const option = discriminatorOptionForValue(schema, original, schema.oneOf, root);
-    const unionMatches = option ? schemaValueMatchesAfterCoercion(original, coerced, option, root) : countMatchingSchemasAfterCoercion(original, coerced, schema.oneOf, root) === 1;
+  const oneOf = schemaOneOf(schema);
+  if (oneOf) {
+    const option = discriminatorOptionForValue(schema, original, oneOf, root);
+    const unionMatches = option ? schemaValueMatchesAfterCoercion(original, coerced, option, root) : countMatchingSchemasAfterCoercion(original, coerced, oneOf, root) === 1;
     if (!unionMatches) return false;
     const base = schemaWithoutUnion(schema, root);
     return base ? schemaValueMatchesAfterCoercion(original, coerced, base, root) : true;
@@ -1315,10 +1386,10 @@ function schemaValueMatchesAfterCoercion(original, coerced, schema, root = schem
     const base = schemaWithoutConditionals(schema, root);
     return base ? schemaValueMatchesAfterCoercion(original, coerced, base, root) : true;
   }
-  if ((schemaTypeIncludes(schema, "array", root) || schema.items || Array.isArray(schema.prefixItems)) && Array.isArray(coerced)) {
+  if (schemaArrayLike(schema, root) && isArray(coerced)) {
     return arraySchemaMatchesAfterCoercion(original, coerced, schema, root);
   }
-  if ((schemaTypeIncludes(schema, "object", root) || schema.properties || schema.patternProperties) && isPlainObject(coerced)) {
+  if (schemaObjectLike(schema, root) && isPlainObject(coerced)) {
     return objectSchemaMatchesAfterCoercion(original, coerced, schema, root);
   }
   return schemaValueMatches(coerced, schema, root);
@@ -1335,112 +1406,145 @@ function countMatchingSchemasAfterCoercion(original, coerced, schemas, root = sc
 function objectSchemaMatchesAfterCoercion(original, value, schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
   if (!isPlainObject(value)) return false;
-  if (typeof schema.minProperties === "number" && Object.keys(value).length < schema.minProperties) return false;
-  if (typeof schema.maxProperties === "number" && Object.keys(value).length > schema.maxProperties) return false;
-  const required = Array.isArray(schema.required) ? schema.required : [];
-  if (required.some((key) => !(key in value))) return false;
+  if (!propertyCountMatches(value, schema)) return false;
+  if (!requiredPropertiesMatch(value, schema)) return false;
   const originalObject = isPlainObject(original) ? original : {};
-  const properties = schema.properties ?? {};
-  const allowed = new Set(Object.keys(properties));
-  for (const [key, item] of Object.entries(value)) {
+  const allowed = schemaPropertySet(schema);
+  for (const [key, item] of objectEntries(value)) {
     if (!objectAllowsProperty(schema, key, allowed, root)) return false;
-    const originalItem = Object.prototype.hasOwnProperty.call(originalObject, key) ? originalObject[key] : item;
+    const originalItem = hasOwn(originalObject, key) ? originalObject[key] : item;
     for (const propSchema of objectPropertySchemas(schema, key)) {
       if (!schemaValueMatchesAfterCoercion(originalItem, item, propSchema, root)) return false;
     }
   }
-  for (const [key, requiredKeys] of Object.entries(schema.dependentRequired ?? {})) {
-    if (key in value && Array.isArray(requiredKeys) && requiredKeys.some((requiredKey) => !(requiredKey in value))) return false;
+  if (!dependentRequiredMatches(value, schema)) return false;
+  if (!dependentSchemasMatch(value, schema, (dependent) => schemaValueMatchesAfterCoercion(original, value, dependent, root))) return false;
+  if (!dependenciesMatch(value, schema, (dependent) => schemaValueMatchesAfterCoercion(original, value, dependent, root))) return false;
+  return true;
+}
+
+function dependentRequiredMatches(value, schema) {
+  for (const [key, requiredKeys] of objectEntries(schema.dependentRequired ?? {})) {
+    if (key in value && arrayValues(requiredKeys).some((requiredKey) => !(requiredKey in value))) return false;
   }
-  for (const [key, dependent] of Object.entries(schema.dependentSchemas ?? {})) {
+  return true;
+}
+
+function requiredPropertiesMatch(value, schema) {
+  return arrayValues(schema.required).every((key) => key in value);
+}
+
+function propertyCountMatches(value, schema) {
+  const count = keyCount(value);
+  if (isNumber(schema.minProperties) && count < schema.minProperties) return false;
+  if (isNumber(schema.maxProperties) && count > schema.maxProperties) return false;
+  return true;
+}
+
+function dependentSchemasMatch(value, schema, matches) {
+  for (const [key, dependent] of objectEntries(schema.dependentSchemas ?? {})) {
     if (!(key in value)) continue;
     if (dependent === false) return false;
-    if (dependent && typeof dependent === "object" && !Array.isArray(dependent) && !schemaValueMatchesAfterCoercion(original, value, dependent, root)) return false;
+    if (isPlainObject(dependent) && !matches(dependent)) return false;
   }
-  for (const [key, dependent] of Object.entries(schema.dependencies ?? {})) {
+  return true;
+}
+
+function dependenciesMatch(value, schema, matches) {
+  for (const [key, dependent] of objectEntries(schema.dependencies ?? {})) {
     if (!(key in value)) continue;
-    if (Array.isArray(dependent) && dependent.some((requiredKey) => !(requiredKey in value))) return false;
+    if (arrayValues(dependent).some((requiredKey) => !(requiredKey in value))) return false;
     if (dependent === false) return false;
-    if (dependent && typeof dependent === "object" && !Array.isArray(dependent) && !schemaValueMatchesAfterCoercion(original, value, dependent, root)) return false;
+    if (isPlainObject(dependent) && !matches(dependent)) return false;
   }
   return true;
 }
 
 function arraySchemaMatchesAfterCoercion(original, value, schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (!Array.isArray(value)) return false;
-  if (typeof schema.minItems === "number" && value.length < schema.minItems) return false;
-  if (typeof schema.maxItems === "number" && value.length > schema.maxItems) return false;
+  if (!isArray(value)) return false;
+  if (!arrayLengthMatches(value, schema)) return false;
   if (schema.uniqueItems === true && !arrayItemsAreUnique(value)) return false;
-  const originalArray = Array.isArray(original) ? original : [];
-  if (Object.prototype.hasOwnProperty.call(schema, "contains") && (typeof schema.contains === "boolean" || (schema.contains && typeof schema.contains === "object" && !Array.isArray(schema.contains)))) {
-    const matches = value.filter((item, index) => schemaValueMatchesAfterCoercion(originalArray[index], item, schema.contains, root)).length;
-    const minContains = typeof schema.minContains === "number" ? schema.minContains : 1;
-    if (matches < minContains) return false;
-    if (typeof schema.maxContains === "number" && matches > schema.maxContains) return false;
-  }
+  const originalArray = arrayValues(original);
+  if (!arrayContainsMatches(value, schema, (item, index) => schemaValueMatchesAfterCoercion(originalArray[index], item, schema.contains, root))) return false;
   return value.every((item, index) => schemaValueMatchesAfterCoercion(originalArray[index], item, arrayItemSchema(schema, index, root), root));
 }
 
+function arrayLengthMatches(value, schema) {
+  if (isNumber(schema.minItems) && value.length < schema.minItems) return false;
+  if (isNumber(schema.maxItems) && value.length > schema.maxItems) return false;
+  return true;
+}
+
+function arrayContainsMatches(value, schema, matchesItem) {
+  if (!hasOwn(schema, "contains") || (!isBoolean(schema.contains) && !isPlainObject(schema.contains))) return true;
+  const matches = value.filter(matchesItem).length;
+  const minContains = isNumber(schema.minContains) ? schema.minContains : 1;
+  if (matches < minContains) return false;
+  if (isNumber(schema.maxContains) && matches > schema.maxContains) return false;
+  return true;
+}
+
 function mergeAllOfObjectSchema(schema, root = schema) {
-  if (!schema || typeof schema !== "object" || !Array.isArray(schema.allOf)) return null;
+  const allOf = schemaAllOf(schema);
+  if (!isPlainObject(schema) || !allOf) return null;
   const base = { ...schema };
   delete base.allOf;
-  const parts = [base, ...schema.allOf.map((option) => resolveJsonSchema(option, root))].filter((part) => part && typeof part === "object" && !Array.isArray(part) && Object.keys(part).length);
+  const parts = [base, ...allOf.map((option) => resolveJsonSchema(option, root))].filter((part) => isPlainObject(part) && hasKeys(part));
   if (!parts.length || parts.some((part) => !isObjectCompositionSchema(part, root))) return null;
   const merged = { type: "object", properties: {}, patternProperties: {} };
   const required = new Set();
   for (const part of parts) {
-    if (part.properties && typeof part.properties === "object" && !Array.isArray(part.properties)) {
-      for (const [key, value] of Object.entries(part.properties)) {
+    if (isPlainObject(part.properties)) {
+      for (const [key, value] of objectEntries(part.properties)) {
         merged.properties[key] = intersectJsonSchemas(merged.properties[key], value);
       }
     }
-    if (part.patternProperties && typeof part.patternProperties === "object" && !Array.isArray(part.patternProperties)) {
-      for (const [key, value] of Object.entries(part.patternProperties)) {
+    if (isPlainObject(part.patternProperties)) {
+      for (const [key, value] of objectEntries(part.patternProperties)) {
         merged.patternProperties[key] = intersectJsonSchemas(merged.patternProperties[key], value);
       }
     }
-    for (const key of Array.isArray(part.required) ? part.required : []) required.add(key);
-    if (part.additionalProperties !== undefined) merged.additionalProperties = intersectJsonSchemas(merged.additionalProperties, part.additionalProperties);
-    if (part.unevaluatedProperties !== undefined) merged.unevaluatedProperties = intersectJsonSchemas(merged.unevaluatedProperties, part.unevaluatedProperties);
-    if (part.propertyNames !== undefined) merged.propertyNames = merged.propertyNames ? { allOf: [merged.propertyNames, part.propertyNames] } : part.propertyNames;
-    if (typeof part.minProperties === "number") merged.minProperties = Math.max(merged.minProperties ?? 0, part.minProperties);
-    if (typeof part.maxProperties === "number") merged.maxProperties = Math.min(merged.maxProperties ?? Infinity, part.maxProperties);
-    if (part.dependentRequired && typeof part.dependentRequired === "object" && !Array.isArray(part.dependentRequired)) {
+    for (const key of arrayValues(part.required)) required.add(key);
+    if (isDefined(part.additionalProperties)) merged.additionalProperties = intersectJsonSchemas(merged.additionalProperties, part.additionalProperties);
+    if (isDefined(part.unevaluatedProperties)) merged.unevaluatedProperties = intersectJsonSchemas(merged.unevaluatedProperties, part.unevaluatedProperties);
+    if (isDefined(part.propertyNames)) merged.propertyNames = mergeAllOfValue(merged.propertyNames, part.propertyNames);
+    if (isNumber(part.minProperties)) merged.minProperties = Math.max(merged.minProperties ?? 0, part.minProperties);
+    if (isNumber(part.maxProperties)) merged.maxProperties = Math.min(merged.maxProperties ?? Infinity, part.maxProperties);
+    if (isPlainObject(part.dependentRequired)) {
       merged.dependentRequired ??= {};
-      for (const [key, values] of Object.entries(part.dependentRequired)) {
-        merged.dependentRequired[key] = [...new Set([...(merged.dependentRequired[key] ?? []), ...(Array.isArray(values) ? values : [])])];
+      for (const [key, values] of objectEntries(part.dependentRequired)) {
+        merged.dependentRequired[key] = mergeUniqueArray(merged.dependentRequired[key], values);
       }
     }
-    if (part.dependentSchemas && typeof part.dependentSchemas === "object" && !Array.isArray(part.dependentSchemas)) {
+    if (isPlainObject(part.dependentSchemas)) {
       merged.dependentSchemas ??= {};
-      for (const [key, value] of Object.entries(part.dependentSchemas)) {
-        merged.dependentSchemas[key] = merged.dependentSchemas[key] ? { allOf: [merged.dependentSchemas[key], value] } : value;
+      for (const [key, value] of objectEntries(part.dependentSchemas)) {
+        merged.dependentSchemas[key] = mergeAllOfValue(merged.dependentSchemas[key], value);
       }
     }
-    if (part.dependencies && typeof part.dependencies === "object" && !Array.isArray(part.dependencies)) {
-      for (const [key, value] of Object.entries(part.dependencies)) {
-        if (Array.isArray(value)) {
+    if (isPlainObject(part.dependencies)) {
+      for (const [key, value] of objectEntries(part.dependencies)) {
+        if (isArray(value)) {
           merged.dependentRequired ??= {};
-          merged.dependentRequired[key] = [...new Set([...(merged.dependentRequired[key] ?? []), ...value])];
-        } else if (value === false || value === true || (value && typeof value === "object" && !Array.isArray(value))) {
+          merged.dependentRequired[key] = mergeUniqueArray(merged.dependentRequired[key], value);
+        } else if (value === false || value === true || isPlainObject(value)) {
           merged.dependentSchemas ??= {};
-          merged.dependentSchemas[key] = merged.dependentSchemas[key] ? { allOf: [merged.dependentSchemas[key], value] } : value;
+          merged.dependentSchemas[key] = mergeAllOfValue(merged.dependentSchemas[key], value);
         }
       }
     }
   }
   if (required.size) merged.required = [...required];
-  if (!Object.keys(merged.properties).length) delete merged.properties;
-  if (!Object.keys(merged.patternProperties).length) delete merged.patternProperties;
+  deleteIfEmpty(merged, "properties");
+  deleteIfEmpty(merged, "patternProperties");
   if (merged.maxProperties === Infinity) delete merged.maxProperties;
   return merged;
 }
 
 function intersectJsonSchemas(left, right) {
-  if (left === undefined) return right;
-  if (right === undefined) return left;
+  if (!isDefined(left)) return right;
+  if (!isDefined(right)) return left;
   if (left === false || right === false) return false;
   if (left === true) return right;
   if (right === true) return left;
@@ -1449,47 +1553,31 @@ function intersectJsonSchemas(left, right) {
 }
 
 function schemaIntersectionParts(schema) {
-  return schema && typeof schema === "object" && !Array.isArray(schema) && Array.isArray(schema.allOf) && Object.keys(schema).length === 1
-    ? schema.allOf
+  const allOf = schemaAllOf(schema);
+  return isPlainObject(schema) && allOf && keyCount(schema) === 1
+    ? allOf
     : [schema];
 }
 
 function isObjectCompositionSchema(schema, root = schema) {
   const resolved = resolveJsonSchema(schema, root);
-  if (!resolved || typeof resolved !== "object" || Array.isArray(resolved)) return false;
-  if (resolved.type !== undefined && !schemaTypeIncludes(resolved, "object", root)) return false;
-  return [
-    "type",
-    "properties",
-    "patternProperties",
-    "required",
-    "additionalProperties",
-    "unevaluatedProperties",
-    "propertyNames",
-    "dependentRequired",
-    "dependentSchemas",
-    "dependencies",
-    "minProperties",
-    "maxProperties",
-    "$defs",
-    "definitions",
-    "title",
-    "description",
-  ].some((key) => Object.prototype.hasOwnProperty.call(resolved, key));
+  if (!isPlainObject(resolved)) return false;
+  if (isDefined(resolved.type) && !schemaTypeIncludes(resolved, "object", root)) return false;
+  return hasAnyOwn(resolved, OBJECT_COMPOSITION_KEYS);
 }
 
 function numberSchemaMatches(value, schema) {
-  if (typeof schema.minimum === "number" && value < schema.minimum) return false;
-  if (typeof schema.maximum === "number" && value > schema.maximum) return false;
-  if (typeof schema.exclusiveMinimum === "number" && value <= schema.exclusiveMinimum) return false;
-  if (schema.exclusiveMinimum === true && typeof schema.minimum === "number" && value <= schema.minimum) return false;
-  if (typeof schema.exclusiveMaximum === "number" && value >= schema.exclusiveMaximum) return false;
-  if (schema.exclusiveMaximum === true && typeof schema.maximum === "number" && value >= schema.maximum) return false;
-  if (typeof schema.multipleOf === "number" && schema.multipleOf > 0) {
+  if (isNumber(schema.minimum) && value < schema.minimum) return false;
+  if (isNumber(schema.maximum) && value > schema.maximum) return false;
+  if (isNumber(schema.exclusiveMinimum) && value <= schema.exclusiveMinimum) return false;
+  if (schema.exclusiveMinimum === true && isNumber(schema.minimum) && value <= schema.minimum) return false;
+  if (isNumber(schema.exclusiveMaximum) && value >= schema.exclusiveMaximum) return false;
+  if (schema.exclusiveMaximum === true && isNumber(schema.maximum) && value >= schema.maximum) return false;
+  if (isNumber(schema.multipleOf) && schema.multipleOf > 0) {
     const quotient = value / schema.multipleOf;
     if (Math.abs(quotient - Math.round(quotient)) > 1e-9) return false;
   }
-  if (typeof schema.format === "string" && !numberFormatMatches(value, schema.format)) return false;
+  if (isString(schema.format) && !numberFormatMatches(value, schema.format)) return false;
   return true;
 }
 
@@ -1501,37 +1589,25 @@ function numberFormatMatches(value, format) {
 }
 
 function stringSchemaMatches(value, schema) {
-  const length = jsonStringLength(value);
-  if (typeof schema.minLength === "number" && length < schema.minLength) return false;
-  if (typeof schema.maxLength === "number" && length > schema.maxLength) return false;
-  if (typeof schema.pattern === "string") {
+  const length = [...value].length;
+  if (isNumber(schema.minLength) && length < schema.minLength) return false;
+  if (isNumber(schema.maxLength) && length > schema.maxLength) return false;
+  if (isString(schema.pattern)) {
     try {
       if (!new RegExp(schema.pattern).test(value)) return false;
     } catch {}
   }
-  if (typeof schema.format === "string" && !stringFormatMatches(value, schema.format)) return false;
-  if (typeof schema.contentEncoding === "string" && !contentEncodingMatches(value, schema.contentEncoding)) return false;
-  if (typeof schema.contentMediaType === "string" && !contentMediaTypeMatches(value, schema)) return false;
-  if (schema.contentSchema !== undefined && !contentSchemaMatches(value, schema)) return false;
+  if (isString(schema.format) && !stringFormatMatches(value, schema.format)) return false;
+  if (isString(schema.contentEncoding) && !contentEncodingMatches(value, schema.contentEncoding)) return false;
+  if (isString(schema.contentMediaType) && !contentMediaTypeMatches(value, schema)) return false;
+  if (isDefined(schema.contentSchema) && !contentSchemaMatches(value, schema)) return false;
   return true;
 }
 
-function jsonStringLength(value) {
-  return [...value].length;
-}
-
 function stringFormatMatches(value, format) {
-  if (format === "email") return validEmailString(value);
-  if (format === "uri" || format === "url") {
-    if (/\s/.test(value)) return false;
-    try {
-      const parsed = new URL(value);
-      return Boolean(parsed.protocol);
-    } catch {
-      return false;
-    }
-  }
-  if (format === "uuid") return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  if (format === "email") return validEmail(value, validHostname);
+  if (format === "uri" || format === "url") return validAbsoluteUrl(value);
+  if (format === "uuid") return UUID_RE.test(value);
   if (format === "date") return validDateString(value);
   if (format === "date-time") return validDateTimeString(value);
   if (format === "time") return validTimeString(value);
@@ -1539,12 +1615,12 @@ function stringFormatMatches(value, format) {
   if (format === "idn-hostname") return validIdnHostname(value);
   if (format === "ipv4") return isIP(value) === 4;
   if (format === "ipv6") return isIP(value) === 6;
-  if (format === "idn-email") return validIdnEmail(value);
+  if (format === "idn-email") return validEmail(value, validIdnHostname);
   if (format === "regex") return validRegexString(value);
   if (format === "json-pointer") return validJsonPointer(value);
   if (format === "uri-reference") return validUriReference(value);
-  if (format === "iri") return validIri(value);
-  if (format === "iri-reference") return validIriReference(value);
+  if (format === "iri") return validAbsoluteUrl(value);
+  if (format === "iri-reference") return validUriReference(value);
   if (format === "uri-template") return validUriTemplate(value);
   if (format === "relative-json-pointer") return validRelativeJsonPointer(value);
   if (format === "byte") return validBase64String(value);
@@ -1553,63 +1629,58 @@ function stringFormatMatches(value, format) {
 }
 
 function validDateString(value) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const match = DATE_RE.exec(value);
   if (!match) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
   return date.getUTCFullYear() === Number(match[1]) && date.getUTCMonth() + 1 === Number(match[2]) && date.getUTCDate() === Number(match[3]);
 }
 
 function validDateTimeString(value) {
-  const match = /^(\d{4}-\d{2}-\d{2})[Tt](\d{2}:\d{2}:\d{2}(?:\.\d+)?)([Zz]|[+-]\d{2}:\d{2})$/.exec(value);
+  const match = DATE_TIME_RE.exec(value);
   if (!match || !validDateString(match[1]) || !validTimeString(match[2]) || !validTimezoneOffset(match[3])) return false;
   return Number.isFinite(Date.parse(value));
 }
 
 function validTimeString(value) {
-  const match = /^(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?([Zz]|[+-]\d{2}:\d{2})?$/.exec(value);
+  const match = TIME_RE.exec(value);
   if (!match) return false;
   return Number(match[1]) <= 23 && Number(match[2]) <= 59 && Number(match[3]) <= 59 && validTimezoneOffset(match[4] ?? "");
 }
 
 function validTimezoneOffset(value) {
   if (!value || value.toUpperCase() === "Z") return true;
-  const match = /^([+-])(\d{2}):(\d{2})$/.exec(value);
+  const match = TIMEZONE_OFFSET_RE.exec(value);
   return Boolean(match && Number(match[2]) <= 23 && Number(match[3]) <= 59);
 }
 
-function validEmailString(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
+function validEmail(value, validHost) {
+  const host = emailHost(value);
+  return Boolean(host && validHost(host));
+}
+
+function emailHost(value) {
+  if (!isString(value) || hasWhitespace(value)) return "";
   const at = value.lastIndexOf("@");
-  if (at <= 0 || at !== value.indexOf("@") || at === value.length - 1) return false;
+  if (at <= 0 || at !== value.indexOf("@") || at === value.length - 1) return "";
   const local = value.slice(0, at);
-  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
-  return validHostname(value.slice(at + 1));
+  return local.startsWith(".") || local.endsWith(".") || local.includes("..") ? "" : value.slice(at + 1);
 }
 
 function validHostname(value) {
-  if (typeof value !== "string" || value.length > 253) return false;
+  if (!isString(value) || value.length > 253) return false;
   const hostname = value.endsWith(".") ? value.slice(0, -1) : value;
   if (!hostname) return false;
-  return hostname.split(".").every((label) => /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(label));
+  return hostname.split(".").every((label) => HOSTNAME_LABEL_RE.test(label));
 }
 
 function validIdnHostname(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
+  if (!isString(value) || hasWhitespace(value)) return false;
   try {
     const ascii = new URL(`http://${value}`).hostname;
     return validHostname(ascii);
   } catch {
     return false;
   }
-}
-
-function validIdnEmail(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
-  const at = value.lastIndexOf("@");
-  if (at <= 0 || at !== value.indexOf("@") || at === value.length - 1) return false;
-  const local = value.slice(0, at);
-  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
-  return validIdnHostname(value.slice(at + 1));
 }
 
 function validRegexString(value) {
@@ -1622,11 +1693,11 @@ function validRegexString(value) {
 }
 
 function validJsonPointer(value) {
-  return value === "" || (value.startsWith("/") && !/(^|[^~])~([^01]|$)/.test(value));
+  return value === "" || (value.startsWith("/") && !JSON_POINTER_RE.test(value));
 }
 
 function validUriReference(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
+  if (!isString(value) || hasWhitespace(value)) return false;
   try {
     new URL(value, "http://example.invalid/base");
     return true;
@@ -1635,8 +1706,8 @@ function validUriReference(value) {
   }
 }
 
-function validIri(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
+function validAbsoluteUrl(value) {
+  if (!isString(value) || hasWhitespace(value)) return false;
   try {
     const parsed = new URL(value);
     return Boolean(parsed.protocol);
@@ -1645,18 +1716,8 @@ function validIri(value) {
   }
 }
 
-function validIriReference(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
-  try {
-    new URL(value, "http://example.invalid/base");
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function validUriTemplate(value) {
-  if (typeof value !== "string" || /\s/.test(value)) return false;
+  if (!isString(value) || hasWhitespace(value)) return false;
   let ok = true;
   const expanded = value.replace(/\{([^{}]+)\}/g, (_match, expression) => {
     if (!validUriTemplateExpression(expression)) ok = false;
@@ -1668,18 +1729,18 @@ function validUriTemplate(value) {
 
 function validUriTemplateExpression(expression) {
   const text = String(expression ?? "");
-  const body = /^[+#./;?&]/.test(text) ? text.slice(1) : text;
+  const body = URI_TEMPLATE_OPERATOR_RE.test(text) ? text.slice(1) : text;
   if (!body) return false;
-  return body.split(",").every((part) => /^[A-Za-z0-9_][A-Za-z0-9_.%-]*(?::[1-9][0-9]{0,3}|\*)?$/.test(part));
+  return body.split(",").every((part) => URI_TEMPLATE_PART_RE.test(part));
 }
 
 function validRelativeJsonPointer(value) {
-  if (typeof value !== "string") return false;
-  return /^(0|[1-9][0-9]*)(?:#|(?:\/(?:[^~/]|~[01])*)*)?$/.test(value);
+  if (!isString(value)) return false;
+  return RELATIVE_JSON_POINTER_RE.test(value);
 }
 
 function validBase64String(value) {
-  if (typeof value !== "string" || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) return false;
+  if (!isString(value) || !BASE64_RE.test(value)) return false;
   try {
     return Buffer.from(value, "base64").toString("base64").replace(/=+$/, "") === value.replace(/=+$/, "");
   } catch {
@@ -1691,14 +1752,14 @@ function contentEncodingMatches(value, encoding) {
   const normalized = encoding.toLowerCase();
   if (normalized === "base64") return validBase64String(value);
   if (normalized === "base64url") return validBase64UrlString(value);
-  if (normalized === "base16" || normalized === "hex") return typeof value === "string" && value.length % 2 === 0 && /^[0-9a-f]*$/i.test(value);
+  if (normalized === "base16" || normalized === "hex") return isString(value) && value.length % 2 === 0 && HEX_RE.test(value);
   return true;
 }
 
 function validBase64UrlString(value) {
-  return typeof value === "string"
+  return isString(value)
     && value.length % 4 !== 1
-    && /^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2}(?:==)?|[A-Za-z0-9_-]{3}=?)?$/.test(value);
+    && BASE64URL_RE.test(value);
 }
 
 function contentMediaTypeMatches(value, schema) {
@@ -1723,8 +1784,8 @@ function parseContentJson(value, schema) {
 }
 
 function decodedContentText(value, schema) {
-  if (typeof value !== "string") return null;
-  const encoding = typeof schema.contentEncoding === "string" ? schema.contentEncoding.toLowerCase() : "";
+  if (!isString(value)) return null;
+  const encoding = isString(schema.contentEncoding) ? schema.contentEncoding.toLowerCase() : "";
   try {
     if (encoding === "base64") return Buffer.from(value, "base64").toString("utf8");
     if (encoding === "base64url") return Buffer.from(value.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
@@ -1736,16 +1797,16 @@ function decodedContentText(value, schema) {
 }
 
 function validDurationString(value) {
-  return /^P(?:\d+W|(?=\d|T\d)(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?)$/.test(value);
+  return DURATION_RE.test(value);
 }
 
 function discriminatorOptionForValue(schema, value, union, root = schema) {
-  if (!schema?.discriminator || !isPlainObject(value) || !Array.isArray(union)) return null;
+  if (!schema?.discriminator || !isPlainObject(value) || !isArray(union)) return null;
   const propertyName = schema.discriminator.propertyName;
-  if (typeof propertyName !== "string" || !propertyName || typeof value[propertyName] !== "string") return null;
+  if (!isString(propertyName) || !propertyName || !isString(value[propertyName])) return null;
   const tag = value[propertyName];
   const mapping = schema.discriminator.mapping;
-  if (mapping && typeof mapping === "object" && !Array.isArray(mapping) && typeof mapping[tag] === "string") {
+  if (isPlainObject(mapping) && isString(mapping[tag])) {
     const mappedRef = mapping[tag];
     const mapped = union.find((option) => schemaOptionMatchesRef(option, mappedRef, root));
     if (mapped) return mapped;
@@ -1754,7 +1815,7 @@ function discriminatorOptionForValue(schema, value, union, root = schema) {
 }
 
 function schemaOptionMatchesRef(option, ref, root) {
-  if (option && typeof option === "object" && !Array.isArray(option) && option.$ref === ref) return true;
+  if (isPlainObject(option) && option.$ref === ref) return true;
   const target = resolveJsonPointer(root, ref);
   const resolved = resolveJsonSchema(option, root);
   return Boolean(target && resolved === target);
@@ -1763,52 +1824,32 @@ function schemaOptionMatchesRef(option, ref, root) {
 function discriminatorPropertyMatches(option, propertyName, tag, root) {
   const resolved = resolveJsonSchema(option, root);
   const prop = resolved?.properties?.[propertyName];
-  if (!prop || typeof prop !== "object" || Array.isArray(prop)) return false;
+  if (!isPlainObject(prop)) return false;
   if ("const" in prop && jsonValuesEqual(prop.const, tag)) return true;
-  return Array.isArray(prop.enum) && prop.enum.some((item) => jsonValuesEqual(item, tag));
+  return schemaEnum(prop)?.some((item) => jsonValuesEqual(item, tag)) ?? false;
 }
 
 function objectSchemaMatches(value, schema, root = schema) {
   schema = resolveJsonSchema(schema, root);
-  if (typeof schema.minProperties === "number" && Object.keys(value).length < schema.minProperties) return false;
-  if (typeof schema.maxProperties === "number" && Object.keys(value).length > schema.maxProperties) return false;
-  const required = Array.isArray(schema.required) ? schema.required : [];
-  if (required.some((key) => !(key in value))) return false;
-  const properties = schema.properties ?? {};
-  const allowed = new Set(Object.keys(properties));
-  for (const [key, item] of Object.entries(value)) {
+  if (!propertyCountMatches(value, schema)) return false;
+  if (!requiredPropertiesMatch(value, schema)) return false;
+  const allowed = schemaPropertySet(schema);
+  for (const [key, item] of objectEntries(value)) {
     if (!objectAllowsProperty(schema, key, allowed, root)) return false;
     for (const propSchema of objectPropertySchemas(schema, key)) {
       if (!schemaValueMatches(item, propSchema, root)) return false;
     }
   }
-  for (const [key, requiredKeys] of Object.entries(schema.dependentRequired ?? {})) {
-    if (key in value && Array.isArray(requiredKeys) && requiredKeys.some((requiredKey) => !(requiredKey in value))) return false;
-  }
-  for (const [key, dependent] of Object.entries(schema.dependentSchemas ?? {})) {
-    if (!(key in value)) continue;
-    if (dependent === false) return false;
-    if (dependent && typeof dependent === "object" && !Array.isArray(dependent) && !schemaValueMatches(value, dependent, root)) return false;
-  }
-  for (const [key, dependent] of Object.entries(schema.dependencies ?? {})) {
-    if (!(key in value)) continue;
-    if (Array.isArray(dependent) && dependent.some((requiredKey) => !(requiredKey in value))) return false;
-    if (dependent === false) return false;
-    if (dependent && typeof dependent === "object" && !Array.isArray(dependent) && !schemaValueMatches(value, dependent, root)) return false;
-  }
+  if (!dependentRequiredMatches(value, schema)) return false;
+  if (!dependentSchemasMatch(value, schema, (dependent) => schemaValueMatches(value, dependent, root))) return false;
+  if (!dependenciesMatch(value, schema, (dependent) => schemaValueMatches(value, dependent, root))) return false;
   return true;
 }
 
 function arraySchemaMatches(value, schema, root = schema) {
-  if (typeof schema.minItems === "number" && value.length < schema.minItems) return false;
-  if (typeof schema.maxItems === "number" && value.length > schema.maxItems) return false;
+  if (!arrayLengthMatches(value, schema)) return false;
   if (schema.uniqueItems === true && !arrayItemsAreUnique(value)) return false;
-  if (Object.prototype.hasOwnProperty.call(schema, "contains") && (typeof schema.contains === "boolean" || (schema.contains && typeof schema.contains === "object" && !Array.isArray(schema.contains)))) {
-    const matches = value.filter((item) => schemaValueMatches(item, schema.contains, root)).length;
-    const minContains = typeof schema.minContains === "number" ? schema.minContains : 1;
-    if (matches < minContains) return false;
-    if (typeof schema.maxContains === "number" && matches > schema.maxContains) return false;
-  }
+  if (!arrayContainsMatches(value, schema, (item) => schemaValueMatches(item, schema.contains, root))) return false;
   return value.every((item, index) => schemaValueMatches(item, arrayItemSchema(schema, index, root), root));
 }
 
@@ -1823,20 +1864,20 @@ function arrayItemsAreUnique(value) {
 
 function jsonValuesEqual(left, right) {
   if (Object.is(left, right)) return true;
-  if (Array.isArray(left) || Array.isArray(right)) {
-    return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((item, index) => jsonValuesEqual(item, right[index]));
+  if (isArray(left) || isArray(right)) {
+    return isArray(left) && isArray(right) && left.length === right.length && left.every((item, index) => jsonValuesEqual(item, right[index]));
   }
   if (isPlainObject(left) || isPlainObject(right)) {
     if (!isPlainObject(left) || !isPlainObject(right)) return false;
-    const leftKeys = Object.keys(left).sort();
-    const rightKeys = Object.keys(right).sort();
+    const leftKeys = objectKeys(left).sort();
+    const rightKeys = objectKeys(right).sort();
     return leftKeys.length === rightKeys.length && leftKeys.every((key, index) => key === rightKeys[index] && jsonValuesEqual(left[key], right[key]));
   }
   return false;
 }
 
 function isPlainObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  return isObjectLike(value) && !isArray(value);
 }
 
 function booleanFromText(text) {
@@ -1851,7 +1892,7 @@ function nullishFromText(text) {
 }
 
 function coerceScalar(value) {
-  if (typeof value !== "string") return value;
+  if (!isString(value)) return value;
   const text = value.trim();
   if (!text) return value;
   const stars = starRating(text);
@@ -1867,49 +1908,54 @@ function starRating(text) {
 }
 
 function firstNumber(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value !== "string") return null;
+  if (isFiniteNumber(value)) return value;
+  if (!isString(value)) return null;
   const text = value.replaceAll(",", "");
-  const fraction = text.match(/(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)/);
+  const fraction = text.match(FRACTION_RE);
   if (fraction && Number(fraction[2]) !== 0) return Number(fraction[1]) / Number(fraction[2]);
-  const match = text.match(/-?\d+(?:\.\d+)?/);
+  const match = text.match(NUMBER_RE);
   return match ? Number(match[0]) : null;
 }
 
 function inferCodeLanguageFromContent(content) {
   const languages = codeFenceLanguages(content);
-  if (languages.some((language) => ["python", "py"].includes(language))) return "python";
+  if (languages.some((language) => PYTHON_FENCE_LANGS.has(language))) return "python";
   return inferJavaScriptLanguageFromContent(content);
 }
 
 function inferJavaScriptLanguageFromContent(content) {
   const languages = codeFenceLanguages(content);
-  if (languages.some((language) => ["typescript", "ts", "tsx", "mts", "cts"].includes(language))) return "typescript";
-  if (languages.some((language) => ["javascript", "js", "jsx", "mjs", "cjs"].includes(language))) return "javascript";
+  if (languages.some((language) => TYPESCRIPT_FENCE_LANGS.has(language))) return "typescript";
+  if (languages.some((language) => JAVASCRIPT_FENCE_LANGS.has(language))) return "javascript";
   return null;
 }
 
 function codeFenceLanguages(content) {
   const languages = [];
-  const openingFenceRe = /(?:```|~~~)(?<lang>[A-Za-z0-9_+-]*)/g;
-  for (const match of String(content ?? "").matchAll(openingFenceRe)) {
-    const language = (match.groups?.lang ?? "").trim().toLowerCase();
+  OPENING_FENCE_RE.lastIndex = 0;
+  for (const match of String(content ?? "").matchAll(OPENING_FENCE_RE)) {
+    const language = fenceLanguage(match);
     if (language) languages.push(language);
   }
   CODE_FENCE_RE.lastIndex = 0;
   for (const match of String(content ?? "").matchAll(CODE_FENCE_RE)) {
-    const language = (match.groups?.lang ?? "").trim().toLowerCase();
+    const language = fenceLanguage(match);
     if (language) languages.push(language);
   }
   return languages;
 }
 
+function fenceLanguage(match) { return (match.groups?.lang ?? "").trim().toLowerCase(); }
+
 function normalizePythonCodeResponse(content, stats) {
-  const candidates = pythonCodeCandidates(content);
+  return normalizeCodeResponse(content, stats, pythonCodeCandidates(content), repairPythonCandidate, isParseablePython, "extracted_python_code");
+}
+
+function normalizeCodeResponse(content, stats, candidates, repair, isParseable, repairName) {
   for (const candidate of candidates) {
-    const repaired = repairPythonCandidate(candidate);
-    if (repaired && isParseablePython(repaired)) {
-      if (repaired.trim() !== content.trim()) stats.repairs.push("extracted_python_code");
+    const repaired = repair(candidate);
+    if (repaired && isParseable(repaired)) {
+      if (repaired.trim() !== content.trim()) stats.repairs.push(repairName);
       return repaired.trim();
     }
   }
@@ -1917,27 +1963,27 @@ function normalizePythonCodeResponse(content, stats) {
 }
 
 function pythonCodeCandidates(content) {
+  return codeCandidates(content, (lang) => PYTHON_FENCE_LANGS.has(lang));
+}
+
+function codeCandidates(content, matchesLanguage) {
   const candidates = [];
   CODE_FENCE_RE.lastIndex = 0;
   for (const match of content.matchAll(CODE_FENCE_RE)) {
-    const lang = (match.groups?.lang ?? "").trim().toLowerCase();
     const code = match.groups?.code ?? "";
-    if (["python", "py"].includes(lang)) candidates.push(code);
+    if (matchesLanguage(fenceLanguage(match))) candidates.push(code);
   }
-  return [...new Set(candidates.map((candidate) => candidate.trim()).filter(Boolean))];
+  return uniqueTrimmed(candidates);
 }
 
-function repairPythonCandidate(code) {
-  let cleaned = stripEndTokens(code).trim().replace(/\r\n/g, "\n");
-  return trimToParseablePythonPrefix(cleaned).trim();
-}
+function repairPythonCandidate(code) { return trimToParseablePrefix(cleanCodeCandidate(code), isParseablePython).trim(); }
 
-function trimToParseablePythonPrefix(code) {
-  if (isParseablePython(code)) return code;
+function trimToParseablePrefix(code, isParseable) {
+  if (isParseable(code)) return code;
   const lines = code.split("\n");
   for (let end = lines.length - 1; end > 0; end -= 1) {
     const candidate = lines.slice(0, end).join("\n").trimEnd();
-    if (isParseablePython(candidate)) return candidate;
+    if (isParseable(candidate)) return candidate;
   }
   return code;
 }
@@ -1961,49 +2007,30 @@ function hasParseErrors(tree) {
 }
 
 function normalizeJavaScriptCodeResponse(content, language, stats) {
-  const candidates = javaScriptCodeCandidates(content, language);
-  for (const candidate of candidates) {
-    const repaired = repairJavaScriptCandidate(candidate, language);
-    if (repaired && isParseableJavaScriptOrTypeScript(repaired, language)) {
-      if (repaired.trim() !== content.trim()) stats.repairs.push(`extracted_${language}_code`);
-      return repaired.trim();
-    }
-  }
-  return null;
+  return normalizeCodeResponse(
+    content,
+    stats,
+    javaScriptCodeCandidates(content, language),
+    (candidate) => repairJavaScriptCandidate(candidate, language),
+    (candidate) => isParseableJavaScriptOrTypeScript(candidate, language),
+    `extracted_${language}_code`,
+  );
 }
 
 function javaScriptCodeCandidates(content, language) {
-  const candidates = [];
-  CODE_FENCE_RE.lastIndex = 0;
-  for (const match of content.matchAll(CODE_FENCE_RE)) {
-    const lang = (match.groups?.lang ?? "").trim().toLowerCase();
-    const code = match.groups?.code ?? "";
-    if (javaScriptFenceMatches(lang, language)) candidates.push(code);
-  }
-  return [...new Set(candidates.map((candidate) => candidate.trim()).filter(Boolean))];
+  return codeCandidates(content, (lang) => javaScriptFenceMatches(lang, language));
 }
 
 function javaScriptFenceMatches(lang, language) {
   if (!lang) return false;
-  const js = new Set(["javascript", "js", "jsx", "mjs", "cjs"]);
-  const ts = new Set(["typescript", "ts", "tsx", "mts", "cts"]);
-  return language === "typescript" ? ts.has(lang) || js.has(lang) : js.has(lang);
+  return language === "typescript" ? TYPESCRIPT_FENCE_LANGS.has(lang) || JAVASCRIPT_FENCE_LANGS.has(lang) : JAVASCRIPT_FENCE_LANGS.has(lang);
 }
 
 function repairJavaScriptCandidate(code, language) {
-  let cleaned = stripEndTokens(code).trim().replace(/\r\n/g, "\n");
-  return trimToParseableJavaScriptPrefix(cleaned, language).trim();
+  return trimToParseablePrefix(cleanCodeCandidate(code), (candidate) => isParseableJavaScriptOrTypeScript(candidate, language)).trim();
 }
 
-function trimToParseableJavaScriptPrefix(code, language) {
-  if (isParseableJavaScriptOrTypeScript(code, language)) return code;
-  const lines = code.split("\n");
-  for (let end = lines.length - 1; end > 0; end -= 1) {
-    const candidate = lines.slice(0, end).join("\n").trimEnd();
-    if (isParseableJavaScriptOrTypeScript(candidate, language)) return candidate;
-  }
-  return code;
-}
+function cleanCodeCandidate(code) { return stripEndTokens(code).trim(); }
 
 function isParseableJavaScriptOrTypeScript(code, language = "javascript") {
   const text = stripEndTokens(String(code ?? "")).trim();
@@ -2013,7 +2040,7 @@ function isParseableJavaScriptOrTypeScript(code, language = "javascript") {
       sourceType: "unambiguous",
       errorRecovery: false,
       allowReturnOutsideFunction: false,
-      plugins: javaScriptParserPlugins(language, text),
+      plugins: javaScriptParserPlugins(language),
     });
     return true;
   } catch {
@@ -2021,23 +2048,8 @@ function isParseableJavaScriptOrTypeScript(code, language = "javascript") {
   }
 }
 
-function javaScriptParserPlugins(language, text) {
-  const plugins = [
-    "jsx",
-    "decorators-legacy",
-    "classProperties",
-    "classPrivateProperties",
-    "classPrivateMethods",
-    "dynamicImport",
-    "importMeta",
-    "topLevelAwait",
-    "optionalChaining",
-    "nullishCoalescingOperator",
-  ];
-  if (language === "typescript") {
-    plugins.unshift("typescript");
-  }
-  return plugins;
+function javaScriptParserPlugins(language) {
+  return language === "typescript" ? ["typescript", ...JAVASCRIPT_PARSER_PLUGINS] : JAVASCRIPT_PARSER_PLUGINS;
 }
 
 function stripToolResidue(content, toolMap) {
@@ -2048,7 +2060,7 @@ function stripToolResidue(content, toolMap) {
 }
 
 function ensureOpenAIToolCallIds(calls) {
-  return calls.map((call, index) => ({ id: call.id ?? `call_${index}_${randomUUID().slice(0, 8)}`, type: "function", ...call }));
+  return calls.map((call, index) => ({ id: call.id ?? `call_${index}_${uuidPart(8)}`, type: "function", ...call }));
 }
 
 function dedupeToolCalls(calls) {
@@ -2066,12 +2078,12 @@ function dedupeToolCalls(calls) {
 function toolCallKey(call) {
   const name = String(call.function?.name ?? "");
   const args = parseArgsValue(call.function?.arguments ?? "{}");
-  return `${name}:${JSON.stringify(sortObject(args))}`;
+  return `${name}:${jsonText(sortObject(args))}`;
 }
 
 function sortObject(value) {
-  if (Array.isArray(value)) return value.map(sortObject);
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sortObject(v)]));
+  if (isArray(value)) return value.map(sortObject);
+  if (isObjectLike(value)) return entriesObject(objectEntries(value).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sortObject(v)]));
   return value;
 }
 
@@ -2082,21 +2094,21 @@ function escapeRegExp(value) {
 function retryReasonForProcessed(body, requestPayload, stats, policy) {
   const message = firstMessage(body);
   const content = String(message.content ?? "").trim();
-  const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
+  const toolCalls = arrayValues(message.tool_calls);
   if (policy.retry_empty && !content && !toolCalls.length) return "empty_response";
-  if (policy.retry_missing_tool_call && Array.isArray(requestPayload.tools) && requestPayload.tools.length && !toolCalls.length && !content) return "missing_tool_call";
+  if (policy.retry_missing_tool_call && arrayValues(requestPayload.tools).length && !toolCalls.length && !content) return "missing_tool_call";
   if (policy.retry_malformed_json && !explicitNonJsonFormatRequest(requestPayload) && !stats.repairs.includes("repaired_json_content")) {
-    const wantsJson = looksLikeJsonRequest(requestPayload);
+    const wantsJson = jsonFormatRequest(requestPayload);
     const jsonishContent = jsonLikeResponseContent(content);
     if ((wantsJson && content) || jsonishContent) return "malformed_json";
   }
   if (policy.retry_malformed_python) {
     const language = inferCodeLanguageFromContent(content);
-    if (!looksLikeJsonRequest(requestPayload) && content && language === "python" && !isParseablePython(content)) return "malformed_python";
+    if (!jsonFormatRequest(requestPayload) && content && language === "python" && !isParseablePython(content)) return "malformed_python";
   }
   if (policy.retry_malformed_javascript) {
     const language = inferCodeLanguageFromContent(content);
-    if (!looksLikeJsonRequest(requestPayload) && content && ["javascript", "typescript"].includes(language) && !isParseableJavaScriptOrTypeScript(content, language)) return `malformed_${language}`;
+    if (!jsonFormatRequest(requestPayload) && content && (language === "javascript" || language === "typescript") && !isParseableJavaScriptOrTypeScript(content, language)) return `malformed_${language}`;
   }
   return null;
 }
@@ -2105,33 +2117,30 @@ function jsonLikeResponseContent(content) {
   const text = String(content ?? "");
   const trimmed = text.trimStart();
   if (!trimmed) return false;
-  return trimmed.startsWith("{") || trimmed.startsWith("[") || JSON_FENCE_RE.test(text);
+  return startsJson(trimmed) || JSON_FENCE_RE.test(text);
 }
 
 function firstMessage(body) {
-  const choice = Array.isArray(body?.choices) ? body.choices[0] : {};
-  return choice?.message && typeof choice.message === "object" ? choice.message : {};
-}
-
-function looksLikeJsonRequest(payload) {
-  return jsonFormatRequest(payload);
+  const choice = firstArrayValue(body?.choices, {});
+  return isPlainObject(choice?.message) ? choice.message : {};
 }
 
 async function upstreamRequest(state, method, path, payload) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), state.timeoutSec * 1000);
   try {
+    const hasPayload = isDefined(payload);
     const response = await fetch(new URL(path.replace(/^\//, ""), state.upstream), {
       method,
-      headers: payload === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-      body: payload === undefined ? undefined : JSON.stringify(payload),
+      headers: hasPayload ? { Accept: JSON_CONTENT_TYPE, "Content-Type": JSON_CONTENT_TYPE } : { Accept: JSON_CONTENT_TYPE },
+      body: hasPayload ? jsonText(payload) : undefined,
       signal: controller.signal,
     });
     const body = Buffer.from(await response.arrayBuffer());
-    return { status: response.status, headers: Object.fromEntries(response.headers.entries()), body };
+    return { status: response.status, headers: entriesObject(response.headers.entries()), body };
   } catch (error) {
-    const body = Buffer.from(JSON.stringify({ error: { message: String(error?.message ?? error), type: error?.name ?? "Error" } }));
-    return { status: 502, headers: { "content-type": "application/json" }, body };
+    const body = jsonBuffer({ error: { message: String(error?.message ?? error), type: error?.name ?? "Error" } });
+    return { status: 502, headers: { "content-type": JSON_CONTENT_TYPE }, body };
   } finally {
     clearTimeout(timeout);
   }
@@ -2140,7 +2149,7 @@ async function upstreamRequest(state, method, path, payload) {
 function writeJsonl(logJsonl, payload) {
   if (!logJsonl) return;
   fs.mkdirSync(path.dirname(logJsonl), { recursive: true });
-  fs.appendFileSync(logJsonl, `${JSON.stringify({ ts: Date.now() / 1000, ...payload })}\n`, "utf8");
+  fs.appendFileSync(logJsonl, `${jsonText({ ts: Date.now() / 1000, ...payload })}\n`, "utf8");
 }
 
 function applyCors(reply) {
@@ -2150,9 +2159,18 @@ function applyCors(reply) {
   reply.header("Access-Control-Max-Age", "86400");
 }
 
+function chatRole(role) {
+  if (!CHAT_ROLES.has(role)) return "user";
+  return role === "developer" ? "system" : role;
+}
+
+function responseInputCallId(item) { return String(item.call_id ?? item.id ?? shortId("call")); }
+function responseInputTypeEnds(item, suffix) { return isString(item.type) && item.type.endsWith(suffix); }
+function isFunctionType(value) { return value?.type === "function"; }
+
 function responseInputToMessages(payload) {
   const messages = [];
-  if (typeof payload?.instructions === "string" && payload.instructions.trim()) {
+  if (isString(payload?.instructions) && payload.instructions.trim()) {
     messages.push({ role: "system", content: payload.instructions });
   }
   const addMessage = (role, content) => {
@@ -2160,14 +2178,14 @@ function responseInputToMessages(payload) {
     if (text) messages.push({ role, content: text });
   };
   const input = payload?.input;
-  if (typeof input === "string") addMessage("user", input);
-  else if (Array.isArray(input)) {
+  if (isString(input)) addMessage("user", input);
+  else if (isArray(input)) {
     for (const item of input) {
-      if (typeof item === "string") addMessage("user", item);
-      else if (item && typeof item === "object") {
+      if (isString(item)) addMessage("user", item);
+      else if (isObjectLike(item)) {
         if (item.type === "reasoning") continue;
-        if (item.type === "function_call" && typeof item.name === "string") {
-          const callId = String(item.call_id ?? item.id ?? `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`);
+        if (item.type === "function_call" && isString(item.name)) {
+          const callId = responseInputCallId(item);
           messages.push({
             role: "assistant",
             content: "",
@@ -2177,7 +2195,7 @@ function responseInputToMessages(payload) {
                 type: "function",
                 function: {
                   name: item.name,
-                  arguments: typeof item.arguments === "string" ? item.arguments : JSON.stringify(item.arguments ?? {}),
+                  arguments: serializedArgs(item.arguments),
                 },
               },
             ],
@@ -2185,63 +2203,61 @@ function responseInputToMessages(payload) {
           continue;
         }
         if (item.type === "function_call_output") {
-          const callId = String(item.call_id ?? item.id ?? `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`);
+          const callId = responseInputCallId(item);
           messages.push({
             role: "tool",
             tool_call_id: callId,
-            content: responseToolOutputContent(item.output ?? item.content ?? ""),
+            content: responseToolOutputContent(firstPresent(item, ["output", "content"]) ?? ""),
           });
           continue;
         }
-        if (typeof item.type === "string" && item.type.endsWith("_call_output")) {
-          addMessage("user", responseToolOutputContent(item.output ?? item.content ?? item.result ?? item));
+        if (responseInputTypeEnds(item, "_call_output")) {
+          addMessage("user", responseToolOutputContent(firstPresent(item, ["output", "content", "result"]) ?? item));
           continue;
         }
-        if (typeof item.type === "string" && item.type.endsWith("_call")) {
-          addMessage("assistant", responseToolOutputContent(item.action ?? item.input ?? item.arguments ?? item));
+        if (responseInputTypeEnds(item, "_call")) {
+          addMessage("assistant", responseToolOutputContent(firstPresent(item, ["action", "input", "arguments"]) ?? item));
           continue;
         }
-        const role = ["system", "developer", "user", "assistant"].includes(item.role) ? (item.role === "developer" ? "system" : item.role) : "user";
-        addMessage(role, item.content ?? item.text ?? item);
+        addMessage(chatRole(item.role), item.content ?? item.text ?? item);
       }
     }
-  } else if (input && typeof input === "object") {
-    const role = ["system", "developer", "user", "assistant"].includes(input.role) ? (input.role === "developer" ? "system" : input.role) : "user";
-    addMessage(role, input.content ?? input.text ?? input);
+  } else if (isPlainObject(input)) {
+    addMessage(chatRole(input.role), input.content ?? input.text ?? input);
   }
   if (!messages.length) messages.push({ role: "user", content: "" });
   return messages;
 }
 
 function responseToolOutputContent(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) {
+  if (isNil(value)) return "";
+  if (isString(value)) return value;
+  if (isArray(value)) {
     const text = normalizeContentValue(value);
-    return text || JSON.stringify(value);
+    return text || jsonText(value);
   }
-  if (typeof value === "object") {
+  if (isPlainObject(value)) {
     const text = normalizeContentValue(value);
-    return text && text !== "[object Object]" ? text : JSON.stringify(value);
+    return text && text !== "[object Object]" ? text : jsonText(value);
   }
   return String(value);
 }
 
 function responsesToolsToChatTools(tools) {
-  if (!Array.isArray(tools)) return tools;
+  if (!isArray(tools)) return tools;
   const converted = [];
   for (const tool of tools) {
-    if (!tool || typeof tool !== "object") continue;
-    if (tool.type === "function" && tool.function && typeof tool.function === "object") {
+    if (!isObjectLike(tool)) continue;
+    if (isFunctionType(tool) && isPlainObject(tool.function)) {
       converted.push(tool);
       continue;
     }
-    if (tool.type === "function" && typeof tool.name === "string" && tool.name) {
+    if (isFunctionType(tool) && isString(tool.name) && tool.name) {
       const fn = { name: tool.name };
-      for (const key of ["description", "parameters", "strict"]) {
-        if (tool[key] !== undefined) fn[key] = tool[key];
+      for (const key of RESPONSE_FUNCTION_TOOL_KEYS) {
+        if (isDefined(tool[key])) fn[key] = tool[key];
       }
-      if (fn.parameters === undefined && tool.input_schema !== undefined) fn.parameters = tool.input_schema;
+      if (!isDefined(fn.parameters) && isDefined(tool.input_schema)) fn.parameters = tool.input_schema;
       converted.push({ type: "function", function: fn });
       continue;
     }
@@ -2251,9 +2267,9 @@ function responsesToolsToChatTools(tools) {
 }
 
 function responsesToolChoiceToChatToolChoice(toolChoice) {
-  if (!toolChoice || typeof toolChoice !== "object" || Array.isArray(toolChoice)) return toolChoice;
+  if (!isPlainObject(toolChoice)) return toolChoice;
   const functionName = toolChoice.name ?? toolChoice.function?.name;
-  if (toolChoice.type === "function" && typeof functionName === "string") {
+  if (isFunctionType(toolChoice) && isString(functionName)) {
     return { type: "function", function: { name: functionName } };
   }
   if (["auto", "none", "required"].includes(toolChoice.type)) return toolChoice.type;
@@ -2261,18 +2277,18 @@ function responsesToolChoiceToChatToolChoice(toolChoice) {
 }
 
 function responsesTextFormatToChatResponseFormat(format) {
-  if (!format || typeof format !== "object" || Array.isArray(format)) return undefined;
+  if (!isPlainObject(format)) return undefined;
   if (format.type === "json_object") return { type: "json_object" };
   if (format.type === "json_schema") {
-    if (format.json_schema && typeof format.json_schema === "object") {
+    if (isPlainObject(format.json_schema)) {
       return { type: "json_schema", json_schema: format.json_schema };
     }
     return {
       type: "json_schema",
       json_schema: {
-        ...(format.name === undefined ? {} : { name: format.name }),
-        ...(format.schema === undefined ? {} : { schema: format.schema }),
-        ...(format.strict === undefined ? {} : { strict: format.strict }),
+        ...definedField("name", format.name),
+        ...definedField("schema", format.schema),
+        ...definedField("strict", format.strict),
       },
     };
   }
@@ -2284,85 +2300,61 @@ function responsesPayloadToChatPayload(payload) {
     model: payload.model,
     messages: responseInputToMessages(payload),
   };
-  for (const key of ["temperature", "top_p", "stream", "stop", "metadata", "user", "parallel_tool_calls", "frequency_penalty", "presence_penalty", "seed", "logprobs", "top_logprobs", "service_tier", "modalities", "audio", "prediction", "store", "truncation", "include", "background", "safety_identifier"]) {
-    if (payload[key] !== undefined) chat[key] = payload[key];
+  copyDefined(payload, chat, RESPONSES_PASSTHROUGH_KEYS);
+  for (const [from, to] of RESPONSES_REASONING_KEYS) {
+    if (isDefined(payload.reasoning?.[from])) chat[to] = payload.reasoning[from];
   }
-  if (payload.reasoning?.effort !== undefined) chat.reasoning_effort = payload.reasoning.effort;
-  if (payload.reasoning?.summary !== undefined) chat.reasoning_summary = payload.reasoning.summary;
-  if (payload.reasoning?.generate_summary !== undefined) chat.reasoning_generate_summary = payload.reasoning.generate_summary;
-  if (payload.text?.verbosity !== undefined) chat.verbosity = payload.text.verbosity;
-  if (payload.top_k !== undefined) chat.top_k = payload.top_k;
-  if (payload.tools !== undefined) chat.tools = responsesToolsToChatTools(payload.tools);
-  if (payload.tool_choice !== undefined) chat.tool_choice = responsesToolChoiceToChatToolChoice(payload.tool_choice);
-  if (payload.response_format !== undefined) chat.response_format = payload.response_format;
+  if (isDefined(payload.text?.verbosity)) chat.verbosity = payload.text.verbosity;
+  if (isDefined(payload.top_k)) chat.top_k = payload.top_k;
+  if (isDefined(payload.tools)) chat.tools = responsesToolsToChatTools(payload.tools);
+  if (isDefined(payload.tool_choice)) chat.tool_choice = responsesToolChoiceToChatToolChoice(payload.tool_choice);
+  if (isDefined(payload.response_format)) chat.response_format = payload.response_format;
   else {
     const responseFormat = responsesTextFormatToChatResponseFormat(payload.text?.format);
-    if (responseFormat !== undefined) chat.response_format = responseFormat;
+    if (isDefined(responseFormat)) chat.response_format = responseFormat;
   }
-  if (payload.max_output_tokens !== undefined) chat.max_tokens = payload.max_output_tokens;
-  else if (payload.max_completion_tokens !== undefined) chat.max_tokens = payload.max_completion_tokens;
-  else if (payload.max_tokens !== undefined) chat.max_tokens = payload.max_tokens;
+  const maxTokens = firstDefined(payload, RESPONSES_MAX_TOKEN_KEYS);
+  if (isDefined(maxTokens)) chat.max_tokens = maxTokens;
   return chat;
 }
 
 function chatCompletionToResponsesBody(chatBody, responsePayload) {
-  const choice = Array.isArray(chatBody?.choices) ? (chatBody.choices[0] ?? {}) : {};
-  const finishReason = choice.finish_reason;
-  const incompleteReason = finishReason === "length" ? "max_output_tokens" : finishReason === "content_filter" ? "content_filter" : null;
-  const incomplete = incompleteReason !== null;
-  const outputStatus = incomplete ? "incomplete" : "completed";
+  const choice = firstArrayValue(chatBody?.choices, {});
+  const incompleteReason = incompleteReasonForFinish(choice.finish_reason);
+  const status = responseStatus(incompleteReason);
   const message = firstMessage(chatBody);
   const text = normalizeContentValue(message.content);
   const refusal = normalizeContentValue(message.refusal);
   const output = [];
   if (text) {
-    output.push({
-      id: `msg_${randomUUID().replaceAll("-", "").slice(0, 24)}`,
-      type: "message",
-      status: outputStatus,
-      role: "assistant",
-      content: [{ type: "output_text", text, annotations: [] }],
-    });
+    output.push(responseMessageOutput(status, outputTextContent(text)));
   }
   if (refusal) {
-    output.push({
-      id: `msg_${randomUUID().replaceAll("-", "").slice(0, 24)}`,
-      type: "message",
-      status: outputStatus,
-      role: "assistant",
-      content: [{ type: "refusal", refusal, annotations: [] }],
-    });
+    output.push(responseMessageOutput(status, refusalContent(refusal)));
   }
-  for (const call of Array.isArray(message.tool_calls) ? message.tool_calls : []) {
+  for (const call of arrayValues(message.tool_calls)) {
     if (!call?.function?.name) continue;
-    output.push({
-      id: call.id ?? `fc_${randomUUID().replaceAll("-", "").slice(0, 24)}`,
-      type: "function_call",
-      status: outputStatus,
-      call_id: call.id ?? `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`,
+    output.push(responseFunctionCallItem({
+      id: call.id ?? longId("fc"),
+      status,
+      callId: call.id ?? shortId("call"),
       name: call.function.name,
-      arguments: typeof call.function.arguments === "string" ? call.function.arguments : JSON.stringify(call.function.arguments ?? {}),
-    });
+      arguments: serializedArgs(call.function.arguments),
+    }));
   }
   if (!output.length) {
-    output.push({
-      id: `msg_${randomUUID().replaceAll("-", "").slice(0, 24)}`,
-      type: "message",
-      status: outputStatus,
-      role: "assistant",
-      content: [{ type: "output_text", text: "", annotations: [] }],
-    });
+    output.push(responseMessageOutput(status, outputTextContent("")));
   }
-  const created = typeof chatBody?.created === "number" ? chatBody.created : Math.floor(Date.now() / 1000);
-  const id = chatBody?.id ?? `resp_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
+  const created = isNumber(chatBody?.created) ? chatBody.created : nowSeconds();
+  const id = chatBody?.id ?? longId("resp");
   const usage = responsesUsageFromChatUsage(chatBody?.usage);
   return {
     id,
     object: "response",
     created_at: created,
-    status: incomplete ? "incomplete" : "completed",
-    ...(incomplete ? { incomplete_details: { reason: incompleteReason } } : {}),
-    model: chatBody?.model ?? responsePayload?.model,
+    status,
+    ...incompleteDetails(incompleteReason),
+    model: chatModelName(chatBody, responsePayload),
     ...responsesMetadata(responsePayload, chatBody),
     output,
     output_text: text,
@@ -2371,10 +2363,34 @@ function chatCompletionToResponsesBody(chatBody, responsePayload) {
   };
 }
 
+function responseMessageOutput(status, content, id = longId("msg")) {
+  return { id, type: "message", status, role: "assistant", content };
+}
+
+function responseFunctionCallItem({ id, status, callId, name, arguments: args }) {
+  return { id, type: "function_call", status, call_id: callId, name, arguments: args };
+}
+
+function emptyStreamToolCall() { return { id: "", name: "", arguments: "" }; }
+function mergeStreamToolCall(current, call) {
+  if (call.id) current.id = call.id;
+  if (call.function?.name) current.name = call.function.name;
+  if (call.function?.arguments) current.arguments += call.function.arguments;
+  return current;
+}
+function streamToolCallIndex(call, toolCalls) { return Number.isInteger(call.index) ? call.index : toolCalls.size; }
+function streamDeltaText(choice, key) { return normalizeContentValue(choice?.delta?.[key]); }
+function chatModelName(chatBody, payload) { return chatBody?.model ?? payload?.model; }
+function outputTextContent(text) { return [{ type: "output_text", text, annotations: [] }]; }
+function refusalContent(refusal) { return [{ type: "refusal", refusal, annotations: [] }]; }
+function incompleteReasonForFinish(reason) { return reason === "length" ? "max_output_tokens" : reason === "content_filter" ? "content_filter" : null; }
+function responseStatus(incompleteReason) { return incompleteReason ? "incomplete" : "completed"; }
+function incompleteDetails(reason) { return reason ? { incomplete_details: { reason } } : {}; }
+
 function chatCompletionStreamToResponsesSse(body, responsePayload) {
-  const id = `resp_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
-  const messageId = `msg_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
-  const created = Math.floor(Date.now() / 1000);
+  const id = longId("resp");
+  const messageId = longId("msg");
+  const created = nowSeconds();
   let model = responsePayload?.model;
   let outputText = "";
   let refusalText = "";
@@ -2383,8 +2399,7 @@ function chatCompletionStreamToResponsesSse(body, responsePayload) {
   let incompleteReason = null;
   const toolCalls = new Map();
   const events = [
-    sseEvent("response.created", {
-      type: "response.created",
+    typedSseEvent("response.created", {
       response: { id, object: "response", created_at: created, status: "in_progress", model, output: [], output_text: "" },
     }),
   ];
@@ -2392,67 +2407,55 @@ function chatCompletionStreamToResponsesSse(body, responsePayload) {
     if (event.model) model = event.model;
     if (event.usage) usage = responsesUsageFromChatUsage(event.usage);
     if (event.system_fingerprint) systemFingerprint = event.system_fingerprint;
-    const choice = Array.isArray(event.choices) ? event.choices[0] : null;
-    const delta = normalizeContentValue(choice?.delta?.content);
+    const choice = firstArrayValue(event.choices, null);
+    const delta = streamDeltaText(choice, "content");
     if (delta) {
       outputText += delta;
-      events.push(sseEvent("response.output_text.delta", {
-        type: "response.output_text.delta",
+      events.push(typedSseEvent("response.output_text.delta", {
         item_id: messageId,
         output_index: 0,
         content_index: 0,
         delta,
       }));
     }
-    const refusal = normalizeContentValue(choice?.delta?.refusal);
+    const refusal = streamDeltaText(choice, "refusal");
     if (refusal) {
       refusalText += refusal;
-      events.push(sseEvent("response.refusal.delta", {
-        type: "response.refusal.delta",
+      events.push(typedSseEvent("response.refusal.delta", {
         item_id: messageId,
         output_index: 0,
         content_index: 0,
         delta: refusal,
       }));
     }
-    for (const call of Array.isArray(choice?.delta?.tool_calls) ? choice.delta.tool_calls : []) {
-      const index = Number.isInteger(call.index) ? call.index : toolCalls.size;
-      const current = toolCalls.get(index) ?? { id: "", name: "", arguments: "" };
-      if (call.id) current.id = call.id;
-      if (call.function?.name) current.name = call.function.name;
-      if (call.function?.arguments) current.arguments += call.function.arguments;
-      toolCalls.set(index, current);
+    for (const call of arrayValues(choice?.delta?.tool_calls)) {
+      const index = streamToolCallIndex(call, toolCalls);
+      const current = toolCalls.get(index) ?? emptyStreamToolCall();
+      toolCalls.set(index, mergeStreamToolCall(current, call));
     }
-    if (choice?.finish_reason === "length") incompleteReason = "max_output_tokens";
-    else if (choice?.finish_reason === "content_filter") incompleteReason = "content_filter";
+    incompleteReason = incompleteReasonForFinish(choice?.finish_reason) ?? incompleteReason;
   }
-  const status = incompleteReason ? "incomplete" : "completed";
+  const status = responseStatus(incompleteReason);
   const output = [];
   if (outputText || refusalText || !toolCalls.size) {
-    output.push({
-      id: messageId,
-      type: "message",
+    output.push(responseMessageOutput(
       status,
-      role: "assistant",
-      content: refusalText
-        ? [{ type: "refusal", refusal: refusalText, annotations: [] }]
-        : [{ type: "output_text", text: outputText, annotations: [] }],
-    });
+      refusalText ? refusalContent(refusalText) : outputTextContent(outputText),
+      messageId,
+    ));
   }
   for (const call of [...toolCalls.values()]) {
     if (!call.name) continue;
-    const callId = call.id || `call_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
-    const item = {
+    const callId = call.id || shortId("call");
+    const item = responseFunctionCallItem({
       id: callId,
-      type: "function_call",
       status,
-      call_id: callId,
+      callId,
       name: call.name,
       arguments: call.arguments || "{}",
-    };
+    });
     output.push(item);
-    events.push(sseEvent("response.output_item.added", {
-      type: "response.output_item.added",
+    events.push(typedSseEvent("response.output_item.added", {
       output_index: output.length - 1,
       item,
     }));
@@ -2462,7 +2465,7 @@ function chatCompletionStreamToResponsesSse(body, responsePayload) {
     object: "response",
     created_at: created,
     status,
-    ...(incompleteReason ? { incomplete_details: { reason: incompleteReason } } : {}),
+    ...incompleteDetails(incompleteReason),
     model,
     ...responsesMetadata(responsePayload, systemFingerprint ? { system_fingerprint: systemFingerprint } : {}),
     output,
@@ -2470,8 +2473,7 @@ function chatCompletionStreamToResponsesSse(body, responsePayload) {
     ...(usage ? { usage } : {}),
   };
   if (outputText) {
-    events.push(sseEvent("response.output_text.done", {
-      type: "response.output_text.done",
+    events.push(typedSseEvent("response.output_text.done", {
       item_id: messageId,
       output_index: 0,
       content_index: 0,
@@ -2479,19 +2481,17 @@ function chatCompletionStreamToResponsesSse(body, responsePayload) {
     }));
   }
   if (refusalText) {
-    events.push(sseEvent("response.refusal.done", {
-      type: "response.refusal.done",
+    events.push(typedSseEvent("response.refusal.done", {
       item_id: messageId,
       output_index: 0,
       content_index: 0,
       refusal: refusalText,
     }));
   }
-  events.push(sseEvent(status === "completed" ? "response.completed" : "response.incomplete", {
-    type: status === "completed" ? "response.completed" : "response.incomplete",
+  events.push(typedSseEvent(status === "completed" ? "response.completed" : "response.incomplete", {
     response,
   }));
-  events.push(sseEvent("response.done", { type: "response.done", response }));
+  events.push(typedSseEvent("response.done", { response }));
   return Buffer.from(events.join(""), "utf8");
 }
 
@@ -2519,24 +2519,25 @@ function parseChatCompletionSse(body) {
 }
 
 function sseEvent(event, data) {
-  return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  return `event: ${event}\ndata: ${jsonText(data)}\n\n`;
 }
+function typedSseEvent(type, data) { return sseEvent(type, { type, ...data }); }
 
 function responsesMetadata(responsePayload, chatBody = {}) {
   return {
-    ...(responsePayload?.parallel_tool_calls !== undefined ? { parallel_tool_calls: responsePayload.parallel_tool_calls } : {}),
-    ...(responsePayload?.previous_response_id !== undefined ? { previous_response_id: responsePayload.previous_response_id } : {}),
-    ...(responsePayload?.truncation !== undefined ? { truncation: responsePayload.truncation } : {}),
-    ...(responsePayload?.max_output_tokens !== undefined ? { max_output_tokens: responsePayload.max_output_tokens } : {}),
-    ...(responsePayload?.store !== undefined ? { store: responsePayload.store } : {}),
-    ...(responsePayload?.tool_choice !== undefined ? { tool_choice: responsePayload.tool_choice } : {}),
-    ...(chatBody?.service_tier !== undefined ? { service_tier: chatBody.service_tier } : {}),
-    ...(chatBody?.system_fingerprint !== undefined ? { system_fingerprint: chatBody.system_fingerprint } : {}),
+    ...definedField("parallel_tool_calls", responsePayload?.parallel_tool_calls),
+    ...definedField("previous_response_id", responsePayload?.previous_response_id),
+    ...definedField("truncation", responsePayload?.truncation),
+    ...definedField("max_output_tokens", responsePayload?.max_output_tokens),
+    ...definedField("store", responsePayload?.store),
+    ...definedField("tool_choice", responsePayload?.tool_choice),
+    ...definedField("service_tier", chatBody?.service_tier),
+    ...definedField("system_fingerprint", chatBody?.system_fingerprint),
   };
 }
 
 function responsesUsageFromChatUsage(usage) {
-  if (!usage || typeof usage !== "object") return undefined;
+  if (!isObjectLike(usage)) return undefined;
   return {
     input_tokens: usage.prompt_tokens ?? usage.input_tokens ?? 0,
     output_tokens: usage.completion_tokens ?? usage.output_tokens ?? 0,
@@ -2547,10 +2548,10 @@ function responsesUsageFromChatUsage(usage) {
 }
 
 function completionPromptText(prompt) {
-  if (typeof prompt === "string") return prompt;
-  if (Array.isArray(prompt)) {
-    if (prompt.every((item) => typeof item === "string")) return prompt.join("\n");
-    if (prompt.every((item) => typeof item === "number")) return prompt.join(" ");
+  if (isString(prompt)) return prompt;
+  if (isArray(prompt)) {
+    if (prompt.every(isString)) return prompt.join("\n");
+    if (prompt.every(isNumber)) return prompt.join(" ");
     return prompt.map(completionPromptText).filter(Boolean).join("\n");
   }
   return normalizeContentValue(prompt);
@@ -2561,23 +2562,20 @@ function completionsPayloadToChatPayload(payload) {
     model: payload.model,
     messages: [{ role: "user", content: completionPromptText(payload.prompt ?? "") }],
   };
-  for (const key of ["temperature", "top_p", "stop", "user", "n", "frequency_penalty", "presence_penalty", "seed", "logprobs", "top_logprobs", "response_format"]) {
-    if (payload[key] !== undefined) chat[key] = payload[key];
-  }
-  if (payload.max_tokens !== undefined) chat.max_tokens = payload.max_tokens;
-  else if (payload.max_completion_tokens !== undefined) chat.max_tokens = payload.max_completion_tokens;
-  else if (payload.max_output_tokens !== undefined) chat.max_tokens = payload.max_output_tokens;
+  copyDefined(payload, chat, COMPLETIONS_PASSTHROUGH_KEYS);
+  const maxTokens = firstDefined(payload, COMPLETIONS_MAX_TOKEN_KEYS);
+  if (isDefined(maxTokens)) chat.max_tokens = maxTokens;
   return chat;
 }
 
 function chatCompletionToCompletionsBody(chatBody, completionPayload) {
-  const created = chatBody?.created ?? Math.floor(Date.now() / 1000);
+  const created = chatBody?.created ?? nowSeconds();
   return {
-    id: chatBody?.id ?? `cmpl_${randomUUID().replaceAll("-", "").slice(0, 24)}`,
+    id: chatBody?.id ?? longId("cmpl"),
     object: "text_completion",
     created,
-    model: chatBody?.model ?? completionPayload?.model,
-    choices: (Array.isArray(chatBody?.choices) ? chatBody.choices : []).map((choice, index) => ({
+    model: chatModelName(chatBody, completionPayload),
+    choices: arrayValues(chatBody?.choices).map((choice, index) => ({
       text: normalizeContentValue(choice?.message?.content),
       index: choice?.index ?? index,
       logprobs: choice?.logprobs ?? null,
@@ -2587,6 +2585,27 @@ function chatCompletionToCompletionsBody(chatBody, completionPayload) {
     gemma_harness: chatBody?.gemma_harness,
   };
 }
+
+function sendBody(reply, status, body, contentType = JSON_CONTENT_TYPE) {
+  reply.code(status).headers({ "content-type": contentType });
+  return reply.send(body);
+}
+
+function sendUpstream(reply, upstream, contentType = responseContentType(upstream.headers)) {
+  return sendBody(reply, upstream.status, upstream.body, contentType);
+}
+
+function writeRequestLog(state, request, payload, started, attempts, parse) {
+  writeJsonl(state.logJsonl, {
+    path: request.url,
+    model: payload.model,
+    elapsed_ms: elapsedMs(started),
+    attempts,
+    parse,
+  });
+}
+function adapterParse(parseStats, adapter) { return { ...parseStats, adapter }; }
+function skippedParse(reason) { return { skipped: reason }; }
 
 export function buildServer(state) {
   const app = Fastify({ logger: false, bodyLimit: 32 * 1024 * 1024 });
@@ -2601,203 +2620,148 @@ export function buildServer(state) {
 
   app.get("/v1/models", async (_request, reply) => {
     const upstream = await upstreamRequest(state, "GET", "/v1/models");
-    reply.code(upstream.status).headers({ "content-type": upstream.headers["content-type"] ?? "application/json" });
-    return reply.send(upstream.body);
+    return sendUpstream(reply, upstream);
   });
 
   app.post("/v1/chat/completions", async (request, reply) => {
     const started = performance.now();
     const requestPayload = request.body;
-    if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
-      reply.code(400);
-      return { error: { message: "request body must be a JSON object" } };
-    }
+    if (!isPlainObject(requestPayload)) return badJsonBody(reply);
     const upstreamPayload = prepareUpstreamPayload(requestPayload, state.policy);
-    if (requestPayload.stream === true) {
+    if (isStreamingRequest(requestPayload)) {
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
-      writeJsonl(state.logJsonl, {
-        path: request.url,
-        model: requestPayload.model,
-        elapsed_ms: Number((performance.now() - started).toFixed(3)),
-        attempts: [{ attempt: 1, status: upstream.status, retry_reason: "" }],
-        parse: { skipped: "streaming_passthrough" },
-      });
-      reply.code(upstream.status).headers({ "content-type": upstream.headers["content-type"] ?? upstream.headers["Content-Type"] ?? "application/json" });
-      return reply.send(upstream.body);
+      writeRequestLog(state, request, requestPayload, started, singleAttempt(upstream.status), skippedParse("streaming_passthrough"));
+      return sendUpstream(reply, upstream);
     }
     const attempts = [];
     let finalStatus = 502;
-    let finalHeaders = { "content-type": "application/json" };
-    let finalBody = Buffer.alloc(0);
+    let finalHeaders = { "content-type": JSON_CONTENT_TYPE };
+    let finalBody = emptyBuffer();
     let parseStats = {};
 
-    for (let attempt = 0; attempt < Math.max(1, Number(state.policy.max_retries) + 1); attempt += 1) {
+    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
       finalStatus = upstream.status;
       finalHeaders = upstream.headers;
       finalBody = upstream.body;
-      const attemptInfo = { attempt: attempt + 1, status: upstream.status };
-      if (upstream.status >= 500) {
-        attempts.push({ ...attemptInfo, retry_reason: "upstream_5xx" });
-        if (attempt < state.policy.max_retries) continue;
+      const info = attemptInfo(attempt, upstream.status);
+      if (retryableUpstream5xx(attempts, info, upstream.status)) {
+        if (canRetry(attempt, state.policy)) continue;
       }
       let upstreamJson;
       try {
-        upstreamJson = JSON.parse(upstream.body.toString("utf8"));
+        upstreamJson = parseJsonBuffer(upstream.body);
       } catch (error) {
-        attempts.push({ ...attemptInfo, retry_reason: `invalid_upstream_json:${error.message}` });
-        if (attempt < state.policy.max_retries) continue;
+        recordInvalidJsonAttempt(attempts, info, error);
+        if (canRetry(attempt, state.policy)) continue;
         break;
       }
       const processed = processChatCompletion(upstreamJson, requestPayload, state.policy);
       parseStats = processed.stats;
       const retryReason = retryReasonForProcessed(processed.body, requestPayload, parseStats, state.policy);
-      attempts.push({ ...attemptInfo, retry_reason: retryReason ?? "" });
-      if (retryReason && attempt < state.policy.max_retries) continue;
-      finalBody = Buffer.from(JSON.stringify(processed.body));
-      finalHeaders = { "content-type": "application/json" };
+      recordProcessedAttempt(attempts, info, retryReason);
+      if (retryReason && canRetry(attempt, state.policy)) continue;
+      finalBody = jsonBuffer(processed.body);
+      finalHeaders = { "content-type": JSON_CONTENT_TYPE };
       finalStatus = upstream.status;
       break;
     }
 
-    writeJsonl(state.logJsonl, {
-      path: request.url,
-      model: requestPayload.model,
-      elapsed_ms: Number((performance.now() - started).toFixed(3)),
-      attempts,
-      parse: parseStats,
-    });
-    reply.code(finalStatus).headers({ "content-type": finalHeaders["content-type"] ?? finalHeaders["Content-Type"] ?? "application/json" });
-    return reply.send(finalBody);
+    writeRequestLog(state, request, requestPayload, started, attempts, parseStats);
+    return sendBody(reply, finalStatus, finalBody, responseContentType(finalHeaders));
   });
 
   app.post("/v1/responses", async (request, reply) => {
     const started = performance.now();
     const requestPayload = request.body;
-    if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
-      reply.code(400);
-      return { error: { message: "request body must be a JSON object" } };
-    }
+    if (!isPlainObject(requestPayload)) return badJsonBody(reply);
     const chatPayload = responsesPayloadToChatPayload(requestPayload);
     const upstreamPayload = prepareUpstreamPayload(chatPayload, state.policy);
-    if (requestPayload.stream === true) {
+    if (isStreamingRequest(requestPayload)) {
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
-      writeJsonl(state.logJsonl, {
-        path: request.url,
-        model: requestPayload.model,
-        elapsed_ms: Number((performance.now() - started).toFixed(3)),
-        attempts: [{ attempt: 1, status: upstream.status, retry_reason: "" }],
-        parse: { adapter: "responses_stream_to_chat_completions" },
-      });
-      const contentType = upstream.status >= 400 ? (upstream.headers["content-type"] ?? "application/json") : "text/event-stream";
-      reply.code(upstream.status).headers({ "content-type": contentType });
-      return reply.send(upstream.status >= 400 ? upstream.body : chatCompletionStreamToResponsesSse(upstream.body, requestPayload));
+      writeRequestLog(state, request, requestPayload, started, singleAttempt(upstream.status), { adapter: "responses_stream_to_chat_completions" });
+      const contentType = isErrorStatus(upstream.status) ? responseContentType(upstream.headers) : EVENT_STREAM_CONTENT_TYPE;
+      return sendBody(reply, upstream.status, responseStreamBody(upstream, requestPayload), contentType);
     }
     const attempts = [];
     let finalStatus = 502;
-    let finalBody = Buffer.alloc(0);
+    let finalBody = emptyBuffer();
     let parseStats = {};
 
-    for (let attempt = 0; attempt < Math.max(1, Number(state.policy.max_retries) + 1); attempt += 1) {
+    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
       finalStatus = upstream.status;
       finalBody = upstream.body;
-      const attemptInfo = { attempt: attempt + 1, status: upstream.status };
-      if (upstream.status >= 500) {
-        attempts.push({ ...attemptInfo, retry_reason: "upstream_5xx" });
-        if (attempt < state.policy.max_retries) continue;
+      const info = attemptInfo(attempt, upstream.status);
+      if (retryableUpstream5xx(attempts, info, upstream.status)) {
+        if (canRetry(attempt, state.policy)) continue;
       }
       let upstreamJson;
       try {
-        upstreamJson = JSON.parse(upstream.body.toString("utf8"));
+        upstreamJson = parseJsonBuffer(upstream.body);
       } catch (error) {
-        attempts.push({ ...attemptInfo, retry_reason: `invalid_upstream_json:${error.message}` });
-        if (attempt < state.policy.max_retries) continue;
+        recordInvalidJsonAttempt(attempts, info, error);
+        if (canRetry(attempt, state.policy)) continue;
         break;
       }
       const processed = processChatCompletion(upstreamJson, chatPayload, state.policy);
       parseStats = processed.stats;
       const retryReason = retryReasonForProcessed(processed.body, chatPayload, parseStats, state.policy);
-      attempts.push({ ...attemptInfo, retry_reason: retryReason ?? "" });
-      if (retryReason && attempt < state.policy.max_retries) continue;
-      finalBody = Buffer.from(JSON.stringify(chatCompletionToResponsesBody(processed.body, requestPayload)));
+      recordProcessedAttempt(attempts, info, retryReason);
+      if (retryReason && canRetry(attempt, state.policy)) continue;
+      finalBody = jsonBuffer(chatCompletionToResponsesBody(processed.body, requestPayload));
       finalStatus = upstream.status;
       break;
     }
 
-    writeJsonl(state.logJsonl, {
-      path: request.url,
-      model: requestPayload.model,
-      elapsed_ms: Number((performance.now() - started).toFixed(3)),
-      attempts,
-      parse: { ...parseStats, adapter: "responses_to_chat_completions" },
-    });
-    reply.code(finalStatus).headers({ "content-type": "application/json" });
-    return reply.send(finalBody);
+    writeRequestLog(state, request, requestPayload, started, attempts, adapterParse(parseStats, "responses_to_chat_completions"));
+    return sendBody(reply, finalStatus, finalBody);
   });
 
   app.post("/v1/completions", async (request, reply) => {
     const started = performance.now();
     const requestPayload = request.body;
-    if (!requestPayload || typeof requestPayload !== "object" || Array.isArray(requestPayload)) {
-      reply.code(400);
-      return { error: { message: "request body must be a JSON object" } };
-    }
-    if (requestPayload.stream === true) {
+    if (!isPlainObject(requestPayload)) return badJsonBody(reply);
+    if (isStreamingRequest(requestPayload)) {
       const upstream = await upstreamRequest(state, "POST", "/v1/completions", prepareUpstreamPayload(requestPayload, state.policy));
-      writeJsonl(state.logJsonl, {
-        path: request.url,
-        model: requestPayload.model,
-        elapsed_ms: Number((performance.now() - started).toFixed(3)),
-        attempts: [{ attempt: 1, status: upstream.status, retry_reason: "" }],
-        parse: { skipped: "legacy_completions_streaming_passthrough" },
-      });
-      reply.code(upstream.status).headers({ "content-type": upstream.headers["content-type"] ?? upstream.headers["Content-Type"] ?? "application/json" });
-      return reply.send(upstream.body);
+      writeRequestLog(state, request, requestPayload, started, singleAttempt(upstream.status), skippedParse("legacy_completions_streaming_passthrough"));
+      return sendUpstream(reply, upstream);
     }
     const chatPayload = completionsPayloadToChatPayload(requestPayload);
     const upstreamPayload = prepareUpstreamPayload(chatPayload, state.policy);
     const attempts = [];
     let finalStatus = 502;
-    let finalBody = Buffer.alloc(0);
+    let finalBody = emptyBuffer();
     let parseStats = {};
 
-    for (let attempt = 0; attempt < Math.max(1, Number(state.policy.max_retries) + 1); attempt += 1) {
+    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
       finalStatus = upstream.status;
       finalBody = upstream.body;
-      const attemptInfo = { attempt: attempt + 1, status: upstream.status };
-      if (upstream.status >= 500) {
-        attempts.push({ ...attemptInfo, retry_reason: "upstream_5xx" });
-        if (attempt < state.policy.max_retries) continue;
+      const info = attemptInfo(attempt, upstream.status);
+      if (retryableUpstream5xx(attempts, info, upstream.status)) {
+        if (canRetry(attempt, state.policy)) continue;
       }
       let upstreamJson;
       try {
-        upstreamJson = JSON.parse(upstream.body.toString("utf8"));
+        upstreamJson = parseJsonBuffer(upstream.body);
       } catch (error) {
-        attempts.push({ ...attemptInfo, retry_reason: `invalid_upstream_json:${error.message}` });
-        if (attempt < state.policy.max_retries) continue;
+        recordInvalidJsonAttempt(attempts, info, error);
+        if (canRetry(attempt, state.policy)) continue;
         break;
       }
       const processed = processChatCompletion(upstreamJson, chatPayload, state.policy);
       parseStats = processed.stats;
       const retryReason = retryReasonForProcessed(processed.body, chatPayload, parseStats, state.policy);
-      attempts.push({ ...attemptInfo, retry_reason: retryReason ?? "" });
-      if (retryReason && attempt < state.policy.max_retries) continue;
-      finalBody = Buffer.from(JSON.stringify(chatCompletionToCompletionsBody(processed.body, requestPayload)));
+      recordProcessedAttempt(attempts, info, retryReason);
+      if (retryReason && canRetry(attempt, state.policy)) continue;
+      finalBody = jsonBuffer(chatCompletionToCompletionsBody(processed.body, requestPayload));
       finalStatus = upstream.status;
       break;
     }
 
-    writeJsonl(state.logJsonl, {
-      path: request.url,
-      model: requestPayload.model,
-      elapsed_ms: Number((performance.now() - started).toFixed(3)),
-      attempts,
-      parse: { ...parseStats, adapter: "completions_to_chat_completions" },
-    });
-    reply.code(finalStatus).headers({ "content-type": "application/json" });
-    return reply.send(finalBody);
+    writeRequestLog(state, request, requestPayload, started, attempts, adapterParse(parseStats, "completions_to_chat_completions"));
+    return sendBody(reply, finalStatus, finalBody);
   });
 
   app.all("*", async (request, reply) => {
@@ -2808,8 +2772,7 @@ export function buildServer(state) {
     }
     if (request.method === "POST") {
       const upstream = await upstreamRequest(state, "POST", request.url, request.body);
-      reply.code(upstream.status).headers({ "content-type": upstream.headers["content-type"] ?? "application/json" });
-      return reply.send(upstream.body);
+      return sendUpstream(reply, upstream);
     }
     reply.code(404);
     return { error: { message: `not found: ${request.url}` } };
@@ -2865,9 +2828,9 @@ export async function main(argv = process.argv.slice(2)) {
     return 0;
   }
   const policy = loadPolicy(args.policy, {
-    ...(args.temperature === undefined ? {} : { temperature: args.temperature }),
-    ...(args.top_p === undefined ? {} : { top_p: args.top_p }),
-    ...(args.top_k === undefined ? {} : { top_k: args.top_k }),
+    ...(!isDefined(args.temperature) ? {} : { temperature: args.temperature }),
+    ...(!isDefined(args.top_p) ? {} : { top_p: args.top_p }),
+    ...(!isDefined(args.top_k) ? {} : { top_k: args.top_k }),
   });
   const state = {
     upstream: args.upstream.replace(/\/?$/, "/"),
