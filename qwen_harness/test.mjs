@@ -4,6 +4,7 @@ import {
   loadPolicy,
   prepareUpstreamPayload,
   processChatCompletion,
+  runChatCompletionHarness,
 } from "./processor.mjs";
 
 const TOOLS = [
@@ -72,6 +73,24 @@ await test("02 qwen tool_call tag", () => {
   assert.equal(message.tool_calls[0].function.name, "get_weather");
 });
 
+await test("02b schema-bound tool argument coercion only", () => {
+  const tools = [{
+    type: "function",
+    function: {
+      name: "set_timer",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: { minutes: { type: "integer" } },
+        required: ["minutes"],
+      },
+    },
+  }];
+  const { message } = processed('<tool_call>{"name":"set_timer","arguments":{"minutes":"15 minutes"}}</tool_call>', request("Set a timer.", { tools }));
+  const args = JSON.parse(message.tool_calls[0].function.arguments);
+  assert.equal(args.minutes, 15);
+});
+
 await test("03 strip qwen think blocks", () => {
   const content = "<think>private</think>\nFinal answer.";
   const { message } = processed(content, request("Say final.", { tools: [] }));
@@ -97,11 +116,11 @@ await test("05 no direct answer injection", () => {
   assert.equal(message.content, "");
 });
 
-await test("06 json numeric coercion", () => {
+await test("06 no extraction value coercion by default", () => {
   const { message } = processed('{"price":"$1,299","battery_life_hours":"10 hours"}', request("Extract. Fields: price, battery_life_hours", { tools: [], system: "Output valid JSON." }));
   const data = JSON.parse(message.content);
-  assert.equal(data.price, 1299);
-  assert.equal(data.battery_life_hours, 10);
+  assert.equal(data.price, "$1,299");
+  assert.equal(data.battery_life_hours, "10 hours");
 });
 
 await test("07 no answer key injection for coding", () => {
@@ -194,6 +213,48 @@ await test("13 removed final numeric normalizer stays inert", () => {
   };
   const { message } = processed("The total is about $3.9k.", req);
   assert.equal(message.content, "The total is about $3.9k.");
+});
+
+await test("14 active policies disable value coercion", () => {
+  for (const policyPath of [
+    "configs/qwopus35_optimized_policy.json",
+    "configs/qwopus27_coder_q4_optimized_policy.json",
+  ]) {
+    const policy = loadPolicy(policyPath);
+    assert.equal(policy.coerce_numeric_json_values, undefined, policyPath);
+    assert.equal(policy.coerce_scalar_json_values, undefined, policyPath);
+    assert.equal(policy.normalize_instruction_constraints, undefined, policyPath);
+    assert.equal(policy.normalize_extraction_values, undefined, policyPath);
+    assert.equal(policy.canonicalize_reasonmath_answer_line, undefined, policyPath);
+    assert.equal(policy.normalize_final_numeric_answers, undefined, policyPath);
+  }
+});
+
+await test("15 truncated reasoning retry only raises token budget", async () => {
+  const req = request("Give a short answer.", { tools: [] });
+  req.max_tokens = 8;
+  const seen = [];
+  const policy = loadPolicy(null, {
+    retry_truncated_reasoning: true,
+    retry_empty: true,
+    max_retries: 2,
+    retry_max_tokens_cap: 32,
+  });
+  const body = await runChatCompletionHarness({
+    requestPayload: req,
+    policy,
+    upstreamJson: async (_path, payload) => {
+      seen.push(structuredClone(payload));
+      if (seen.length === 1) {
+        return { choices: [{ finish_reason: "length", message: { role: "assistant", content: "", reasoning_content: "thinking..." } }] };
+      }
+      return response("Done.", []);
+    },
+  });
+  assert.equal(body.choices[0].message.content, "Done.");
+  assert.equal(seen[0].max_tokens, 8);
+  assert.equal(seen[1].max_tokens, 16);
+  assert.deepEqual(seen[0].messages, seen[1].messages);
 });
 
 console.log("All qwen harness tests passed.");

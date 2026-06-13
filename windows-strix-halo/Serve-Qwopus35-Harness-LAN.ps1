@@ -22,4 +22,4 @@ $env:HARNESS_POLICY = $PolicyPath
 $env:HARNESS_MODULE = Join-Path $RepoRoot "qwen_harness\processor.mjs"
 $env:HARNESS_LOG_JSONL = Join-Path $Root "logs\lan-qwopus35-harness-adapter.jsonl"
 
-& (Join-Path $Root "Serve-LAN.ps1") -Action Start -Model "Qwopus3.6-35B-A3B-v1" -Port $Port -BackendPort $BackendPort
+& (Join-Path $Root "Serve-LAN.ps1") -Action Start -Model "Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M" -Port $Port -BackendPort $BackendPort

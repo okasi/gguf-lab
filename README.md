@@ -5,7 +5,7 @@ Benchmarks run locally on Windows with llama.cpp Vulkan and on macOS with llama.
 Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/).
 
 The general Gemma 4 harness lives in [`gemma4_harness/`](gemma4_harness/). It is the shared OpenAI-compatible adapter for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and similar local agent clients.
-The Qwen/Qwopus LAN-adapter harness lives in [`qwen_harness/`](qwen_harness/). It is intended for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent clients. Its active policy is parser/tool-call/code/JSON cleanup only. A prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
+The Qwen/Qwopus LAN-adapter harness lives in [`qwen_harness/`](qwen_harness/). It is intended for OpenClaw/ClawBench, Hermes Agent, BenchLoop, and similar local agent clients. Its active policies are parser/tool-call/code/JSON-envelope cleanup only, with extraction value coercion and answer-changing repairs disabled. Current fair evidence is limited to toolcall smoke runs and real-use validation; a prior 35B MTP promoted result of **91.66** overall / **96.66** quality is invalidated because it used answer-changing normalizers that have since been removed.
 
 ## macOS M1 Pro (Metal)
 

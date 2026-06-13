@@ -7,7 +7,7 @@ response normalization after llama.cpp returns:
 
 - sampler enforcement for the Qwopus 35B profile (`temp=0.85`, `top_p=0.95`, `top_k=20`)
 - Qwen reasoning/end-token cleanup
-- generic JSON scalar and numeric cleanup
+- generic JSON envelope/fence cleanup that preserves emitted values
 - generic Python/JavaScript/TypeScript fence extraction
 - OpenAI tool-call normalization from tags, JSON blobs, function syntax, and active tool schemas
 - bounded retries for empty, malformed structured output, or missing tool-call responses
@@ -15,16 +15,23 @@ response normalization after llama.cpp returns:
 The harness intentionally does **not** perform answer-changing post-processing such as
 instruction-constraint solving, extraction value rewriting, reason/math answer
 canonicalization, final numeric answer injection, direct-answer injection, prompt-only
-tool-call synthesis, missing batch-call synthesis, or code-answer alias repair.
+tool-call synthesis, missing batch-call synthesis, code-answer alias repair, or numeric/
+scalar value canonicalization.
 
-The active policy is [`configs/qwopus35_optimized_policy.json`](configs/qwopus35_optimized_policy.json).
+Active policies:
+
+- [`configs/qwopus27_coder_q4_optimized_policy.json`](configs/qwopus27_coder_q4_optimized_policy.json)
+- [`configs/qwopus35_optimized_policy.json`](configs/qwopus35_optimized_policy.json)
+
+The two-model BenchLoop target manifest is
+[`../windows-strix-halo/configs/qwen-harness-target-models.json`](../windows-strix-halo/configs/qwen-harness-target-models.json).
 
 ## Run
 
 From the repo root:
 
 ```powershell
-.\windows-strix-halo\Serve-Qwopus35-Harness-LAN.ps1
+.\windows-strix-halo\Serve-Qwen-Harness-LAN.ps1 -Model Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M
 ```
 
 For a BenchLoop run:
@@ -39,12 +46,20 @@ For optimizer loops:
 node .\windows-strix-halo\scripts\optimize_qwen_harness.mjs
 ```
 
+For OpenClaw-style real-use validation against a running LAN adapter:
+
+```powershell
+node .\windows-strix-halo\scripts\run_qwen_real_use_validation.mjs --endpoint http://127.0.0.1:8080 --model <model-alias>
+```
+
 ## Current Status
 
-Target: `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf`, context `262144`, sampler
-`0.85 / 0.95 / 20`, reasoning off, MTP draft `1-2`.
+Targets:
 
-Active policy: `lan-adapter-no-answer-rewrite`.
+- `Qwopus3.6-27B-Coder-MTP-Q4_K_M.gguf`, context `32768`, sampler `0.85 / 0.95 / 20`, reasoning off, MTP draft `1-2`
+- `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf`, context `262144`, sampler `0.85 / 0.95 / 20`, reasoning off, MTP draft `1-2`
+
+Active fair policy generation: `lan-adapter-parser-runtime-v*`.
 
 The previous promoted policy, `lan-adapter-iter-51-50-extraction-full`, is now
 invalidated because it included answer-changing normalizers that are not allowed under
@@ -66,8 +81,15 @@ Historical loop artifacts are under
 The invalidated promoted full run is
 `C:\Users\Admin\.bench-loop\runs\20260612-143329-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-qwen-harness-noreason-mtp2-local-openai_compat\run.json`.
 
-The cleaned active policy has not yet been rerun after removing the answer-changing
-normalizers.
+The cleaned active policies have not yet completed a full BenchLoop optimization run.
+Current fair smoke evidence:
+
+- `windows-strix-halo/logs/qwen-harness-live-smoke-20260613-final/`:
+  `toolcall` smoke with copied `run.json`, policy snapshots, model snapshots, and adapter JSONL
+  for both target models.
+- `windows-strix-halo/logs/qwen-real-use-validation-20260613/`:
+  OpenClaw-style validation prompts; latest current-policy summaries passed 4/4 for both
+  `qwopus3.6-27b-coder-mtp-q4` and `qwopus3.6-35b-a3b-v1-mtp-q5`.
 
 ## Limitations
 

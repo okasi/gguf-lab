@@ -20,10 +20,6 @@ const THINK_RE = /(?:<(?:redacted_)?think(?:ing)?>[\s\S]*?<\/(?:redacted_)?think
 const ORPHAN_THINK_CLOSE_RE = /^[\s\S]*?<\/(?:redacted_)?think(?:ing)?>\s*/i;
 const THINK_TAG_RE = /<\/?(?:redacted_)?think(?:ing)?>|<\|redacted_thinking\|>/gi;
 const FUNCTION_CALL_RE = /\b([A-Za-z_][A-Za-z0-9_]*)\s*\(([\s\S]*?)\)/g;
-const NUMERIC_KEY_RE = /(^|_)(amount|balance|battery|budget|count|diastolic|duration|earbud|grams?|gb|heart|hours?|hourly|kg|latency|minutes?|oxygen|paid|price|qty|quantity|ram|rating|salary|saturation|stars?|subtotal|systolic|temperature|total|unit|weight|min|max|years?)(_|$)/i;
-const BOOLEAN_KEY_RE = /(^|_)(available|boolean|catering|enabled|has|include|includes|is|needs|projector|required|requires|whiteboard)(_|$)/i;
-const NULLABLE_KEY_RE = /(^|_)(chef|neighborhood|referral)(_|$)/i;
-const PRESERVE_STRING_KEY_RE = /(^|_)(address|bluetooth_version|card|date|driver_size|email|id|invoice|linkedin|medication_duration|name|phone|po|postal|rating_text|resistance_rating|sku|tax_id|tax_rate|time|url|version|visit_duration|water_resistance_rating|zip)(_|$)/i;
 const DEFAULT_POLICY_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "configs/qwopus35_optimized_policy.json",
@@ -41,8 +37,6 @@ export const DEFAULT_POLICY = {
   extract_python_code: true,
   extract_javascript_code: true,
   repair_json: true,
-  coerce_numeric_json_values: true,
-  coerce_scalar_json_values: false,
   parse_tagged_tool_calls: true,
   parse_json_tool_calls: true,
   parse_function_syntax: true,
@@ -54,6 +48,8 @@ export const DEFAULT_POLICY = {
   retry_malformed_python: false,
   retry_malformed_javascript: false,
   retry_missing_tool_call: false,
+  retry_truncated_reasoning: false,
+  retry_max_tokens_cap: 4096,
   max_retries: 0,
   repair_only_when_needed: true,
   metadata: {},
@@ -289,7 +285,7 @@ function parseKeyValueArgs(text) {
   const args = {};
   const re = /([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(".*?"|'.*?'|[^,)\n]+)/gs;
   for (const match of text.matchAll(re)) {
-    args[match[1]] = coerceScalar(match[2].trim().replace(/^["']|["']$/g, ""));
+    args[match[1]] = match[2].trim().replace(/^["']|["']$/g, "");
   }
   return args;
 }
@@ -545,84 +541,11 @@ function normalizeJsonResponse(content, policy, stats, promptText = "") {
   for (const candidate of jsonCandidates(content, policy.parse_escaped_json)) {
     let parsed = parseLooseJson(candidate);
     if (parsed && typeof parsed === "object") {
-      if (policy.coerce_numeric_json_values) parsed = coerceNumericJson(parsed);
-      if (policy.coerce_scalar_json_values) parsed = coerceScalarJson(parsed);
       stats.repairs.push("repaired_json_content");
       return JSON.stringify(parsed);
     }
   }
   return null;
-}
-
-function coerceNumericJson(value, key = "") {
-  if (Array.isArray(value)) return value.map((item) => coerceNumericJson(item, key));
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, coerceNumericJson(v, k)]));
-  if (typeof value === "string" && shouldCoerceNumericKey(key)) return coerceScalar(value, key);
-  return value;
-}
-
-function coerceScalarJson(value, key = "") {
-  if (Array.isArray(value)) return value.map((item) => coerceScalarJson(item, key));
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, coerceScalarJson(v, k)]));
-  if (typeof value !== "string") return value;
-  const text = value.trim();
-  if (!text) return value;
-  if (shouldCoerceBooleanKey(key)) {
-    const bool = booleanFromText(text);
-    if (bool !== null) return bool;
-  }
-  if (shouldCoerceNullKey(key) && nullishFromText(text)) return null;
-  return value;
-}
-
-function shouldCoerceNumericKey(key) {
-  return Boolean(key) && !PRESERVE_STRING_KEY_RE.test(key) && NUMERIC_KEY_RE.test(key);
-}
-
-function shouldCoerceBooleanKey(key) {
-  return Boolean(key) && BOOLEAN_KEY_RE.test(key);
-}
-
-function shouldCoerceNullKey(key) {
-  return Boolean(key) && NULLABLE_KEY_RE.test(key);
-}
-
-function booleanFromText(text) {
-  const lower = text.trim().toLowerCase();
-  if (/^(true|yes|y|needed|required|included|include|available)$/.test(lower)) return true;
-  if (/^(false|no|n|none|null|not needed|not required|no catering needed|unavailable)$/.test(lower)) return false;
-  if (/\b(no|not)\b/.test(lower) && /\b(needed|required|available|included|catering)\b/.test(lower)) return false;
-  if (/\b(need|needs|needed|required|available|included|yes|projector|whiteboard)\b/.test(lower)) return true;
-  return null;
-}
-
-function nullishFromText(text) {
-  return /^(null|none(?:\b.*)?|n\/a|na|not mentioned|not provided|unknown|no\s+(?:referral|referrals?|value|data)(?:\b.*)?)$/i.test(text.trim());
-}
-
-function coerceScalar(value, key = "") {
-  if (typeof value !== "string") return value;
-  const text = value.trim();
-  if (!text) return value;
-  const stars = starRating(text);
-  if (stars !== null) return stars;
-  if (/(^|_)rating(_|$)/i.test(key)) {
-    const rating = ratingNumerator(text);
-    if (rating !== null) return rating;
-  }
-  const number = firstNumber(text);
-  if (number === null) return value;
-  return Number.isInteger(number) ? Math.trunc(number) : number;
-}
-
-function starRating(text) {
-  if (!text.includes("★") && !text.includes("☆")) return null;
-  return [...text].filter((char) => char === "★").length + (text.includes("½") || text.includes("⯨") ? 0.5 : 0);
-}
-
-function ratingNumerator(text) {
-  const fraction = text.match(/\b(\d+(?:\.\d+)?)\s*\/\s*(5|10)\b/i);
-  return fraction ? Number(fraction[1]) : null;
 }
 
 function firstNumber(value) {
@@ -880,9 +803,12 @@ function escapeRegExp(value) {
 }
 
 function retryReasonForProcessed(body, requestPayload, stats, policy) {
+  const choice = firstChoice(body);
   const message = firstMessage(body);
   const content = String(message.content ?? "").trim();
+  const reasoning = String(message.reasoning_content ?? "").trim();
   const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : [];
+  if (policy.retry_truncated_reasoning && !content && reasoning && choice.finish_reason === "length") return "truncated_reasoning";
   if (policy.retry_empty && !content && !toolCalls.length) return "empty_response";
   if (policy.retry_missing_tool_call && Array.isArray(requestPayload.tools) && requestPayload.tools.length && !toolCalls.length && !content) return "missing_tool_call";
   if (policy.retry_malformed_json && looksLikeJsonRequest(requestPayload) && !stats.repairs.includes("repaired_json_content")) {
@@ -901,9 +827,24 @@ function retryReasonForProcessed(body, requestPayload, stats, policy) {
   return null;
 }
 
+function firstChoice(body) {
+  return Array.isArray(body?.choices) && body.choices[0] && typeof body.choices[0] === "object" ? body.choices[0] : {};
+}
+
 function firstMessage(body) {
-  const choice = Array.isArray(body?.choices) ? body.choices[0] : {};
+  const choice = firstChoice(body);
   return choice?.message && typeof choice.message === "object" ? choice.message : {};
+}
+
+function payloadForRetry(payload, retryReason, policy) {
+  if (retryReason !== "truncated_reasoning") return payload;
+  const next = structuredClone(payload ?? {});
+  const key = next.max_output_tokens == null ? "max_tokens" : "max_output_tokens";
+  const current = Number(next[key] ?? next.max_tokens ?? next.max_output_tokens ?? 0);
+  const cap = Math.max(1, Number(policy.retry_max_tokens_cap ?? 4096));
+  const bumped = current > 0 ? Math.min(cap, Math.max(current + 1, current * 2)) : cap;
+  next[key] = Math.ceil(bumped);
+  return next;
 }
 
 function looksLikeJsonRequest(payload) {
@@ -941,13 +882,14 @@ function writeJsonl(logJsonl, payload) {
 
 export async function runChatCompletionHarness({ upstreamJson, requestPayload, policy, logJsonl, path = "/v1/chat/completions" }) {
   const upstreamPayload = prepareUpstreamPayload(requestPayload, policy);
+  let attemptPayload = upstreamPayload;
   const attempts = [];
   let finalBody = null;
   let parseStats = {};
 
   for (let attempt = 0; attempt < Math.max(1, Number(policy.max_retries) + 1); attempt += 1) {
-    const result = await upstreamJson(path, upstreamPayload);
-    const attemptInfo = { attempt: attempt + 1, status: result?.error ? 502 : 200 };
+    const result = await upstreamJson(path, attemptPayload);
+    const attemptInfo = { attempt: attempt + 1, status: result?.error ? 502 : 200, max_tokens: attemptPayload.max_tokens ?? attemptPayload.max_output_tokens ?? null };
     if (result?.error) {
       attempts.push({ ...attemptInfo, retry_reason: "upstream_error" });
       if (attempt < policy.max_retries) continue;
@@ -957,7 +899,10 @@ export async function runChatCompletionHarness({ upstreamJson, requestPayload, p
     parseStats = processed.stats;
     const retryReason = retryReasonForProcessed(processed.body, requestPayload, parseStats, policy);
     attempts.push({ ...attemptInfo, retry_reason: retryReason ?? "" });
-    if (retryReason && attempt < policy.max_retries) continue;
+    if (retryReason && attempt < policy.max_retries) {
+      attemptPayload = payloadForRetry(attemptPayload, retryReason, policy);
+      continue;
+    }
     finalBody = processed.body;
     break;
   }
@@ -1001,13 +946,14 @@ export function buildServer(state) {
     let finalHeaders = { "content-type": "application/json" };
     let finalBody = Buffer.alloc(0);
     let parseStats = {};
+    let attemptPayload = upstreamPayload;
 
     for (let attempt = 0; attempt < Math.max(1, Number(state.policy.max_retries) + 1); attempt += 1) {
-      const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
+      const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", attemptPayload);
       finalStatus = upstream.status;
       finalHeaders = upstream.headers;
       finalBody = upstream.body;
-      const attemptInfo = { attempt: attempt + 1, status: upstream.status };
+      const attemptInfo = { attempt: attempt + 1, status: upstream.status, max_tokens: attemptPayload.max_tokens ?? attemptPayload.max_output_tokens ?? null };
       if (upstream.status >= 500) {
         attempts.push({ ...attemptInfo, retry_reason: "upstream_5xx" });
         if (attempt < state.policy.max_retries) continue;
@@ -1024,7 +970,10 @@ export function buildServer(state) {
       parseStats = processed.stats;
       const retryReason = retryReasonForProcessed(processed.body, requestPayload, parseStats, state.policy);
       attempts.push({ ...attemptInfo, retry_reason: retryReason ?? "" });
-      if (retryReason && attempt < state.policy.max_retries) continue;
+      if (retryReason && attempt < state.policy.max_retries) {
+        attemptPayload = payloadForRetry(attemptPayload, retryReason, state.policy);
+        continue;
+      }
       finalBody = Buffer.from(JSON.stringify(processed.body));
       finalHeaders = { "content-type": "application/json" };
       finalStatus = upstream.status;
@@ -1081,7 +1030,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Qwen/Qwopus BenchLoop Fastify proxy
+  console.log(`Qwen/Qwopus Fastify harness proxy
 
 Options:
   --host HOST             Proxy listen host, default 127.0.0.1
@@ -1114,7 +1063,7 @@ export async function main(argv = process.argv.slice(2)) {
   };
   const app = buildServer(state);
   await app.listen({ host: args.host, port: args.port });
-  console.log(`qwen BenchLoop Fastify harness listening on http://${args.host}:${args.port} -> ${state.upstream.replace(/\/$/, "")} policy=${policy.name}:${policy.version}`);
+  console.log(`qwen Fastify harness listening on http://${args.host}:${args.port} -> ${state.upstream.replace(/\/$/, "")} policy=${policy.name}:${policy.version}`);
   return 0;
 }
 

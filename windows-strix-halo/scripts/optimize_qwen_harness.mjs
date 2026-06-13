@@ -11,47 +11,47 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
 const HARNESS_DIR = path.join(REPO_ROOT, "qwen_harness");
-const BASE_POLICY_PATH = path.join(HARNESS_DIR, "configs/qwopus35_optimized_policy.json");
+const DEFAULT_BASE_POLICY_PATH = path.join(HARNESS_DIR, "configs/qwopus35_optimized_policy.json");
 const RUN_PS1 = path.join(REPO_ROOT, "windows-strix-halo/Run-Qwen-Harness-BenchLoop.ps1");
 const BENCHLOOP = path.join(REPO_ROOT, "windows-strix-halo/.venv-benchloop/Scripts/benchloop.exe");
+const DEFAULT_MODELS_JSON = path.join(REPO_ROOT, "windows-strix-halo/configs/qwen-harness-target-models.json");
 const DEFAULT_OUT = path.join(REPO_ROOT, "windows-strix-halo/logs/qwen-harness-optimization");
 
-/** General-purpose policy iterations (no benchmark-specific answer injection). */
+/** General-purpose policy iterations: parser/runtime/logging only, no answer or value rewriting. */
 const CANDIDATES = [
   ["01-baseline", {}],
-  ["01b-minimal-repair", {
-    extract_python_code: false,
-    extract_javascript_code: false,
-    normalize_tool_args: false,
-  }],
-  ["02-coerce-scalar-json", { coerce_scalar_json_values: true }],
-  ["04-retry-empty", { retry_empty: true, max_retries: 1 }],
-  ["05-retry-json", { retry_malformed_json: true, max_retries: 1 }],
-  ["06-retry-missing-tool", { retry_missing_tool_call: true, max_retries: 1 }],
-  ["07-retry-python", { retry_malformed_python: true, max_retries: 1 }],
-  ["08-retry-typescript", { retry_malformed_javascript: true, max_retries: 1 }],
-  ["09-json-agent-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, max_retries: 1 }],
-  ["10-tool-reason-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
-  ["11-code-retry-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, max_retries: 2 }],
-  ["12-full-code-retry", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["14-normalize-tool-args-off", { normalize_tool_args: false }],
-  ["15-dedupe-off", { dedupe_tool_calls: false }],
-  ["20-max-retries-2-baseline", { max_retries: 2 }],
-  ["21-max-retries-3-json", { retry_empty: true, retry_malformed_json: true, max_retries: 3 }],
-  ["22-forensic-shared", { coerce_scalar_json_values: true }],
-  ["23-forensic-json-agent", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, max_retries: 2 }],
-  ["24-forensic-tool-reason", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
-  ["25-forensic-code", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["26-forensic-full", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["27-promoted-lean", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2, normalize_tool_args: true, dedupe_tool_calls: true }],
-  ["28-promoted-code", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, max_retries: 2 }],
-  ["29-promoted-full", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
-  ["30-promoted-full-plus", { coerce_scalar_json_values: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 3, dedupe_tool_calls: true }],
+  ["02-no-code-extraction", { extract_python_code: false, extract_javascript_code: false }],
+  ["03-no-tool-arg-normalize", { normalize_tool_args: false }],
+  ["04-no-dedupe", { dedupe_tool_calls: false }],
+  ["05-tagged-tools-only", { parse_json_tool_calls: false, parse_function_syntax: false }],
+  ["06-json-tools-only", { parse_tagged_tool_calls: false, parse_function_syntax: false }],
+  ["07-no-function-syntax", { parse_function_syntax: false }],
+  ["08-no-escaped-json", { parse_escaped_json: false }],
+  ["09-no-markdown-fence-strip", { strip_markdown_fences: false }],
+  ["10-json-repair-off", { repair_json: false, retry_malformed_json: false }],
+  ["11-retry-empty-1", { retry_empty: true, max_retries: 1 }],
+  ["12-retry-json-1", { retry_malformed_json: true, max_retries: 1 }],
+  ["13-retry-missing-tool-1", { retry_missing_tool_call: true, max_retries: 1 }],
+  ["14-retry-python-1", { retry_malformed_python: true, max_retries: 1 }],
+  ["15-retry-typescript-1", { retry_malformed_javascript: true, max_retries: 1 }],
+  ["16-retry-json-tool-2", { retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
+  ["17-retry-code-2", { retry_empty: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["18-retry-full-2", { retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["19-retry-full-3", { retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 3 }],
+  ["20-parser-full-retry-1", { parse_tagged_tool_calls: true, parse_json_tool_calls: true, parse_function_syntax: true, parse_escaped_json: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 1 }],
+  ["21-parser-full-retry-2", { parse_tagged_tool_calls: true, parse_json_tool_calls: true, parse_function_syntax: true, parse_escaped_json: true, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["22-parser-full-retry-2-no-code-extract", { extract_python_code: false, extract_javascript_code: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, max_retries: 2 }],
+  ["23-parser-full-retry-2-no-tool-normalize", { normalize_tool_args: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
+  ["24-parser-full-retry-2-no-dedupe", { dedupe_tool_calls: false, retry_empty: true, retry_malformed_json: true, retry_missing_tool_call: true, retry_malformed_python: true, retry_malformed_javascript: true, max_retries: 2 }],
 ];
 
 function parseArgs(argv) {
   const args = {
     outDir: DEFAULT_OUT,
+    modelsJson: DEFAULT_MODELS_JSON,
+    basePolicy: DEFAULT_BASE_POLICY_PATH,
+    promotePolicy: DEFAULT_BASE_POLICY_PATH,
+    modelNameFilter: "",
     start: 1,
     end: CANDIDATES.length,
     suites: "",
@@ -61,6 +61,10 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const key = argv[i];
     if (key === "--out-dir") args.outDir = path.resolve(argv[++i]);
+    else if (key === "--models-json") args.modelsJson = path.resolve(argv[++i]);
+    else if (key === "--base-policy") args.basePolicy = path.resolve(argv[++i]);
+    else if (key === "--promote-policy") args.promotePolicy = path.resolve(argv[++i]);
+    else if (key === "--model-name-filter") args.modelNameFilter = argv[++i];
     else if (key === "--start") args.start = Number(argv[++i]);
     else if (key === "--end") args.end = Number(argv[++i]);
     else if (key === "--suites") args.suites = argv[++i];
@@ -90,7 +94,7 @@ function run(cmd, cmdArgs, options = {}) {
 }
 
 function policyForCandidate(basePolicy, iteration, name, patch) {
-  return {
+  const policy = {
     ...basePolicy,
     ...patch,
     version: `lan-adapter-iter-${String(iteration).padStart(2, "0")}-${name}`,
@@ -99,20 +103,46 @@ function policyForCandidate(basePolicy, iteration, name, patch) {
       optimizer: "windows-strix-halo/scripts/optimize_qwen_harness.mjs",
       optimizer_iteration: iteration,
       optimizer_candidate: name,
+      anti_cheat_boundary: "No semantic post-processing, value canonicalization, output injection, prompt mutation, dataset literals, or benchmark branches.",
       patch,
     },
   };
+  assertDefensiblePolicy(policy);
+  return policy;
+}
+
+function assertDefensiblePolicy(policy) {
+  const forbiddenTrueFlags = [
+    "coerce_numeric_json_values",
+    "coerce_scalar_json_values",
+    "normalize_instruction_constraints",
+    "normalize_extraction_values",
+    "canonicalize_reasonmath_answer_line",
+    "normalize_final_numeric_answers",
+    "synthesize_direct_answer",
+    "synthesize_missing_tool_call",
+    "synthesize_batch_tool_calls",
+    "repair_python_class_alias",
+  ];
+  for (const flag of forbiddenTrueFlags) {
+    if (policy[flag] === true) throw new Error(`Forbidden policy flag enabled: ${flag}`);
+  }
+  const serialized = JSON.stringify(policy).toLowerCase();
+  for (const needle of ["expected_output", "task_id", "benchloop answer", "dataset answer"]) {
+    if (serialized.includes(needle)) throw new Error(`Forbidden benchmark-specific literal in policy: ${needle}`);
+  }
 }
 
 function runUnitTests() {
   run(process.execPath, ["test.mjs"], { cwd: HARNESS_DIR });
 }
 
-function runBenchLoop(policyPath, iterationDir, name, suites) {
+function runBenchLoop(policyPath, iterationDir, name, suites, modelsJson, modelNameFilter) {
   const psArgs = [
     "-NoProfile",
     "-ExecutionPolicy", "Bypass",
     "-File", RUN_PS1,
+    "-ModelsJson", modelsJson,
     "-PolicyPath", policyPath,
     "-OutDir", iterationDir,
     "-IterationLabel", name,
@@ -121,6 +151,7 @@ function runBenchLoop(policyPath, iterationDir, name, suites) {
     "-SpecDraftNMaxOverride", "2",
   ];
   if (suites) psArgs.push("-SuitesOverride", suites);
+  if (modelNameFilter) psArgs.push("-ModelNameFilter", modelNameFilter);
   run("powershell.exe", psArgs, { cwd: path.dirname(RUN_PS1) });
 }
 
@@ -142,6 +173,45 @@ function summarizeBenchLoopRun(run) {
     reliability_score: Number(run.reliability_score ?? 0),
     value_score: Number(run.value_score ?? 0),
     suites: Object.fromEntries(Object.entries(run.suites ?? {}).map(([k, v]) => [k, Number(v.score ?? 0)])),
+  };
+}
+
+function average(values) {
+  const nums = values.map(Number).filter((value) => Number.isFinite(value));
+  return nums.length ? nums.reduce((sum, value) => sum + value, 0) / nums.length : 0;
+}
+
+function readHarnessSummaries(iterationDir) {
+  const file = path.join(iterationDir, "qwen-harness-run-summaries.jsonl");
+  if (!fs.existsSync(file)) return null;
+  const rows = fs.readFileSync(file, "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  const okRows = rows.filter((row) => row.status === "ok" && row.metrics);
+  if (!okRows.length) return null;
+  const suiteNames = new Set(okRows.flatMap((row) => Object.keys(row.metrics.suites ?? {})));
+  const suites = {};
+  for (const suite of suiteNames) {
+    suites[suite] = average(okRows.map((row) => row.metrics.suites?.[suite]));
+  }
+  return {
+    overall_score: average(okRows.map((row) => row.metrics.overall_score)),
+    quality_score: average(okRows.map((row) => row.metrics.quality_score)),
+    speed_score: average(okRows.map((row) => row.metrics.speed_score)),
+    generation_tok_per_sec: average(okRows.map((row) => row.metrics.generation_tok_per_sec)),
+    reliability_score: average(okRows.map((row) => row.metrics.reliability_score)),
+    suites,
+    model_summaries: rows.map((row) => ({
+      model_name: row.model_name,
+      run_alias: row.run_alias,
+      status: row.status,
+      error: row.error ?? "",
+      benchloop_run_json: row.benchloop_run_json ?? "",
+      metrics: row.metrics ?? null,
+      summary_path: row.summary_path ?? "",
+    })),
   };
 }
 
@@ -176,13 +246,10 @@ function summarizeRun(run) {
   return summarizeBenchLoopRun(run);
 }
 
-const RAW_BASELINE_OVERALL = 82.33748689138578;
-const RAW_BASELINE_QUALITY = 87.24666666666667;
-
 function main() {
   const args = parseArgs(process.argv.slice(2));
   fs.mkdirSync(args.outDir, { recursive: true });
-  const basePolicy = readJson(BASE_POLICY_PATH);
+  const basePolicy = readJson(args.basePolicy);
   const summaryPath = path.join(args.outDir, "optimization-summary.json");
   const rows = fs.existsSync(summaryPath) ? readJson(summaryPath) : [];
   let best = rows.reduce((acc, row) => {
@@ -219,8 +286,8 @@ function main() {
     let metrics = { overall_score: 0, quality_score: 0, suites: {} };
     if (!args.skipBench) {
       try {
-        runBenchLoop(policyPath, iterationDir, name, args.suites);
-        metrics = readBenchLoopMetrics(iterationDir, name) ?? summarizeRun(exportLatestRun("qwen-harness-noreason-mtp2"));
+        runBenchLoop(policyPath, iterationDir, name, args.suites, args.modelsJson, args.modelNameFilter);
+        metrics = readHarnessSummaries(iterationDir) ?? readBenchLoopMetrics(iterationDir, name) ?? summarizeRun(exportLatestRun("qwen-harness-noreason-mtp2"));
       } catch (error) {
         console.error(`BenchLoop failed for ${name}: ${error.message}`);
         writeJson(rowPath, { iteration: i, candidate: name, status: "bench_failed", error: error.message });
@@ -244,9 +311,8 @@ function main() {
     ) {
       best = row;
       row.kept = true;
-      writeJson(path.join(HARNESS_DIR, "configs/qwopus35_optimized_policy.json"), policy);
-      const rawDelta = metrics.overall_score - RAW_BASELINE_OVERALL;
-      console.log(`Promoted policy ${name}: overall=${metrics.overall_score.toFixed(2)} quality=${metrics.quality_score.toFixed(2)} raw_delta=${rawDelta.toFixed(2)}`);
+      writeJson(args.promotePolicy, policy);
+      console.log(`Promoted policy ${name}: overall=${metrics.overall_score.toFixed(2)} quality=${metrics.quality_score.toFixed(2)}`);
     } else {
       console.log(`Rejected ${name}: overall=${metrics.overall_score.toFixed(2)} (best=${best?.overall_score?.toFixed?.(2) ?? "none"})`);
     }
