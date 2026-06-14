@@ -14,7 +14,13 @@ param(
     [string]$Reasoning = "auto",
     [string]$AliasSuffix = "",
     [switch]$KeepResults,
-    [int]$SpecDraftNMaxOverride = 0
+    [int]$SpecDraftNMaxOverride = 0,
+    [Alias("c")]
+    [int]$CtxSizeOverride = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0
 )
 
 $ErrorActionPreference = "Continue"
@@ -86,7 +92,11 @@ function New-BatchRun {
         [ValidateSet("auto", "off")]
         [string]$Reasoning = "auto",
         [string]$CacheTypeK = "",
-        [string]$CacheTypeV = ""
+        [string]$CacheTypeV = "",
+        [int]$CacheReuse = 0,
+        [int]$BatchSize = 0,
+        [int]$UBatchSize = 0,
+        [int]$ThreadsBatch = 0
     )
     $resolvedCacheK = if ($CacheTypeK) { $CacheTypeK } else { $script:DefaultCacheTypeK }
     $resolvedCacheV = if ($CacheTypeV) { $CacheTypeV } else { $script:DefaultCacheTypeV }
@@ -95,7 +105,7 @@ function New-BatchRun {
         "--alias", $Alias,
         "--host", "127.0.0.1",
         "--port", "$Port",
-        "--ctx-size", "$CtxSize",
+        "-c", "$CtxSize",
         "-np", "1",
         "-ngl", "99",
         "--flash-attn", $FlashAttn,
@@ -135,6 +145,7 @@ function New-BatchRun {
     if ($ExtraServerArgs.Count -gt 0) {
         $args += $ExtraServerArgs
     }
+    $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     $args = Add-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName $Name
     return @{
         Name = $Name
@@ -172,7 +183,7 @@ foreach ($parsedModel in $parsedModels) {
         Mmproj = if ($model.ContainsKey("Mmproj") -and $null -ne $model.Mmproj) { [string]$model.Mmproj } else { "" }
         Port = if ($model.ContainsKey("Port") -and $model.Port) { [int]$model.Port } else { $GemmaPort }
         Vision = if ($model.ContainsKey("Vision")) { [bool]$model.Vision } else { $true }
-        CtxSize = if ($model.ContainsKey("CtxSize") -and $model.CtxSize) { [int]$model.CtxSize } else { 262144 }
+        CtxSize = if ($CtxSizeOverride -gt 0) { $CtxSizeOverride } elseif ($model.ContainsKey("CtxSize") -and $model.CtxSize) { [int]$model.CtxSize } else { 262144 }
         Temperature = if ($model.ContainsKey("Temp") -and $model.Temp) { [double]$model.Temp } elseif ($model.ContainsKey("Temperature") -and $model.Temperature) { [double]$model.Temperature } else { 0.75 }
         TopP = if ($model.ContainsKey("TopP") -and $model.TopP) { [double]$model.TopP } else { 0.95 }
         TopK = if ($model.ContainsKey("TopK") -and $model.TopK) { [int]$model.TopK } else { 20 }
@@ -192,6 +203,10 @@ foreach ($parsedModel in $parsedModels) {
     $modelCache = Get-CacheTypeValues -Model $model
     $runArgs.CacheTypeK = $modelCache.K
     $runArgs.CacheTypeV = $modelCache.V
+    $runArgs.CacheReuse = $CacheReuse
+    $runArgs.BatchSize = $BatchSize
+    $runArgs.UBatchSize = $UBatchSize
+    $runArgs.ThreadsBatch = $ThreadsBatch
     if ($model.ContainsKey("ModelDraftFile") -and $model.ModelDraftFile) { $runArgs.ModelDraftFile = [string]$model.ModelDraftFile }
     if ($model.ContainsKey("MtpAutoDiscoveryFile") -and $model.MtpAutoDiscoveryFile) { $runArgs.MtpAutoDiscoveryFile = [string]$model.MtpAutoDiscoveryFile }
     if ($model.ContainsKey("SpecDraftNMin") -and $null -ne $model.SpecDraftNMin) { $runArgs.SpecDraftNMin = [int]$model.SpecDraftNMin }
@@ -206,6 +221,7 @@ foreach ($parsedModel in $parsedModels) {
         $run.Args = @($model.RawServerArgs | ForEach-Object {
             "$_".Replace("{PORT}", "$port").Replace("{ALIAS}", $runAlias)
         })
+        $run.Args = Apply-PromptRuntimeOverrides -ServerArgs $run.Args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     }
     $Runs += $run
 }

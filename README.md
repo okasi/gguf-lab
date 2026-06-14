@@ -90,6 +90,8 @@ Unless noted otherwise, runs used:
 - `--seed 3407`
 - `-n 32768`
 
+Agent-facing LAN shortcuts use the prompt-reuse profile `-c 131072 -CacheReuse 256`. Native-max benchmark rows and historical tables keep their documented context sizes.
+
 Notes:
 
 - Vision runs used the matching `mmproj` when it loaded successfully.

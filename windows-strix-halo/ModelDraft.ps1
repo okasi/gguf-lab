@@ -39,6 +39,67 @@ function Resolve-ModelDraftPath {
     return $null
 }
 
+function Set-ServerArgValue {
+    param(
+        [object[]]$ServerArgs,
+        [string[]]$Names,
+        [object]$Value,
+        [string]$PreferredName = ""
+    )
+
+    $args = @($ServerArgs)
+    if ($null -eq $Value -or "$Value" -eq "") { return $args }
+    if (-not $PreferredName) { $PreferredName = $Names[0] }
+
+    $updated = @()
+    $found = $false
+    for ($i = 0; $i -lt $args.Count; $i++) {
+        if ($Names -contains [string]$args[$i]) {
+            if (-not $found) {
+                $updated += @($PreferredName, "$Value")
+                $found = $true
+            }
+            if ($i -lt ($args.Count - 1)) { $i++ }
+            continue
+        }
+        $updated += $args[$i]
+    }
+
+    if (-not $found) {
+        $updated += @($PreferredName, "$Value")
+    }
+    return $updated
+}
+
+function Apply-PromptRuntimeOverrides {
+    param(
+        [object[]]$ServerArgs,
+        [int]$CtxSize = 0,
+        [int]$CacheReuse = 0,
+        [int]$BatchSize = 0,
+        [int]$UBatchSize = 0,
+        [int]$ThreadsBatch = 0
+    )
+
+    $args = @($ServerArgs)
+    if ($CtxSize -gt 0) {
+        $args = Set-ServerArgValue -ServerArgs $args -Names @("--ctx-size", "-c") -Value $CtxSize -PreferredName "-c"
+    }
+    if ($CacheReuse -gt 0) {
+        $args = Set-ServerArgValue -ServerArgs $args -Names @("--cache-reuse") -Value $CacheReuse -PreferredName "--cache-reuse"
+    }
+    if ($BatchSize -gt 0) {
+        $args = Set-ServerArgValue -ServerArgs $args -Names @("--batch-size", "-b") -Value $BatchSize -PreferredName "-b"
+    }
+    if ($UBatchSize -gt 0) {
+        $args = Set-ServerArgValue -ServerArgs $args -Names @("--ubatch-size", "-ub") -Value $UBatchSize -PreferredName "-ub"
+    }
+    if ($ThreadsBatch -gt 0) {
+        $args = Set-ServerArgValue -ServerArgs $args -Names @("--threads-batch", "-tb") -Value $ThreadsBatch -PreferredName "-tb"
+    }
+    return $args
+}
+
 function Add-SpeculativeServerArgs {
     param(
         [hashtable]$Model,

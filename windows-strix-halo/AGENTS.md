@@ -12,9 +12,9 @@ Every model uses these unless a row-specific override is documented in the READM
 
 - `--reasoning auto`
 - `--ctx-size` at each model's largest supported window
-- Lower `--ctx-size` only when the model fails to load or serve with the full window
+- For agent-facing LAN serving, prefer the prompt-reuse profile: script alias `-c 131072` plus `-CacheReuse 256`
 
-Do not add `--batch-size`, `--ubatch-size`, or `--split-mode` by default. Local tests showed llama.cpp defaults were as good or better and used less memory.
+Do not add `--batch-size`, `--ubatch-size`, or `--split-mode` to native benchmark defaults. The launch scripts expose `-BatchSize`, `-UBatchSize`, and `-ThreadsBatch` only for explicit prompt-processing trials.
 
 ## Runtime Base
 
@@ -25,7 +25,8 @@ Start `llama-server` with the model file, then add the shared runtime, KV cache,
   --model <model.gguf> `
   --host 0.0.0.0 `
   --port 8080 `
-  --ctx-size 262144 `
+  -c 131072 `
+  --cache-reuse 256 `
   --ngl 99 `
   -np 1 `
   --flash-attn on `
@@ -54,7 +55,7 @@ Use q8/q8 or f16/f16 only when deliberately running a comparison matrix or repro
 
 ## Qwopus
 
-Use the shared defaults for `--reasoning auto` and `--ctx-size 262144`.
+Use the shared defaults for `--reasoning auto`. Native-max benchmark rows use `--ctx-size 262144`; agent-facing LAN shortcuts use the prompt-reuse profile `-c 131072`.
 
 Sampler:
 

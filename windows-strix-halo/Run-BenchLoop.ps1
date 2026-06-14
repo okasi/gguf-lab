@@ -7,7 +7,13 @@ param(
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "auto",
     [string]$AliasSuffix = "",
-    [int]$SpecDraftNMaxOverride = 0
+    [int]$SpecDraftNMaxOverride = 0,
+    [Alias("c")]
+    [int]$CtxSize = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -227,7 +233,8 @@ foreach ($m in $Models) {
     $benchErr = Join-Path $LogDir "benchloop-$runAlias.err.log"
     Remove-Item $serverOut,$serverErr,$benchOut,$benchErr -ErrorAction SilentlyContinue
 
-    $ctxSize = Get-ModelValue -Model $m -Key "CtxSize" -Default "262144"
+    $ctxSize = if ($CtxSize -gt 0) { "$CtxSize" } else { Get-ModelValue -Model $m -Key "CtxSize" -Default "262144" }
+    $ctxFlag = if ($CtxSize -gt 0) { "-c" } else { "--ctx-size" }
     $temp = Get-ModelValue -Model $m -Key "Temp" -Default "0.75"
     $topP = Get-ModelValue -Model $m -Key "TopP" -Default "0.95"
     $topK = Get-ModelValue -Model $m -Key "TopK" -Default "20"
@@ -247,13 +254,14 @@ foreach ($m in $Models) {
             $arg = "$_"
             $arg.Replace("{PORT}", "$Port").Replace("{ALIAS}", $runAlias)
         })
+        $serverArgs = Apply-PromptRuntimeOverrides -ServerArgs $serverArgs -CtxSize $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     } else {
         $serverArgs = @(
             "--model", $runModel.Model,
             "--alias", $runAlias,
             "--host", "127.0.0.1",
             "--port", "$Port",
-            "--ctx-size", $ctxSize,
+            $ctxFlag, $ctxSize,
             "-np", "1",
             "-ngl", "99",
             "--flash-attn", $flashAttn,
@@ -283,6 +291,7 @@ foreach ($m in $Models) {
         if ($runModel.ContainsKey("GptOss") -and $runModel.GptOss) {
             $serverArgs += @("--jinja")
         }
+        $serverArgs = Apply-PromptRuntimeOverrides -ServerArgs $serverArgs -CtxSize $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
         $serverArgs = Add-ReasoningServerArgs -ServerArgs $serverArgs -Reasoning $Reasoning -ModelName ([string]$runModel.Name)
     }
 

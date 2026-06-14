@@ -6,6 +6,12 @@ param(
     [string]$PolicyPath = "",
     [int]$Port = 8080,
     [int]$BackendPort = 18081,
+    [Alias("c")]
+    [int]$CtxSize = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0,
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "off",
     [switch]$DisableAsr
@@ -33,4 +39,4 @@ $env:HARNESS_MODULE = Join-Path $RepoRoot "qwen_harness\processor.mjs"
 $safeModel = ($Model.ToLower() -replace '[^a-z0-9]+', '-').Trim('-')
 $env:HARNESS_LOG_JSONL = Join-Path $Root "logs\lan-$safeModel-harness-adapter.jsonl"
 
-& (Join-Path $Root "Serve-LAN.ps1") -Action Start -Model $Model -Port $Port -BackendPort $BackendPort -Reasoning $Reasoning -DisableAsr:$DisableAsr
+& (Join-Path $Root "Serve-LAN.ps1") -Action Start -Model $Model -Port $Port -BackendPort $BackendPort -CtxSize $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch -Reasoning $Reasoning -DisableAsr:$DisableAsr

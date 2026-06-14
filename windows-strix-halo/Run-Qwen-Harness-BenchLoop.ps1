@@ -11,7 +11,13 @@ param(
     [string]$OutDir = "",
     [string]$IterationLabel = "",
     [string]$ServerOverride = "",
-    [string]$ModelNameFilter = ""
+    [string]$ModelNameFilter = "",
+    [Alias("c")]
+    [int]$CtxSize = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -355,7 +361,8 @@ foreach ($m in $Models) {
     Copy-Item -LiteralPath $policyForModel -Destination $policySnapshot -Force
     Set-Content -LiteralPath $modelSnapshot -Value (($m | ConvertTo-Json -Depth 32)) -Encoding utf8
 
-    $ctxSize = Get-ModelValue -Model $m -Key "CtxSize" -Default "262144"
+    $ctxSize = if ($CtxSize -gt 0) { "$CtxSize" } else { Get-ModelValue -Model $m -Key "CtxSize" -Default "262144" }
+    $ctxFlag = if ($CtxSize -gt 0) { "-c" } else { "--ctx-size" }
     $temp = Get-ModelValue -Model $m -Key "Temp" -Default "0.85"
     $topP = Get-ModelValue -Model $m -Key "TopP" -Default "0.95"
     $topK = Get-ModelValue -Model $m -Key "TopK" -Default "20"
@@ -373,7 +380,7 @@ foreach ($m in $Models) {
         "--alias", $runAlias,
         "--host", "127.0.0.1",
         "--port", "$BackendPort",
-        "--ctx-size", $ctxSize,
+        $ctxFlag, $ctxSize,
         "-np", "1",
         "-ngl", "99",
         "--flash-attn", $flashAttn,
@@ -397,6 +404,7 @@ foreach ($m in $Models) {
     if ($runModel.ContainsKey("ExtraServerArgs") -and $null -ne $runModel.ExtraServerArgs) {
         $serverArgs += $runModel.ExtraServerArgs
     }
+    $serverArgs = Apply-PromptRuntimeOverrides -ServerArgs $serverArgs -CtxSize $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     for ($argIndex = 0; $argIndex -lt $serverArgs.Count; $argIndex++) {
         if (-not ($serverArgs[$argIndex] -is [string])) {
             Write-Host "Non-string server arg[$argIndex]: $($serverArgs[$argIndex].GetType().FullName) = $($serverArgs[$argIndex])"

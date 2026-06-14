@@ -12,6 +12,12 @@ param(
     [int]$AsrBackendPort = 52625,
     [int]$MaxTokens = 32768,
     [int]$Parallel = 1,
+    [Alias("c")]
+    [int]$CtxSize = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0,
 
     [switch]$DisableAsr,
     [switch]$DisableMtp,
@@ -356,12 +362,12 @@ function Ensure-LanFirewallPort {
 function Get-ServerArgValue {
     param(
         [object[]]$ServerArgs,
-        [string]$Name,
+        [string[]]$Name,
         [string]$Default = ""
     )
 
     for ($i = 0; $i -lt ($ServerArgs.Count - 1); $i++) {
-        if ([string]$ServerArgs[$i] -eq $Name) {
+        if ($Name -contains [string]$ServerArgs[$i]) {
             return [string]$ServerArgs[$i + 1]
         }
     }
@@ -422,8 +428,14 @@ function Get-LanModelMetadata {
         backend_port = $BackendPort
         adapter_host = $AdapterHost
         adapter_ports = @($AdapterPorts)
-        context_size = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--ctx-size" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "")
+        context_size = Get-ServerArgValue -ServerArgs $ServerArgs -Name @("--ctx-size", "-c") -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "")
         max_tokens = Get-ServerArgValue -ServerArgs $ServerArgs -Name "-n" -Default "$MaxTokens"
+        runtime = [ordered]@{
+            batch_size = Get-ServerArgValue -ServerArgs $ServerArgs -Name @("--batch-size", "-b") -Default ""
+            ubatch_size = Get-ServerArgValue -ServerArgs $ServerArgs -Name @("--ubatch-size", "-ub") -Default ""
+            threads_batch = Get-ServerArgValue -ServerArgs $ServerArgs -Name @("--threads-batch", "-tb") -Default ""
+            cache_reuse = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--cache-reuse" -Default ""
+        }
         sampler = [ordered]@{
             temperature = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--temp" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "Temp" -Default "")
             top_p = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--top-p" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "TopP" -Default "")
@@ -561,6 +573,11 @@ function Build-LlamaArgs {
         [int]$BackendPort,
         [int]$MaxTokens,
         [int]$Parallel,
+        [int]$CtxSizeOverride,
+        [int]$CacheReuse,
+        [int]$BatchSize,
+        [int]$UBatchSize,
+        [int]$ThreadsBatch,
         [ValidateSet("auto", "off")]
         [string]$Reasoning,
         [switch]$DisableMtp
@@ -578,10 +595,12 @@ function Build-LlamaArgs {
                 break
             }
         }
+        $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
         return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
     }
 
-    $ctxSize = Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "262144"
+    $ctxSize = if ($CtxSizeOverride -gt 0) { "$CtxSizeOverride" } else { Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "262144" }
+    $ctxFlag = if ($CtxSizeOverride -gt 0) { "-c" } else { "--ctx-size" }
     $temp = Get-ModelValue -ModelConfig $ModelConfig -Key "Temp" -Default "0.75"
     $topP = Get-ModelValue -ModelConfig $ModelConfig -Key "TopP" -Default "0.95"
     $topK = Get-ModelValue -ModelConfig $ModelConfig -Key "TopK" -Default "20"
@@ -596,7 +615,7 @@ function Build-LlamaArgs {
         "--alias", $alias,
         "--host", "127.0.0.1",
         "--port", "$BackendPort",
-        "--ctx-size", $ctxSize,
+        $ctxFlag, $ctxSize,
         "-np", "$Parallel",
         "-ngl", "99",
         "--flash-attn", $flashAttn,
@@ -627,6 +646,7 @@ function Build-LlamaArgs {
     if ($ModelConfig.ContainsKey("ExtraServerArgs") -and $null -ne $ModelConfig.ExtraServerArgs) {
         $args += $ModelConfig.ExtraServerArgs
     }
+    $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
 }
 
@@ -732,7 +752,7 @@ foreach ($TargetPort in $portTargets) {
     }
 }
 
-$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -Reasoning $Reasoning -DisableMtp:$DisableMtp
+$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -CtxSizeOverride $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch -Reasoning $Reasoning -DisableMtp:$DisableMtp
 $Out = Join-Path $LogDir "lan-$slug-llama.out.log"
 $Err = Join-Path $LogDir "lan-$slug-llama.err.log"
 $AsrOut = Join-Path $LogDir "lan-$slug-whisper-asr.out.log"

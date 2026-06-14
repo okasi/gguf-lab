@@ -8,6 +8,12 @@ param(
     [int]$AltPort = 13305,
     [int]$BackendPort = 18081,
     [int]$AsrBackendPort = 52625,
+    [Alias("c")]
+    [int]$CtxSize = 0,
+    [int]$CacheReuse = 0,
+    [int]$BatchSize = 0,
+    [int]$UBatchSize = 0,
+    [int]$ThreadsBatch = 0,
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "off",
     [switch]$DisableAsr,
@@ -58,6 +64,11 @@ $env:HARNESS_MODEL_ALIASES = $optimizedAlias
     -AltPort $AltPort `
     -BackendPort $BackendPort `
     -AsrBackendPort $AsrBackendPort `
+    -CtxSize $CtxSize `
+    -CacheReuse $CacheReuse `
+    -BatchSize $BatchSize `
+    -UBatchSize $UBatchSize `
+    -ThreadsBatch $ThreadsBatch `
     -Reasoning $Reasoning `
     -DisableAsr:$DisableAsr `
     -DisableMtp:$DisableMtp
