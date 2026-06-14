@@ -109,6 +109,17 @@ These rows use the cleaned `qwen_harness/` LAN-adapter policies with answer-chan
 | `Qwopus3.6-27B-Coder-MTP-Q4_K_M.gguf` | 32768 | 74.59 | 82.28 | 52.59 | 75.28 | 17.80 tok/s | 93.75 | 75.00 | 96.88 | 86.92 | 67.78 | 73.33 |
 | `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` (MTP Q5 weights) | 262144 | 76.95 | 81.64 | 70.36 | 71.91 | 48.25 tok/s | 93.75 | 91.67 | 96.88 | 83.07 | 51.11 | 73.33 |
 
+## Qwopus 35B MTP Reasoning Toggle BenchLoop (2026-06-13)
+
+Requested raw rerun for the main 35B profile: `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` label served from `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf`, `--ctx-size 262144`, sampler `0.85 / 0.95 / 20`, `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`, `q8_0/q8_0` KV, llama.cpp `b9551` Vulkan, BenchLoop raw harness.
+
+Artifacts: reasoning auto run `C:\Users\Admin\.bench-loop\runs\20260613-162833-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-reasoning-auto-mtp2-20260613-local-openai_compat\run.json`; reasoning off run `C:\Users\Admin\.bench-loop\runs\20260613-163957-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-noreason-mtp2-20260613-local-openai_compat\run.json`.
+
+| Reasoning | BL overall | BL quality | BL speed | Reliability | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath | Runtime |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| auto | 64.97 | 63.20 | 73.81 | 61.80 | 56.37 tok/s | 60.42 | 81.67 | 93.75 | 0.00 | 70.00 | 73.33 | 1146.6s |
+| off | 82.08 | 87.25 | 70.76 | 79.78 | 48.55 tok/s | 100.00 | 96.67 | 96.88 | 88.82 | 67.78 | 73.33 | 389.8s |
+
 ## Qwopus 27B Coder MTP BenchLoop (2026-06-12)
 
 Requested raw BenchLoop runs for [`Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF`](https://huggingface.co/Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF). The model card's completed local result emphasizes Q5_K_M, MTP enabled, and thinking-off / no-thinking mode; it also notes the 32K fine-tuning target and recommends RoPE/YaRN for contexts beyond 32K. The initial BenchLoop-only runs used `--ctx-size 32768`; the later Q5_K_M max-context rerun used `--ctx-size 262144`. All rows in this table used `--reasoning off`, `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`, launcher sampler defaults `0.85 / 0.95 / 20`, `q8_0/q8_0` KV, and llama.cpp `b9551` Vulkan. Server logs confirmed `chat template, thinking = 0`; saved `run.json` files contained zero `<think>` / `</think>` tags.

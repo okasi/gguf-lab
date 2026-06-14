@@ -14,7 +14,10 @@ param(
     [int]$Parallel = 1,
 
     [switch]$DisableAsr,
-    [switch]$DisableMtp
+    [switch]$DisableMtp,
+
+    [ValidateSet("auto", "off")]
+    [string]$Reasoning = "auto"
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,6 +36,9 @@ function ConvertTo-PlainHashtable {
     param($Value)
 
     if ($null -eq $Value) { return $null }
+    if ($Value -is [string] -or $Value -is [char] -or $Value.GetType().IsPrimitive -or $Value -is [decimal]) {
+        return $Value
+    }
     if ($Value -is [System.Collections.IDictionary]) {
         $hash = @{}
         foreach ($key in $Value.Keys) {
@@ -65,6 +71,428 @@ function Get-ModelValue {
 function Get-LanSlug {
     param([string]$Key)
     return ($Key.ToLower() -replace '[^a-z0-9]+', '-').Trim('-')
+}
+
+function Test-LanModelAlias {
+    param([string]$Alias)
+
+    if ([string]::IsNullOrWhiteSpace($Alias)) { return $false }
+    $trimmed = $Alias.Trim()
+    if ($trimmed -match '[,\r\n]') { return $false }
+    if ($trimmed -eq "[object Object]") { return $false }
+    if ($trimmed -match '^System\.(Collections\.|Object(\[\])?$)') { return $false }
+    return $true
+}
+
+function ConvertTo-LanAliasStrings {
+    param($Value)
+
+    $aliases = @()
+    if ($null -eq $Value) { return $aliases }
+    if ($Value -is [string]) {
+        $alias = $Value.Trim()
+        if (Test-LanModelAlias -Alias $alias) { $aliases += $alias }
+        return $aliases
+    }
+    if ($Value -is [System.Collections.IDictionary] -or $Value -is [pscustomobject]) {
+        return $aliases
+    }
+    if ($Value -is [System.Collections.IEnumerable]) {
+        foreach ($item in $Value) {
+            $aliases += ConvertTo-LanAliasStrings -Value $item
+        }
+        return $aliases
+    }
+
+    $alias = ([string]$Value).Trim()
+    if (Test-LanModelAlias -Alias $alias) { $aliases += $alias }
+    return $aliases
+}
+
+function Get-LanPublicAliases {
+    param($ModelConfig)
+
+    if ($env:LAN_PUBLIC_MODEL_ALIASES) {
+        return @(ConvertTo-LanAliasStrings -Value ($env:LAN_PUBLIC_MODEL_ALIASES -split ",") | Select-Object -Unique)
+    }
+
+    $aliases = @()
+    foreach ($value in @($ModelConfig["PublicAliases"], $ModelConfig["LanAlias"], $ModelConfig["LanKey"])) {
+        $aliases += ConvertTo-LanAliasStrings -Value $value
+    }
+    return @($aliases | Select-Object -Unique)
+}
+
+function Set-ReasoningServerArgs {
+    param(
+        [object[]]$ServerArgs,
+        [ValidateSet("auto", "off")]
+        [string]$Reasoning = "auto",
+        [string]$ModelName = ""
+    )
+
+    $filtered = @()
+    $skipNext = $false
+    foreach ($arg in $ServerArgs) {
+        if ($skipNext) {
+            $skipNext = $false
+            continue
+        }
+        if ([string]$arg -eq "--reasoning") {
+            $skipNext = $true
+            continue
+        }
+        $filtered += $arg
+    }
+
+    $filtered += @("--reasoning", $Reasoning)
+    return $filtered
+}
+
+function Initialize-LanConsoleCleanup {
+    param([string]$LogPath)
+
+    if (-not ("LanConsoleCleanup" -as [type])) {
+        Add-Type -TypeDefinition @"
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+
+public static class LanConsoleCleanup
+{
+    private delegate bool HandlerRoutine(uint ctrlType);
+    private static readonly HandlerRoutine Handler = new HandlerRoutine(Handle);
+    private static readonly object Gate = new object();
+    private static int[] Pids = new int[0];
+    private static string LogPath = "";
+    private static bool Installed = false;
+
+    [DllImport("kernel32.dll")]
+    private static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
+
+    public static void Install(string logPath)
+    {
+        LogPath = logPath ?? "";
+        if (!Installed)
+        {
+            SetConsoleCtrlHandler(Handler, true);
+            Installed = true;
+        }
+    }
+
+    public static void SetTargets(int[] targetPids)
+    {
+        List<int> filtered = new List<int>();
+        HashSet<int> seen = new HashSet<int>();
+        if (targetPids != null)
+        {
+            foreach (int pid in targetPids)
+            {
+                if (pid > 0 && seen.Add(pid))
+                {
+                    filtered.Add(pid);
+                }
+            }
+        }
+
+        lock (Gate)
+        {
+            Pids = filtered.ToArray();
+        }
+    }
+
+    public static void ClearTargets()
+    {
+        SetTargets(new int[0]);
+    }
+
+    private static bool Handle(uint ctrlType)
+    {
+        if (ctrlType == 0 || ctrlType == 1 || ctrlType == 2 || ctrlType == 5 || ctrlType == 6)
+        {
+            Cleanup("console-control-" + ctrlType.ToString());
+        }
+
+        return false;
+    }
+
+    public static void Cleanup(string reason)
+    {
+        int[] localPids;
+        lock (Gate)
+        {
+            localPids = (int[])Pids.Clone();
+        }
+
+        Log("cleanup " + reason + " pids=" + String.Join(",", Array.ConvertAll(localPids, pid => pid.ToString())));
+        foreach (int pid in localPids)
+        {
+            try
+            {
+                if (pid == Process.GetCurrentProcess().Id)
+                {
+                    continue;
+                }
+
+                using (Process process = Process.GetProcessById(pid))
+                {
+                    if (!process.HasExited)
+                    {
+                        Log("killing pid=" + pid.ToString() + " name=" + process.ProcessName);
+                        process.Kill();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("kill failed pid=" + pid.ToString() + " " + ex.GetType().Name + ": " + ex.Message);
+            }
+        }
+    }
+
+    private static void Log(string message)
+    {
+        if (String.IsNullOrEmpty(LogPath))
+        {
+            return;
+        }
+
+        try
+        {
+            File.AppendAllText(LogPath, DateTime.Now.ToString("s") + " " + message + Environment.NewLine);
+        }
+        catch
+        {
+        }
+    }
+}
+"@
+    }
+
+    [LanConsoleCleanup]::Install($LogPath)
+}
+
+function Set-LanConsoleCleanupTargets {
+    param([object[]]$Processes)
+
+    if (-not ("LanConsoleCleanup" -as [type])) { return }
+
+    $targetPids = @()
+    foreach ($Process in @($Processes)) {
+        if (-not $Process) { continue }
+        try {
+            if (-not $Process.HasExited -and $Process.Id -gt 0) {
+                $targetPids += [int]$Process.Id
+            }
+        } catch {
+        }
+    }
+
+    [LanConsoleCleanup]::SetTargets([int[]]$targetPids)
+}
+
+function Test-LanFirewallPortAllowed {
+    param([int]$Port)
+
+    try {
+        $rules = Get-NetFirewallRule -Direction Inbound -Enabled True -Action Allow -ErrorAction Stop
+        foreach ($rule in $rules) {
+            $filters = Get-NetFirewallPortFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
+            foreach ($filter in @($filters)) {
+                $protocol = [string]$filter.Protocol
+                if ($protocol -ne "TCP" -and $protocol -ne "Any") { continue }
+
+                $localPort = [string]$filter.LocalPort
+                if ($localPort -eq "Any" -or (Test-LanFirewallPortMatch -PortPattern $localPort -Port $Port)) {
+                    return $true
+                }
+            }
+        }
+    } catch {
+        return $false
+    }
+
+    return $false
+}
+
+function Test-LanFirewallPortMatch {
+    param(
+        [string]$PortPattern,
+        [int]$Port
+    )
+
+    foreach ($part in ($PortPattern -split ",")) {
+        $part = $part.Trim()
+        if ($part -eq "$Port") { return $true }
+        if ($part -match '^(\d+)-(\d+)$') {
+            $start = [int]$Matches[1]
+            $end = [int]$Matches[2]
+            if ($Port -ge $start -and $Port -le $end) { return $true }
+        }
+    }
+
+    return $false
+}
+
+function Ensure-LanFirewallPort {
+    param(
+        [int]$Port,
+        [string]$Model
+    )
+
+    if (Test-LanFirewallPortAllowed -Port $Port) { return }
+
+    $ruleName = "LAN $Model $Port"
+    try {
+        New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Action Allow -Protocol TCP -LocalPort $Port -Profile Any -ErrorAction Stop | Out-Null
+    } catch {
+        $adminCommand = "New-NetFirewallRule -DisplayName '$ruleName' -Direction Inbound -Action Allow -Protocol TCP -LocalPort $Port -Profile Any"
+        Write-Warning "TCP $Port is not covered by an enabled inbound allow rule, and this launcher could not create one without administrator rights. Run PowerShell as Administrator: $adminCommand"
+    }
+}
+
+function Get-ServerArgValue {
+    param(
+        [object[]]$ServerArgs,
+        [string]$Name,
+        [string]$Default = ""
+    )
+
+    for ($i = 0; $i -lt ($ServerArgs.Count - 1); $i++) {
+        if ([string]$ServerArgs[$i] -eq $Name) {
+            return [string]$ServerArgs[$i + 1]
+        }
+    }
+    return $Default
+}
+
+function Test-ServerArgPresent {
+    param(
+        [object[]]$ServerArgs,
+        [string]$Name
+    )
+
+    return @($ServerArgs | Where-Object { [string]$_ -eq $Name }).Count -gt 0
+}
+
+function ConvertTo-LanMetadataBool {
+    param($Value)
+
+    if ($null -eq $Value) { return $null }
+    if ($Value -is [bool]) { return $Value }
+    $text = "$Value".Trim().ToLowerInvariant()
+    if ($text -in @("1", "true", "yes", "on")) { return $true }
+    if ($text -in @("0", "false", "no", "off")) { return $false }
+    return $null
+}
+
+function Get-LanModelMetadata {
+    param(
+        [hashtable]$ModelConfig,
+        [object[]]$ServerArgs,
+        [string]$ModelKey,
+        [string]$ModelAlias,
+        [string[]]$PublicAliases,
+        [string]$ServerPath,
+        [string]$Upstream,
+        [string]$AdapterHost,
+        [int[]]$AdapterPorts,
+        [int]$BackendPort,
+        [int]$AsrBackendPort,
+        [bool]$AsrEnabled,
+        [string]$Reasoning,
+        [bool]$DisableMtp
+    )
+
+    $visionValue = if ($ModelConfig.ContainsKey("Vision")) { $ModelConfig.Vision } else { $false }
+    $metadata = [ordered]@{
+        id = $ModelAlias
+        key = $ModelKey
+        alias = $ModelAlias
+        public_aliases = @($PublicAliases)
+        name = if ($ModelConfig.ContainsKey("Name")) { [string]$ModelConfig.Name } else { "" }
+        source = if ($ModelConfig.ContainsKey("Source")) { [string]$ModelConfig.Source } else { "" }
+        file = if ($ModelConfig.ContainsKey("File")) { [string]$ModelConfig.File } else { Split-Path -Leaf ([string]$ModelConfig.Model) }
+        path = [string]$ModelConfig.Model
+        server = $ServerPath
+        upstream = $Upstream
+        backend = "llama.cpp"
+        backend_port = $BackendPort
+        adapter_host = $AdapterHost
+        adapter_ports = @($AdapterPorts)
+        context_size = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--ctx-size" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "")
+        max_tokens = Get-ServerArgValue -ServerArgs $ServerArgs -Name "-n" -Default "$MaxTokens"
+        sampler = [ordered]@{
+            temperature = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--temp" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "Temp" -Default "")
+            top_p = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--top-p" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "TopP" -Default "")
+            top_k = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--top-k" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "TopK" -Default "")
+            min_p = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--min-p" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "MinP" -Default "")
+            presence_penalty = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--presence-penalty" -Default "0.0"
+            repeat_penalty = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--repeat-penalty" -Default (Get-ModelValue -ModelConfig $ModelConfig -Key "RepeatPenalty" -Default "")
+            seed = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--seed" -Default ""
+        }
+        reasoning = $Reasoning
+        vision = ConvertTo-LanMetadataBool -Value $visionValue
+        multimodal = Test-ServerArgPresent -ServerArgs $ServerArgs -Name "--mmproj"
+        mmproj = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--mmproj" -Default ""
+        image_min_tokens = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--image-min-tokens" -Default ""
+        mtp = [ordered]@{
+            enabled = (Test-ServerArgPresent -ServerArgs $ServerArgs -Name "--spec-type") -and ((Get-ServerArgValue -ServerArgs $ServerArgs -Name "--spec-type" -Default "") -ne "none")
+            disabled_by_flag = $DisableMtp
+            spec_type = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--spec-type" -Default ""
+            draft_model = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--model-draft" -Default ""
+            draft_n_min = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--spec-draft-n-min" -Default ""
+            draft_n_max = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--spec-draft-n-max" -Default ""
+        }
+        cache = [ordered]@{
+            type_k = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--cache-type-k" -Default ""
+            type_v = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--cache-type-v" -Default ""
+            flash_attention = Get-ServerArgValue -ServerArgs $ServerArgs -Name "--flash-attn" -Default ""
+        }
+        gpu_layers = Get-ServerArgValue -ServerArgs $ServerArgs -Name "-ngl" -Default ""
+        parallel = Get-ServerArgValue -ServerArgs $ServerArgs -Name "-np" -Default "$Parallel"
+        asr = [ordered]@{
+            enabled = $AsrEnabled
+            backend = if ($AsrEnabled) { "FastFlowLM" } else { "" }
+            model = if ($AsrEnabled) { "whisper-v3:turbo" } else { "" }
+            port = if ($AsrEnabled) { $AsrBackendPort } else { $null }
+        }
+    }
+
+    if ($ModelConfig.ContainsKey("ReadmeFileLabel")) { $metadata["readme_file_label"] = [string]$ModelConfig.ReadmeFileLabel }
+    if ($env:HARNESS_POLICY) {
+        $harness = [ordered]@{
+            enabled = $true
+            policy = [string]$env:HARNESS_POLICY
+            module = [string]$env:HARNESS_MODULE
+            log_jsonl = [string]$env:HARNESS_LOG_JSONL
+            mode = if ($env:HARNESS_MODEL_ALIASES) { "selected_models" } else { "all_models" }
+            model_aliases = @(ConvertTo-LanAliasStrings -Value ($env:HARNESS_MODEL_ALIASES -split ","))
+        }
+        if (Test-Path -LiteralPath $env:HARNESS_POLICY) {
+            try {
+                $policy = Get-Content -LiteralPath $env:HARNESS_POLICY -Raw | ConvertFrom-Json
+                if ($policy.name) { $harness["name"] = [string]$policy.name }
+                if ($policy.version) { $harness["version"] = [string]$policy.version }
+                $policySampler = [ordered]@{}
+                foreach ($key in @("temperature", "top_p", "top_k", "min_p")) {
+                    if ($null -ne $policy.$key) { $policySampler[$key] = $policy.$key }
+                }
+                if ($policySampler.Count -gt 0) { $harness["policy_sampler"] = $policySampler }
+                $policyFlags = [ordered]@{}
+                foreach ($key in @("strip_reasoning", "strip_markdown_fences", "repair_json", "parse_tagged_tool_calls", "parse_json_tool_calls", "parse_function_syntax", "parse_escaped_json", "normalize_tool_args", "dedupe_tool_calls", "retry_empty", "retry_malformed_json", "retry_malformed_python", "retry_malformed_javascript", "retry_missing_tool_call", "max_retries")) {
+                    if ($null -ne $policy.$key) { $policyFlags[$key] = $policy.$key }
+                }
+                if ($policyFlags.Count -gt 0) { $harness["policy_flags"] = $policyFlags }
+            } catch {
+                $harness["policy_parse_error"] = $_.Exception.Message
+            }
+        }
+        $metadata["harness"] = $harness
+    }
+    return $metadata
 }
 
 function Load-JsonModels {
@@ -118,9 +546,9 @@ function Resolve-LanModelConfig {
         foreach ($key in $readmeEntry.Keys) { $config[$key] = $readmeEntry[$key] }
     }
 
-    $config["LanKey"] = $lanEntry.Key
-    $config["LanAlias"] = $lanEntry.LanAlias
-    $config["PublicAliases"] = @($lanEntry.PublicAliases | Where-Object { $_ })
+    $config["LanKey"] = [string]$lanEntry["Key"]
+    $config["LanAlias"] = [string]$lanEntry["LanAlias"]
+    $config["PublicAliases"] = @(ConvertTo-LanAliasStrings -Value $lanEntry["PublicAliases"])
     if ($config.ContainsKey("Server") -and $config.Server -and -not [System.IO.Path]::IsPathRooted([string]$config.Server)) {
         $config["Server"] = Join-Path $Root ([string]$config.Server)
     }
@@ -133,10 +561,12 @@ function Build-LlamaArgs {
         [int]$BackendPort,
         [int]$MaxTokens,
         [int]$Parallel,
+        [ValidateSet("auto", "off")]
+        [string]$Reasoning,
         [switch]$DisableMtp
     )
 
-    $alias = $ModelConfig.LanAlias
+    $alias = [string]$ModelConfig["LanAlias"]
     if ($ModelConfig.ContainsKey("RawServerArgs") -and $null -ne $ModelConfig.RawServerArgs) {
         $args = @($ModelConfig.RawServerArgs | ForEach-Object {
             $arg = "$_"
@@ -148,10 +578,7 @@ function Build-LlamaArgs {
                 break
             }
         }
-        if ($args -notcontains "--reasoning") {
-            $args += @("--reasoning", "auto")
-        }
-        return $args
+        return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
     }
 
     $ctxSize = Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "262144"
@@ -199,10 +626,7 @@ function Build-LlamaArgs {
     if ($ModelConfig.ContainsKey("ExtraServerArgs") -and $null -ne $ModelConfig.ExtraServerArgs) {
         $args += $ModelConfig.ExtraServerArgs
     }
-    if ($args -notcontains "--reasoning") {
-        $args += @("--reasoning", "auto")
-    }
-    return $args
+    return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
 }
 
 if (-not $LanModelsJson) { $LanModelsJson = Join-Path $RepoRoot "lan-models.json" }
@@ -256,6 +680,8 @@ if ([string]::IsNullOrWhiteSpace($Model)) {
 }
 
 $modelConfig = Resolve-LanModelConfig -ModelKey $Model -LanManifestPath $LanModelsJson -ReadmeManifestPath $ReadmeModelsJson
+$modelAlias = [string]$modelConfig["LanAlias"]
+$modelKey = [string]$modelConfig["LanKey"]
 $slug = Get-LanSlug -Key $Model
 $PidFile = Join-Path $LogDir "lan-$slug-launcher.pid"
 $serverPath = if ($modelConfig.ContainsKey("Server") -and -not [string]::IsNullOrWhiteSpace($modelConfig.Server)) {
@@ -274,6 +700,14 @@ if (Test-Path $BundledNode) {
     $Node = (Get-Command node -ErrorAction Stop).Source
 }
 
+if ($modelConfig.ContainsKey("Mmproj") -and -not [string]::IsNullOrWhiteSpace([string]$modelConfig.Mmproj)) {
+    $mmprojPath = [string]$modelConfig.Mmproj
+    if (-not (Test-Path -LiteralPath $mmprojPath)) {
+        Write-Warning "Multimodal projector not found: $mmprojPath. Continuing without --mmproj, so this LAN session will be text-only."
+        $modelConfig["Mmproj"] = ""
+    }
+}
+
 $required = @($serverPath, $modelConfig.Model, $Adapter, $Node)
 if ($modelConfig.ContainsKey("Mmproj") -and $modelConfig.Mmproj) { $required += $modelConfig.Mmproj }
 if (-not $DisableAsr) { $required += $Flm }
@@ -286,15 +720,7 @@ foreach ($Path in $required) {
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 foreach ($FirewallPort in @($Port, $AltPort)) {
-    try {
-        $ruleName = "LAN $Model $FirewallPort"
-        $rule = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
-        if (-not $rule) {
-            New-NetFirewallRule -DisplayName $ruleName -Direction Inbound -Action Allow -Protocol TCP -LocalPort $FirewallPort -Profile Any | Out-Null
-        }
-    } catch {
-        Write-Warning "Could not verify or create the Windows Firewall rule for TCP $FirewallPort."
-    }
+    Ensure-LanFirewallPort -Port $FirewallPort -Model $Model
 }
 
 $portTargets = @($Port, $AltPort, $BackendPort)
@@ -305,7 +731,7 @@ foreach ($TargetPort in $portTargets) {
     }
 }
 
-$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -DisableMtp:$DisableMtp
+$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -Reasoning $Reasoning -DisableMtp:$DisableMtp
 $Out = Join-Path $LogDir "lan-$slug-llama.out.log"
 $Err = Join-Path $LogDir "lan-$slug-llama.err.log"
 $AsrOut = Join-Path $LogDir "lan-$slug-whisper-asr.out.log"
@@ -324,18 +750,24 @@ if (-not $DisableAsr) {
     }
 }
 
-Remove-Item Env:LLAMA_CHAT_TEMPLATE_KWARGS -ErrorAction SilentlyContinue
-$llama = Start-Process -FilePath $serverPath -ArgumentList $LlamaArgs -WorkingDirectory $Root -RedirectStandardOutput $Out -RedirectStandardError $Err -WindowStyle Hidden -PassThru
+Initialize-LanConsoleCleanup -LogPath $WatchdogLog
 
+$llama = $null
 $asrProcess = $null
-if (-not $DisableAsr) {
-    $AsrArgs = @("serve", "--asr", "1", "--host", "127.0.0.1", "--port", "$AsrBackendPort", "--pmode", "performance")
-    $asrProcess = Start-Process -FilePath $Flm -ArgumentList $AsrArgs -WorkingDirectory $Root -RedirectStandardOutput $AsrOut -RedirectStandardError $AsrErr -WindowStyle Hidden -PassThru
-}
-
 $watchdogProcess = $null
 $adapterProcess = $null
 $tailJobs = @()
+
+try {
+Remove-Item Env:LLAMA_CHAT_TEMPLATE_KWARGS -ErrorAction SilentlyContinue
+$llama = Start-Process -FilePath $serverPath -ArgumentList $LlamaArgs -WorkingDirectory $Root -RedirectStandardOutput $Out -RedirectStandardError $Err -WindowStyle Hidden -PassThru
+Set-LanConsoleCleanupTargets -Processes @($llama)
+
+if (-not $DisableAsr) {
+    $AsrArgs = @("serve", "--asr", "1", "--host", "127.0.0.1", "--port", "$AsrBackendPort", "--pmode", "performance")
+    $asrProcess = Start-Process -FilePath $Flm -ArgumentList $AsrArgs -WorkingDirectory $Root -RedirectStandardOutput $AsrOut -RedirectStandardError $AsrErr -WindowStyle Hidden -PassThru
+    Set-LanConsoleCleanupTargets -Processes @($llama, $asrProcess)
+}
 
 function Start-LogTail {
     param([string]$Path, [string]$Prefix)
@@ -355,12 +787,11 @@ function Receive-LogTail {
     }
 }
 
-try {
-    $title = "$($modelConfig.LanKey) LAN"
+    $title = "$modelKey LAN"
     if (-not $DisableAsr) { $title += " + Whisper ASR" }
     $Host.UI.RawUI.WindowTitle = $title
 
-    Write-Host "Starting $($modelConfig.LanKey) backend PID $($llama.Id) on 127.0.0.1:$BackendPort..."
+    Write-Host "Starting $modelKey backend PID $($llama.Id) on 127.0.0.1:$BackendPort..."
     if ($asrProcess) {
         Write-Host "Starting FastFlowLM Whisper ASR PID $($asrProcess.Id) on 127.0.0.1:$AsrBackendPort..."
     }
@@ -379,6 +810,7 @@ try {
         $portCsv = if ($asrProcess) { "$Port,$AltPort,$BackendPort,$AsrBackendPort" } else { "$Port,$AltPort,$BackendPort" }
         $watchdogArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$Watchdog`" -ParentPid $PID -ChildPidCsv `"$childCsv`" -PortCsv `"$portCsv`" -PidFile `"$PidFile`" -LogPath `"$WatchdogLog`""
         $watchdogProcess = Start-Process -FilePath "powershell.exe" -ArgumentList $watchdogArgs -WindowStyle Hidden -PassThru
+        Set-LanConsoleCleanupTargets -Processes @($llama, $asrProcess, $watchdogProcess)
     }
 
     $healthy = $false
@@ -398,7 +830,7 @@ try {
         }
         try {
             $models = Invoke-RestMethod -Uri "http://127.0.0.1:$BackendPort/v1/models" -TimeoutSec 2
-            if ($models.data.id -contains $modelConfig.LanAlias) { $healthy = $true }
+            if ($models.data.id -contains $modelAlias) { $healthy = $true }
         } catch {
             if ($i % 10 -eq 0) { Write-Host "Still loading model..." }
         }
@@ -435,7 +867,7 @@ try {
     $ips = @($ips | Select-Object -Unique)
 
     Write-Host ""
-    Write-Host "$($modelConfig.LanKey) is available:"
+    Write-Host "$modelKey is available:"
     Write-Host "  http://127.0.0.1:$Port/v1"
     Write-Host "  http://127.0.0.1:$AltPort/v1"
     foreach ($ip in $ips) {
@@ -443,9 +875,10 @@ try {
         Write-Host "  http://$ip`:$AltPort/v1"
     }
     Write-Host ""
-    Write-Host "Model alias: $($modelConfig.LanAlias)"
-    if ($modelConfig.PublicAliases.Count -gt 0) {
-        Write-Host "Public aliases: $($modelConfig.PublicAliases -join ', ')"
+    $displayPublicAliases = @(Get-LanPublicAliases -ModelConfig $modelConfig)
+    Write-Host "Model alias: $modelAlias"
+    if ($displayPublicAliases.Count -gt 0) {
+        Write-Host "Public aliases: $($displayPublicAliases -join ', ')"
     }
     if ($asrProcess) {
         Write-Host "ASR model: whisper-v3:turbo via FastFlowLM NPU"
@@ -453,14 +886,30 @@ try {
     Write-Host "Close this window or press Ctrl+C to stop the adapter and backend."
     Write-Host ""
 
-    $publicAliases = @($modelConfig.PublicAliases + $modelConfig.LanAlias + $modelConfig.LanKey) | Select-Object -Unique
+    $publicAliases = Get-LanPublicAliases -ModelConfig $modelConfig
+    $modelMetadata = Get-LanModelMetadata `
+        -ModelConfig $modelConfig `
+        -ServerArgs $LlamaArgs `
+        -ModelKey $modelKey `
+        -ModelAlias $modelAlias `
+        -PublicAliases $publicAliases `
+        -ServerPath $serverPath `
+        -Upstream "http://127.0.0.1:$BackendPort" `
+        -AdapterHost "0.0.0.0" `
+        -AdapterPorts @($Port, $AltPort) `
+        -BackendPort $BackendPort `
+        -AsrBackendPort $AsrBackendPort `
+        -AsrEnabled ([bool]$asrProcess) `
+        -Reasoning $Reasoning `
+        -DisableMtp ([bool]$DisableMtp)
     $env:ADAPTER_HOST = "0.0.0.0"
     $env:ADAPTER_PORT = "$Port"
     $env:ADAPTER_PORTS = "$Port,$AltPort"
     $env:LLAMA_UPSTREAM = "http://127.0.0.1:$BackendPort"
     $env:UPSTREAM_KIND = "llama.cpp"
-    $env:MODEL_ALIAS = $modelConfig.LanAlias
+    $env:MODEL_ALIAS = $modelAlias
     $env:PUBLIC_MODEL_ALIASES = ($publicAliases -join ",")
+    $env:MODEL_METADATA_JSON = ($modelMetadata | ConvertTo-Json -Depth 10 -Compress)
     $env:DEFAULT_TEMPERATURE = (Get-ModelValue -ModelConfig $modelConfig -Key "Temp" -Default "0.75")
     $env:DEFAULT_TOP_P = (Get-ModelValue -ModelConfig $modelConfig -Key "TopP" -Default "0.95")
     $env:DEFAULT_TOP_K = (Get-ModelValue -ModelConfig $modelConfig -Key "TopK" -Default "20")
@@ -483,9 +932,11 @@ try {
         Remove-Item Env:HARNESS_POLICY -ErrorAction SilentlyContinue
         Remove-Item Env:HARNESS_MODULE -ErrorAction SilentlyContinue
         Remove-Item Env:HARNESS_LOG_JSONL -ErrorAction SilentlyContinue
+        Remove-Item Env:HARNESS_MODEL_ALIASES -ErrorAction SilentlyContinue
     }
 
     $adapterProcess = Start-Process -FilePath $Node -ArgumentList @($Adapter) -WorkingDirectory $RepoRoot -RedirectStandardOutput $AdapterOut -RedirectStandardError $AdapterErr -WindowStyle Hidden -PassThru
+    Set-LanConsoleCleanupTargets -Processes @($adapterProcess, $llama, $asrProcess, $watchdogProcess)
     Write-Host "Adapter PID $($adapterProcess.Id) listening on 0.0.0.0:$Port and 0.0.0.0:$AltPort"
     Write-Host ""
 
@@ -517,6 +968,9 @@ try {
     }
     if ($watchdogProcess -and -not $watchdogProcess.HasExited) {
         Stop-Process -Id $watchdogProcess.Id -Force -ErrorAction SilentlyContinue
+    }
+    if ("LanConsoleCleanup" -as [type]) {
+        [LanConsoleCleanup]::ClearTargets()
     }
     Remove-Item -LiteralPath $PidFile -Force -ErrorAction SilentlyContinue
 }

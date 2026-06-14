@@ -77,6 +77,41 @@ function Resolve-RepoPath {
     return Join-Path $RepoRoot $PathText
 }
 
+function Test-PublicModelAlias {
+    param([string]$Alias)
+    if ([string]::IsNullOrWhiteSpace($Alias)) { return $false }
+    $trimmed = $Alias.Trim()
+    if ($trimmed -match '[,\r\n]') { return $false }
+    if ($trimmed -eq "[object Object]") { return $false }
+    if ($trimmed -match '^System\.(Collections\.|Object(\[\])?$)') { return $false }
+    return $true
+}
+
+function ConvertTo-PublicAliasStrings {
+    param($Value)
+
+    $aliases = @()
+    if ($null -eq $Value) { return $aliases }
+    if ($Value -is [string]) {
+        $alias = $Value.Trim()
+        if (Test-PublicModelAlias -Alias $alias) { $aliases += $alias }
+        return $aliases
+    }
+    if ($Value -is [System.Collections.IDictionary] -or $Value -is [pscustomobject]) {
+        return $aliases
+    }
+    if ($Value -is [System.Collections.IEnumerable]) {
+        foreach ($item in $Value) {
+            $aliases += ConvertTo-PublicAliasStrings -Value $item
+        }
+        return $aliases
+    }
+
+    $alias = ([string]$Value).Trim()
+    if (Test-PublicModelAlias -Alias $alias) { $aliases += $alias }
+    return $aliases
+}
+
 function Get-ModelPolicyPath {
     param($Model, [string]$ExplicitPath, [string]$DefaultPath)
     if ($ExplicitPath) { return Resolve-RepoPath -PathText $ExplicitPath }
@@ -86,14 +121,14 @@ function Get-ModelPolicyPath {
 
 function Get-PublicAliases {
     param($Model, [string]$RunAlias)
-    $aliases = @($RunAlias)
+    $aliases = @(ConvertTo-PublicAliasStrings -Value $RunAlias)
     foreach ($key in @("Alias", "Name", "ReadmeFileLabel", "File", "Source")) {
-        if ($Model.ContainsKey($key) -and $Model[$key]) { $aliases += [string]$Model[$key] }
+        if ($Model.ContainsKey($key) -and $Model[$key]) { $aliases += ConvertTo-PublicAliasStrings -Value $Model[$key] }
     }
-    if ($Model.ContainsKey("PublicAliases") -and $null -ne $Model.PublicAliases) {
-        $aliases += @($Model.PublicAliases | ForEach-Object { [string]$_ })
+    if ($Model.ContainsKey("PublicAliases") -and $null -ne $Model["PublicAliases"]) {
+        $aliases += ConvertTo-PublicAliasStrings -Value $Model["PublicAliases"]
     }
-    return (($aliases | Where-Object { $_ -and $_.Trim() }) | Select-Object -Unique) -join ","
+    return ($aliases | Select-Object -Unique) -join ","
 }
 
 function Join-ProcessArguments {

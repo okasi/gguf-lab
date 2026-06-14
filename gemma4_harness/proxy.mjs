@@ -2131,7 +2131,7 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function retryReasonForProcessed(body, requestPayload, stats, policy) {
+export function retryReasonForProcessed(body, requestPayload, stats, policy) {
   const message = firstMessage(body);
   const content = String(message.content ?? "").trim();
   const toolCalls = arrayValues(message.tool_calls);
