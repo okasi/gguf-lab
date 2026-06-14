@@ -6,7 +6,7 @@ Continuously improve the Gemma 4 harness and make it as concise and lightweight 
 
 ## Definition of Done
 
-- Complete at least 200 safe Gemma harness improvement loops.
+- Complete at least 3 safe shared E2B/E4B/12B/26B Gemma harness policy loops.
 - Keep policy behavior changes tied to BenchLoop reruns before reporting scores as current.
 - Preserve no-cheat boundaries for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and other OpenAI-compatible clients.
 - Keep `gemma4_harness` tests passing after each code loop.
@@ -16,10 +16,11 @@ Continuously improve the Gemma 4 harness and make it as concise and lightweight 
 - Active serve script: `macos-m1-pro/scripts/run_gemma4_12b_promoted_serve.sh`
 - Active BenchLoop rerun script: `macos-m1-pro/scripts/run_gemma4_12b_harness_optimized.sh`
 - Active harness policy: `gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json`
-- Current validated 12B harness result: `macos-m1-pro/results/benchloop/gemma4-12b-policy-20iter-20260612T100148Z/iter186-restore-safe-baseline-full/`
-- Score: overall 76.7188, quality 86.4983, speed 44.60, reliability 80.8989.
-- Loop progress: 200/200 completed.
-- Current `gemma4_harness/proxy.mjs` size: 2852 lines, 116587 bytes.
+- Current validated 12B harness result: `macos-m1-pro/results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/`
+- Score: overall 78.9760, quality 87.1533, speed 52.68, reliability 82.0225.
+- Current 26B check for the same policy: `macos-m1-pro/results/benchloop/gemma4-26b-quality-goal-20260613/temp090/` — overall 78.7599, quality 84.5233, speed 64.45, reliability 77.5281.
+- Loop progress: 200/200 cleanup loops completed; 5/5 12B sampler-policy quality loops completed on 2026-06-13; 3/3 active shared 12B+26B policy loops completed on 2026-06-14; E2B/E4B current-policy gate completed on 2026-06-14.
+- Current `gemma4_harness/proxy.mjs` size: 2863 lines, 118855 bytes.
 
 ## Active Boundaries
 
@@ -28,11 +29,41 @@ Continuously improve the Gemma 4 harness and make it as concise and lightweight 
 - Run BenchLoop after policy behavior changes before treating scores as current.
 - Docs-only cleanup does not require a BenchLoop rerun.
 
+## Active Shared E2B/E4B/12B/26B Quality Goal (2026-06-14)
+
+- Objective: improve shared E2B, E4B, 12B, and 26B BenchLoop quality without cheats while keeping the harness general for OpenClaw/ClawBench, Hermes Agent, opencode, BenchLoop, and other OpenAI-compatible agent clients.
+- Definition of done: at least 3 tracked safe loops; every policy behavior change must have BenchLoop evidence before scores are treated as current; no benchmark-specific answer/tool/action synthesis, phrase/word transforms, prompt/schema rewriting, or client-specific action heuristics; selected policy must improve E2B, E4B, 12B, and 26B quality before all-size promotion.
+- Current evaluated shared policy: `shared-current-best-temp090` using `temperature=0.90`, `top_p=0.95`, `top_k=64`.
+- Current selected 12B result: `results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/` — overall 78.9760, quality 87.1533, speed 52.68, reliability 82.0225.
+- Current selected 26B result: `results/benchloop/gemma4-26b-quality-goal-20260613/temp090/` — overall 78.7599, quality 84.5233, speed 64.45, reliability 77.5281.
+- E2B/E4B current-policy gate: `results/benchloop/gemma4-e2b-e4b-current-policy-rerun-20260614/` used the no-cap matrix defaults (`f16` KV) and found raw better than the evaluated shared policy. E2B raw 79.6631 overall / 84.1217 quality vs harness 75.6018 / 80.1800. E4B raw 77.6922 / 83.3200 vs harness 75.3981 / 81.1683. Outcome: `shared-current-best-temp090` remains useful for 12B/26B but is not an all-size promoted policy. Disallowed repair grep over proxy jsonl returned no hits; `node --check gemma4_harness/proxy.mjs`, `git diff --check`, and `npm test` passed.
+- All-size candidate 001 (`temperature=0.90`, `top_p=0.90`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-001-topp090-e2e4-gate/` scored E2B overall 76.3804 / quality 81.9050 vs raw 79.6631 / 84.1217. Stopped before E4B because it cannot be all-size promoted.
+- All-size candidate 002 (`temperature=0.95`, `top_p=0.90`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-002-temp095-topp090-e2-gate/` scored E2B overall 78.4388 / quality 82.6350 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- All-size candidate 003 (`temperature=1.00`, `top_p=0.90`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-003-temp100-topp090-e2-gate/` scored E2B overall 75.9357 / quality 80.5433 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- All-size candidate 004 (`temperature=0.95`, `top_p=0.925`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-004-temp095-topp0925-e2-gate/` scored E2B overall 77.3142 / quality 81.0683 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- All-size candidate 005 (`temperature=0.95`, `top_p=0.95`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-005-temp095-e2-gate/` scored E2B overall 76.4531 / quality 81.2167 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- All-size candidate 006 (`temperature=0.80`, `top_p=0.95`, `top_k=64`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-006-temp080-e2-gate/` scored E2B overall 76.3223 / quality 80.8067 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- All-size candidate 007 (`temperature=0.95`, `top_p=0.90`, `top_k=64`, `normalize_tool_args=true`, `dedupe_tool_calls=true`) failed the E2B gate: `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-007-toolnorm-e2-gate/` scored E2B overall 77.6742 / quality 82.0683 vs raw 79.6631 / 84.1217. Disallowed repair grep over proxy jsonl returned no hits.
+- E4B follow-up for candidate 002 (`temperature=0.95`, `top_p=0.90`, `top_k=64`): `results/benchloop/gemma4-allsize-policy-candidates-20260614/candidate-002-temp095-topp090-e4-gate/` scored E4B overall 73.2971 / quality 79.6717 vs raw 77.6922 / 83.3200 and current-policy harness 75.3981 / 81.1683. Disallowed repair grep over proxy jsonl returned no hits.
+- Outcome of the active all-size search: no tested no-cheat shared policy improved all four models. The policy JSON was restored to `shared-current-best-temp090` because it remains the best measured no-cheat 12B+26B policy, with `all_size_gate.status=failed`.
+- Loop 001 tested `temperature=1.00`, `top_p=0.95`, `top_k=64` on both models. 12B: overall 72.7571, quality 82.6250, speed 43.87, reliability 74.1573. 26B: overall 79.2358, quality 85.9833, speed 61.41, reliability 78.6517. Outcome: rejected as shared policy because it improved 26B but regressed 12B.
+- Loop 002 tested `temperature=0.92`, `top_p=0.95`, `top_k=64` on both models. 12B: overall 76.3978, quality 85.9450, speed 48.73, reliability 77.5281. 26B: overall 77.4314, quality 84.1900, speed 57.32, reliability 78.6517. Outcome: rejected because it regressed quality and overall on both selected 12B and selected 26B baselines.
+- Loop 003 tested `temperature=0.90`, `top_p=0.95`, `top_k=80` on both models. 12B: overall 77.3492, quality 86.9900, speed 46.40, reliability 80.8989. 26B: overall 74.8121, quality 80.8850, speed 58.93, reliability 74.1573. Outcome: rejected because it failed to improve 12B quality and regressed 26B quality.
+- Progress: 3/3 12B+26B policy loops plus the E2B/E4B current-policy gate completed for this goal; no policy has yet beaten raw or improved quality across all four model sizes.
+
 ## Completed Cleanup
 
 - Removed the root docs folder by moving the client compatibility note to `macos-m1-pro/docs/gemma4-harness-clients.md`.
 - Removed the historical Gemma 4 iteration schedule and obsolete sweep-analysis scripts.
 - Replaced the long merged progress history with this compact current-state note.
+
+## Completed Policy Quality Goal (2026-06-13)
+
+- Ran five full 12B BenchLoop policy loops after each sampler-only policy change; no prompt-derived answers, prompt-to-tool synthesis, phrase/word transforms, prompt/schema rewriting, or benchmark-specific formatting were added.
+- Best 12B policy: `current-best-temp090` (`temperature=0.90`, `top_p=0.95`, `top_k=64`) from `results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/`.
+- 12B best score: overall 78.9760, quality 87.1533, speed 52.68, reliability 82.0225; suites agent 96.88, coding 100, dataextract 79.38, instructfollow 83.33, reasonmath 80.00, toolcall 83.33.
+- 26B check with the selected policy: overall 78.7599, quality 84.5233, speed 64.45, reliability 77.5281; suites agent 96.88, coding 100, dataextract 81.37, instructfollow 72.23, reasonmath 73.33, toolcall 83.33.
+- Loop outcomes: baseline 76.7188/86.4983 overall/quality; loop 1 temp 0.80 = 78.1821/85.7917; loop 2 top_p 0.90 = 78.0832/86.2133; loop 3 temp 0.90 = 78.9760/87.1533; loop 4 temp 0.95 = 76.8534/84.6700; loop 5 temp 0.90 top_k 48 = 76.6993/84.0733.
 
 ## Completed Loops
 
@@ -84,7 +115,20 @@ Continuously improve the Gemma 4 harness and make it as concise and lightweight 
 - `npm test` in `gemma4_harness` passed 263/263 after loop 002.
 - `npm test` in `gemma4_harness` passed 263/263 after loop 003.
 - `npm test` in `gemma4_harness` passed 263/263 after each loop from 004 through 017.
-- `node test.mjs` in `gemma4_harness` passed after each completed loop from 018 through 200; current suite count is 267/267.
+- `node test.mjs` in `gemma4_harness` passed after each completed loop from 018 through 200; current suite count is 263/263.
+- Active shared policy loop 001 completed paired 12B and 26B BenchLoop runs for `temperature=1.00`, `top_p=0.95`, `top_k=64`; rejected because 12B regressed.
+- Active shared policy loop 002 completed paired 12B and 26B BenchLoop runs for `temperature=0.92`, `top_p=0.95`, `top_k=64`; rejected because both selected baselines regressed.
+- Active shared policy loop 003 completed paired 12B and 26B BenchLoop runs for `temperature=0.90`, `top_p=0.95`, `top_k=80`; rejected because it did not improve both models.
+- All-size non-sampler candidate 008 kept the selected sampler and enabled schema-aware tool-argument normalization plus tool-call dedupe. E2B BenchLoop gate scored overall 76.5522, quality 80.1100, speed 75.38, reliability 69.6629; rejected because it remained below clean E2B raw 79.6631/84.1217 overall/quality. Proxy audit grep was clean.
+- All-size non-sampler candidate 009 kept the selected sampler, restored current tool settings, and disabled harness-level code extraction. E2B BenchLoop gate scored overall 76.2860, quality 82.4133, speed 66.31, reliability 70.7865; rejected because it remained below clean E2B raw and caused 36 malformed-Python retry attempts. Proxy audit grep was clean.
+- All-size non-sampler candidate 010 kept code extraction disabled but also disabled malformed-code retries. E2B BenchLoop gate scored overall 76.4216, quality 80.0050, speed 76.42, reliability 68.5393; rejected because it remained below clean E2B raw and reduced coding/data/instruction quality. Proxy audit grep was clean.
+- All-size non-sampler candidate 011 restored code extraction and disabled malformed-code retries. E2B BenchLoop gate scored overall 75.6672, quality 79.4350, speed 75.62, reliability 67.4157; rejected because it remained below clean E2B raw/current. Proxy audit grep was clean.
+- All-size non-sampler candidate 012 restored selected parser behavior and reduced `max_retries` from 2 to 1. E2B BenchLoop gate scored overall 77.7266, quality 81.5617, speed 77.26, reliability 69.6629; best non-sampler candidate so far by overall but still rejected because it remained below clean E2B raw 79.6631/84.1217. Proxy audit grep was clean.
+- Candidate 012 E4B follow-up scored overall 71.9210, quality 79.5167, speed 55.26, reliability 68.5393; rejected because it regressed below E4B current harness 75.3981/81.1683 and raw 77.6922/83.3200. Proxy audit grep was clean.
+- All-size non-sampler candidate 013 restored selected parser behavior and set `max_retries=0`. E2B BenchLoop gate scored overall 75.5041, quality 78.7167, speed 76.78, reliability 67.4157; rejected because removing retries entirely hurt quality. Proxy audit grep was clean.
+- All-size non-sampler candidate 014 restored selected parser behavior and disabled only malformed-JSON retries. E2B BenchLoop gate scored overall 73.0081, quality 77.3817, speed 70.78, reliability 65.1685; rejected because JSON retries/repair interplay is important for E2B quality. Proxy audit grep was clean.
+- Candidate 015 attempted an E4B follow-up for the candidate-008 tool-normalization/dedupe policy, but the run was interrupted during the session handoff and logged only 30 proxy calls. Its low score is not counted as valid policy evidence; the selected policy was restored to `shared-current-best-temp090`.
+- Post-loop-003 checks passed: policy JSON parse, `node --check gemma4_harness/proxy.mjs`, production no-cheat grep, `git diff --check`, and `npm test` in `gemma4_harness` at 263/263.
 - Policy behavior-field check passed after loop 001.
 - Policy behavior-field check passed after loop 085.
 - Policy behavior-field check passed after loop 125.

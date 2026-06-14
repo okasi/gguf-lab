@@ -9,6 +9,14 @@ import { parse as parseJavaScriptAst } from "@babel/parser";
 import { parser as pythonAstParser } from "@lezer/python";
 import Fastify from "fastify";
 
+// Harness contract:
+// - Accept OpenAI-style client traffic and forward it to llama.cpp.
+// - Repair only transport and serialization problems that are visible in the model output.
+// - Keep the user's task semantics in the prompt/model, never in this adapter.
+//
+// That last point is the important audit line. The proxy may turn malformed JSON into JSON
+// or a declared tool-call blob into OpenAI tool_calls, but it must not infer answers,
+// manufacture missing actions from prompt text, or branch on benchmark/task-suite identity.
 const END_TOKENS = ["<end_of_turn>", "<eos>", "</s>", "<|eot_id|>", "<|im_end|>"];
 const TOOL_BLOCK_PATTERNS = [
   /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/gi,
@@ -75,6 +83,9 @@ const DEFAULT_POLICY_PATH = path.join(
   "configs/gemma4_qat_q4_optimized_policy.json",
 );
 
+// These defaults let the module run without a config file, but benchmarked behavior should
+// come from the JSON policy. Keeping behavior in data makes sampler/retry changes easy to
+// diff and ties each policy change to a fresh BenchLoop run.
 export const DEFAULT_POLICY = {
   name: "gemma4-q4-optimized",
   version: "harness",
@@ -165,7 +176,6 @@ function copyDefined(from, to, keys) {
 function definedField(key, value) { return isDefined(value) ? { [key]: value } : {}; }
 function jsonText(value) { return JSON.stringify(value); }
 function jsonBuffer(value) { return Buffer.from(jsonText(value)); }
-function emptyBuffer() { return Buffer.alloc(0); }
 function serializedArgs(value) { return isString(value) ? value : jsonText(value ?? {}); }
 function parseJsonBuffer(buffer) { return JSON.parse(buffer.toString("utf8")); }
 function attemptInfo(attempt, status) { return { attempt: attempt + 1, status }; }
@@ -193,6 +203,9 @@ export function loadPolicy(path, overrides = {}) {
   return { ...DEFAULT_POLICY, ...filePolicy, ...overrides };
 }
 
+// Prepare the request for llama.cpp without changing the task. This is limited to API-shape
+// mismatches such as max_completion_tokens vs max_tokens, developer role vs system role, and
+// sampler overrides that are explicitly owned by the policy file.
 export function prepareUpstreamPayload(payload, policy) {
   const outgoing = structuredClone(payload ?? {});
   if (!isDefined(outgoing.max_tokens) && isDefined(outgoing.max_completion_tokens)) {
@@ -218,6 +231,9 @@ function normalizeChatMessagesForUpstream(messages) {
   });
 }
 
+// Main non-streaming output pass. It normalizes the assistant message in-place, attaches
+// a gemma_harness audit block, and records each repair so benchmark logs can show whether
+// a score came from normal model output, structural repair, or a retry.
 export function processChatCompletion(body, requestPayload, policy) {
   const started = performance.now();
   const stats = {
@@ -253,6 +269,13 @@ function normalizeMessage(message, requestPayload, policy) {
   const rawContent = content;
   const toolMap = toolSchemaMap(requestPayload?.tools ?? []);
 
+  // Run normalizers from most explicit to most inferred:
+  // 1. already-structured tool/function calls from the upstream response,
+  // 2. reasoning/end-token cleanup,
+  // 3. tool calls serialized inside text,
+  // 4. JSON/code extraction only when the request or content makes that format obvious.
+  // This order keeps structured data authoritative and avoids letting later text cleanup
+  // erase tool calls that agents depend on.
   const legacyFunctionCalls = isPlainObject(out.function_call) ? [out.function_call] : [];
   const existingCalls = normalizeToolCalls([...arrayValues(out.tool_calls), ...legacyFunctionCalls], toolMap, policy, stats);
   if (legacyFunctionCalls.length) delete out.function_call;
@@ -746,6 +769,9 @@ function parseToolCallsFromContent(content, toolMap, policy, stats) {
   let stripped = content;
   if (!toolMap.size) return { calls, content: stripped };
 
+  // Text-to-tool parsing is allowed only when the model names a tool that the client
+  // actually declared. The adapter may recover the wire format, but the model is still
+  // responsible for choosing whether a tool should be called and with what arguments.
   if (policy.parse_tagged_tool_calls) {
     for (const pattern of TOOL_BLOCK_PATTERNS) {
       pattern.lastIndex = 0;
@@ -777,6 +803,8 @@ function parseToolCallsFromContent(content, toolMap, policy, stats) {
     FUNCTION_CALL_RE.lastIndex = 0;
     for (const match of stripped.matchAll(FUNCTION_CALL_RE)) {
       const name = canonicalToolName(match[1], toolMap);
+      // Plain "foo(...)" text is ambiguous in normal prose, so only exact declared tools
+      // are accepted. This prevents accidental conversion of examples or explanations.
       if (!toolMap.has(name)) continue;
       const args = parseArgsValue(match[2].trim());
       calls.push(toolCall(name, normalizeArgsForSchema(args, toolMap.get(name))));
@@ -837,6 +865,8 @@ function jsonCandidates(text, includeEscaped = true) {
   const candidates = [];
   const clean = stripEndTokens(text);
   if (clean) candidates.push(clean);
+  // Collect possible JSON views of the same model output. Later parsing decides whether
+  // any candidate is valid; this helper only exposes common wrappers and balanced blocks.
   FENCE_RE.lastIndex = 0;
   for (const match of text.matchAll(FENCE_RE)) candidates.push(fenceBody(match).trim());
   candidates.push(...extractBalancedJsonBlocks(text));
@@ -962,6 +992,10 @@ function repairJsonCandidates(text) {
   const clean = stripEndTokens(String(text ?? "")).trim();
   if (!clean) return [];
   const candidates = [clean];
+  // Generate structural JSON repair candidates for common model formatting slips:
+  // fences, escaped JSON, trailing commas/comments, smart quotes, and missing closers.
+  // The candidate list deliberately contains only transformed versions of the output,
+  // never values supplied by prompts, tests, benchmarks, or client-specific knowledge.
   FENCE_RE.lastIndex = 0;
   if (clean.startsWith("```") || clean.startsWith("~~~")) {
     for (const match of clean.matchAll(FENCE_RE)) candidates.push(fenceBody(match).trim());
@@ -1163,6 +1197,9 @@ function coerceJsonForSchema(value, schema, root = schema) {
   const union = schemaUnion(schema);
   const isOneOf = union === schemaOneOf(schema);
   if (union) {
+    // For anyOf/oneOf, prefer discriminator-guided branches and otherwise keep the
+    // original value unless a single branch can be validated after coercion. Guessing the
+    // wrong branch is worse than returning slightly messy JSON.
     const discriminatorOption = discriminatorOptionForValue(schema, value, union, root);
     if (discriminatorOption) {
       const matched = coerceUnionOptionForSchema(value, discriminatorOption, schema, root, coerceJsonForSchema);
@@ -1192,6 +1229,9 @@ function coerceJsonForSchema(value, schema, root = schema) {
       if (isPlainObject(parsed)) value = parsed;
     }
     if (!isPlainObject(value)) return value;
+    // Schema coercion is intentionally schema-local. We drop keys the schema disallows,
+    // recurse through declared properties, and materialize explicit defaults. Prompt text
+    // and benchmark knowledge never participate in choosing or inventing values.
     const properties = schemaProperties(schema);
     const allowed = schemaPropertySet(schema);
     const entries = objectEntries(value).filter(([key]) => objectAllowsProperty(schema, key, allowed, root));
@@ -2095,6 +2135,10 @@ function retryReasonForProcessed(body, requestPayload, stats, policy) {
   const message = firstMessage(body);
   const content = String(message.content ?? "").trim();
   const toolCalls = arrayValues(message.tool_calls);
+  // Retries spend extra samples only on format failures where the current body cannot
+  // satisfy the requested protocol: empty output, unrepaired JSON, or unparsable code.
+  // They are not quality retries; this function does not look at rubrics, task answers,
+  // benchmark names, or task content beyond detecting the requested response type.
   if (policy.retry_empty && !content && !toolCalls.length) return "empty_response";
   if (policy.retry_missing_tool_call && arrayValues(requestPayload.tools).length && !toolCalls.length && !content) return "missing_tool_call";
   if (policy.retry_malformed_json && !explicitNonJsonFormatRequest(requestPayload) && !stats.repairs.includes("repaired_json_content")) {
@@ -2168,6 +2212,9 @@ function responseInputCallId(item) { return String(item.call_id ?? item.id ?? sh
 function responseInputTypeEnds(item, suffix) { return isString(item.type) && item.type.endsWith(suffix); }
 function isFunctionType(value) { return value?.type === "function"; }
 
+// Responses input is a richer event log than Chat Completions: user text, assistant tool
+// calls, and tool outputs can all appear in the same input array. Preserve call IDs while
+// projecting it to chat messages so agents can still match observations to actions.
 function responseInputToMessages(payload) {
   const messages = [];
   if (isString(payload?.instructions) && payload.instructions.trim()) {
@@ -2185,30 +2232,11 @@ function responseInputToMessages(payload) {
       else if (isObjectLike(item)) {
         if (item.type === "reasoning") continue;
         if (item.type === "function_call" && isString(item.name)) {
-          const callId = responseInputCallId(item);
-          messages.push({
-            role: "assistant",
-            content: "",
-            tool_calls: [
-              {
-                id: callId,
-                type: "function",
-                function: {
-                  name: item.name,
-                  arguments: serializedArgs(item.arguments),
-                },
-              },
-            ],
-          });
+          messages.push(responseFunctionCallMessage(item));
           continue;
         }
         if (item.type === "function_call_output") {
-          const callId = responseInputCallId(item);
-          messages.push({
-            role: "tool",
-            tool_call_id: callId,
-            content: responseToolOutputContent(firstPresent(item, ["output", "content"]) ?? ""),
-          });
+          messages.push(responseFunctionOutputMessage(item));
           continue;
         }
         if (responseInputTypeEnds(item, "_call_output")) {
@@ -2227,6 +2255,26 @@ function responseInputToMessages(payload) {
   }
   if (!messages.length) messages.push({ role: "user", content: "" });
   return messages;
+}
+
+function responseFunctionCallMessage(item) {
+  return {
+    role: "assistant",
+    content: "",
+    tool_calls: [{
+      id: responseInputCallId(item),
+      type: "function",
+      function: { name: item.name, arguments: serializedArgs(item.arguments) },
+    }],
+  };
+}
+
+function responseFunctionOutputMessage(item) {
+  return {
+    role: "tool",
+    tool_call_id: responseInputCallId(item),
+    content: responseToolOutputContent(firstPresent(item, ["output", "content"]) ?? ""),
+  };
 }
 
 function responseToolOutputContent(value) {
@@ -2607,6 +2655,48 @@ function writeRequestLog(state, request, payload, started, attempts, parse) {
 function adapterParse(parseStats, adapter) { return { ...parseStats, adapter }; }
 function skippedParse(reason) { return { skipped: reason }; }
 
+// Non-streaming routes all use llama.cpp's chat endpoint under the hood. The shared retry
+// loop keeps protocol repair consistent; each route only supplies its input projection and
+// final envelope conversion. If upstream returns an error or malformed JSON after retries,
+// the last upstream body is preserved for observability.
+async function retryChatCompletions(state, upstreamPayload, processPayload, bodyFromProcessed) {
+  const attempts = [];
+  let finalStatus = 502;
+  let finalHeaders = { "content-type": JSON_CONTENT_TYPE };
+  let finalBody = Buffer.alloc(0);
+  let parseStats = {};
+
+  for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
+    const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
+    finalStatus = upstream.status;
+    finalHeaders = upstream.headers;
+    finalBody = upstream.body;
+    const info = attemptInfo(attempt, upstream.status);
+    if (retryableUpstream5xx(attempts, info, upstream.status)) {
+      if (canRetry(attempt, state.policy)) continue;
+    }
+    let upstreamJson;
+    try {
+      upstreamJson = parseJsonBuffer(upstream.body);
+    } catch (error) {
+      recordInvalidJsonAttempt(attempts, info, error);
+      if (canRetry(attempt, state.policy)) continue;
+      break;
+    }
+    const processed = processChatCompletion(upstreamJson, processPayload, state.policy);
+    parseStats = processed.stats;
+    const retryReason = retryReasonForProcessed(processed.body, processPayload, parseStats, state.policy);
+    recordProcessedAttempt(attempts, info, retryReason);
+    if (retryReason && canRetry(attempt, state.policy)) continue;
+    finalBody = jsonBuffer(bodyFromProcessed(processed.body));
+    finalHeaders = { "content-type": JSON_CONTENT_TYPE };
+    finalStatus = upstream.status;
+    break;
+  }
+
+  return { attempts, body: finalBody, headers: finalHeaders, parseStats, status: finalStatus };
+}
+
 export function buildServer(state) {
   const app = Fastify({ logger: false, bodyLimit: 32 * 1024 * 1024 });
 
@@ -2629,46 +2719,15 @@ export function buildServer(state) {
     if (!isPlainObject(requestPayload)) return badJsonBody(reply);
     const upstreamPayload = prepareUpstreamPayload(requestPayload, state.policy);
     if (isStreamingRequest(requestPayload)) {
+      // Streaming chunks are passed through. Rewriting them safely would require a stateful
+      // SSE transformer that preserves token timing and partial tool-call deltas.
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
       writeRequestLog(state, request, requestPayload, started, singleAttempt(upstream.status), skippedParse("streaming_passthrough"));
       return sendUpstream(reply, upstream);
     }
-    const attempts = [];
-    let finalStatus = 502;
-    let finalHeaders = { "content-type": JSON_CONTENT_TYPE };
-    let finalBody = emptyBuffer();
-    let parseStats = {};
-
-    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
-      const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
-      finalStatus = upstream.status;
-      finalHeaders = upstream.headers;
-      finalBody = upstream.body;
-      const info = attemptInfo(attempt, upstream.status);
-      if (retryableUpstream5xx(attempts, info, upstream.status)) {
-        if (canRetry(attempt, state.policy)) continue;
-      }
-      let upstreamJson;
-      try {
-        upstreamJson = parseJsonBuffer(upstream.body);
-      } catch (error) {
-        recordInvalidJsonAttempt(attempts, info, error);
-        if (canRetry(attempt, state.policy)) continue;
-        break;
-      }
-      const processed = processChatCompletion(upstreamJson, requestPayload, state.policy);
-      parseStats = processed.stats;
-      const retryReason = retryReasonForProcessed(processed.body, requestPayload, parseStats, state.policy);
-      recordProcessedAttempt(attempts, info, retryReason);
-      if (retryReason && canRetry(attempt, state.policy)) continue;
-      finalBody = jsonBuffer(processed.body);
-      finalHeaders = { "content-type": JSON_CONTENT_TYPE };
-      finalStatus = upstream.status;
-      break;
-    }
-
-    writeRequestLog(state, request, requestPayload, started, attempts, parseStats);
-    return sendBody(reply, finalStatus, finalBody, responseContentType(finalHeaders));
+    const result = await retryChatCompletions(state, upstreamPayload, requestPayload, (body) => body);
+    writeRequestLog(state, request, requestPayload, started, result.attempts, result.parseStats);
+    return sendBody(reply, result.status, result.body, responseContentType(result.headers));
   });
 
   app.post("/v1/responses", async (request, reply) => {
@@ -2678,44 +2737,21 @@ export function buildServer(state) {
     const chatPayload = responsesPayloadToChatPayload(requestPayload);
     const upstreamPayload = prepareUpstreamPayload(chatPayload, state.policy);
     if (isStreamingRequest(requestPayload)) {
+      // Responses streaming has a different event vocabulary, so it gets a narrow SSE
+      // adapter instead of the non-streaming repair pipeline.
       const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
       writeRequestLog(state, request, requestPayload, started, singleAttempt(upstream.status), { adapter: "responses_stream_to_chat_completions" });
       const contentType = isErrorStatus(upstream.status) ? responseContentType(upstream.headers) : EVENT_STREAM_CONTENT_TYPE;
       return sendBody(reply, upstream.status, responseStreamBody(upstream, requestPayload), contentType);
     }
-    const attempts = [];
-    let finalStatus = 502;
-    let finalBody = emptyBuffer();
-    let parseStats = {};
-
-    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
-      const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
-      finalStatus = upstream.status;
-      finalBody = upstream.body;
-      const info = attemptInfo(attempt, upstream.status);
-      if (retryableUpstream5xx(attempts, info, upstream.status)) {
-        if (canRetry(attempt, state.policy)) continue;
-      }
-      let upstreamJson;
-      try {
-        upstreamJson = parseJsonBuffer(upstream.body);
-      } catch (error) {
-        recordInvalidJsonAttempt(attempts, info, error);
-        if (canRetry(attempt, state.policy)) continue;
-        break;
-      }
-      const processed = processChatCompletion(upstreamJson, chatPayload, state.policy);
-      parseStats = processed.stats;
-      const retryReason = retryReasonForProcessed(processed.body, chatPayload, parseStats, state.policy);
-      recordProcessedAttempt(attempts, info, retryReason);
-      if (retryReason && canRetry(attempt, state.policy)) continue;
-      finalBody = jsonBuffer(chatCompletionToResponsesBody(processed.body, requestPayload));
-      finalStatus = upstream.status;
-      break;
-    }
-
-    writeRequestLog(state, request, requestPayload, started, attempts, adapterParse(parseStats, "responses_to_chat_completions"));
-    return sendBody(reply, finalStatus, finalBody);
+    const result = await retryChatCompletions(
+      state,
+      upstreamPayload,
+      chatPayload,
+      (body) => chatCompletionToResponsesBody(body, requestPayload),
+    );
+    writeRequestLog(state, request, requestPayload, started, result.attempts, adapterParse(result.parseStats, "responses_to_chat_completions"));
+    return sendBody(reply, result.status, result.body);
   });
 
   app.post("/v1/completions", async (request, reply) => {
@@ -2729,39 +2765,14 @@ export function buildServer(state) {
     }
     const chatPayload = completionsPayloadToChatPayload(requestPayload);
     const upstreamPayload = prepareUpstreamPayload(chatPayload, state.policy);
-    const attempts = [];
-    let finalStatus = 502;
-    let finalBody = emptyBuffer();
-    let parseStats = {};
-
-    for (let attempt = 0; attempt < maxAttempts(state.policy); attempt += 1) {
-      const upstream = await upstreamRequest(state, "POST", "/v1/chat/completions", upstreamPayload);
-      finalStatus = upstream.status;
-      finalBody = upstream.body;
-      const info = attemptInfo(attempt, upstream.status);
-      if (retryableUpstream5xx(attempts, info, upstream.status)) {
-        if (canRetry(attempt, state.policy)) continue;
-      }
-      let upstreamJson;
-      try {
-        upstreamJson = parseJsonBuffer(upstream.body);
-      } catch (error) {
-        recordInvalidJsonAttempt(attempts, info, error);
-        if (canRetry(attempt, state.policy)) continue;
-        break;
-      }
-      const processed = processChatCompletion(upstreamJson, chatPayload, state.policy);
-      parseStats = processed.stats;
-      const retryReason = retryReasonForProcessed(processed.body, chatPayload, parseStats, state.policy);
-      recordProcessedAttempt(attempts, info, retryReason);
-      if (retryReason && canRetry(attempt, state.policy)) continue;
-      finalBody = jsonBuffer(chatCompletionToCompletionsBody(processed.body, requestPayload));
-      finalStatus = upstream.status;
-      break;
-    }
-
-    writeRequestLog(state, request, requestPayload, started, attempts, adapterParse(parseStats, "completions_to_chat_completions"));
-    return sendBody(reply, finalStatus, finalBody);
+    const result = await retryChatCompletions(
+      state,
+      upstreamPayload,
+      chatPayload,
+      (body) => chatCompletionToCompletionsBody(body, requestPayload),
+    );
+    writeRequestLog(state, request, requestPayload, started, result.attempts, adapterParse(result.parseStats, "completions_to_chat_completions"));
+    return sendBody(reply, result.status, result.body);
   });
 
   app.all("*", async (request, reply) => {
@@ -2781,6 +2792,9 @@ export function buildServer(state) {
   return app;
 }
 
+const STRING_CLI_OPTIONS = { "--host": "host", "--upstream": "upstream", "--policy": "policy", "--log-jsonl": "logJsonl" };
+const NUMBER_CLI_OPTIONS = { "--port": "port", "--temperature": "temperature", "--top-p": "top_p", "--top-k": "top_k", "--timeout-sec": "timeoutSec" };
+
 function parseArgs(argv) {
   const args = {
     host: "127.0.0.1",
@@ -2791,17 +2805,14 @@ function parseArgs(argv) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const key = argv[i];
-    const value = argv[i + 1];
-    if (key === "--host") args.host = value, i += 1;
-    else if (key === "--port") args.port = Number(value), i += 1;
-    else if (key === "--upstream") args.upstream = value, i += 1;
-    else if (key === "--policy") args.policy = value, i += 1;
-    else if (key === "--temperature") args.temperature = Number(value), i += 1;
-    else if (key === "--top-p") args.top_p = Number(value), i += 1;
-    else if (key === "--top-k") args.top_k = Number(value), i += 1;
-    else if (key === "--timeout-sec") args.timeoutSec = Number(value), i += 1;
-    else if (key === "--log-jsonl") args.logJsonl = value, i += 1;
-    else if (key === "--help") args.help = true;
+    if (key === "--help") {
+      args.help = true;
+      continue;
+    }
+    const name = STRING_CLI_OPTIONS[key] ?? NUMBER_CLI_OPTIONS[key];
+    if (!name) continue;
+    args[name] = hasOwn(NUMBER_CLI_OPTIONS, key) ? Number(argv[i + 1]) : argv[i + 1];
+    i += 1;
   }
   return args;
 }
