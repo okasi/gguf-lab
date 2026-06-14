@@ -589,6 +589,7 @@ function Build-LlamaArgs {
     $repeatPenalty = Get-ModelValue -ModelConfig $ModelConfig -Key "RepeatPenalty" -Default "1.0"
     $imageMinTokens = Get-ModelValue -ModelConfig $ModelConfig -Key "ImageMinTokens" -Default "256"
     $flashAttn = Get-FlashAttnValue -Model $ModelConfig
+    $cacheTypes = Get-CacheTypeValues -Model $ModelConfig
 
     $args = @(
         "--model", $ModelConfig.Model,
@@ -599,8 +600,8 @@ function Build-LlamaArgs {
         "-np", "$Parallel",
         "-ngl", "99",
         "--flash-attn", $flashAttn,
-        "--cache-type-k", "q8_0",
-        "--cache-type-v", "q8_0",
+        "--cache-type-k", $cacheTypes.K,
+        "--cache-type-v", $cacheTypes.V,
         "--temp", $temp,
         "--top-p", $topP,
         "--top-k", $topK,

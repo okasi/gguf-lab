@@ -6,8 +6,8 @@ param(
     [int]$CodeMaxTokens = 4096,
     [int]$RequestTimeoutSec = 1800,
     [string[]]$OnlyModels = @(),
-    [string]$CacheTypeK = "q8_0",
-    [string]$CacheTypeV = "q8_0",
+    [string]$CacheTypeK = "q4_0",
+    [string]$CacheTypeV = "q4_0",
     [string]$ModelsJson = "",
     [string]$ResultNameOverride = "",
     [ValidateSet("auto", "off")]
@@ -635,4 +635,3 @@ foreach ($run in $Runs) {
 
 Write-Host "Results saved to $ResultPath"
 $Results | Format-Table -AutoSize
-

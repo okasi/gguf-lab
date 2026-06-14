@@ -75,8 +75,10 @@ Runs were done on a Strix Halo mini PC:
 Unless noted otherwise, runs used:
 
 - `--ctx-size` set to each model's native maximum (see **Max ctx** column; most rows use `262144`)
-- `--cache-type-k q8_0`
-- `--cache-type-v q8_0`
+- `--cache-type-k q4_0`
+- `--cache-type-v q4_0`
+- `--spec-draft-type-k q4_0` for MTP rows
+- `--spec-draft-type-v q4_0` for MTP rows
 - `--ngl 99`
 - `-np 1`
 - `--flash-attn on`
@@ -96,9 +98,22 @@ Notes:
 - The 2026-06-09 refresh reran reasoning-on rows with `q8_0/q8_0` KV cache, model-card or family sampler settings, hard TypeScript max output at `7168`, and llama.cpp `b9535` Vulkan. The 2026-06-10 reasoning-off refresh used llama.cpp `b9551` Vulkan.
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector and Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors.
 - `Unsloth Gemma4 E4B` and `Unsloth Gemma4 E2B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
-- Gemma4 QAT rows used `--temp 1.0 --top-p 0.95 --top-k 64` and `q8_0/q8_0` KV cache. Per the [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4), E2B/E4B native context is 128K (`131072`); 12B, 26B A4B, and 31B native context is 256K (`262144`). Local Unsloth QAT GGUFs match those `n_ctx_train` values. The 12B, 26B, and 31B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
+- Earlier Gemma4 QAT refresh rows used `--temp 1.0 --top-p 0.95 --top-k 64` and `q8_0/q8_0` KV cache; current serving and benchmark defaults use `q4_0/q4_0` target and draft KV unless a matrix overrides it. Per the [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4), E2B/E4B native context is 128K (`131072`); 12B, 26B A4B, and 31B native context is 256K (`262144`). Local Unsloth QAT GGUFs match those `n_ctx_train` values. The 12B, 26B, and 31B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
 - Qwopus rows use native `262144` context per the [Qwen3.6](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) model card and matching GGUF `n_ctx_train`.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the 2026-06-06 sampler sweep used `mmproj-F32.gguf` from the MTP repo snapshot.
+
+## Gemma 26B / Qwopus 35B KV Matrix (2026-06-14)
+
+Requested direct/raw BenchLoop matrix for three same-precision target + draft KV settings: `q4_0`, `q8_0`, and `f16`. Runs used `windows-strix-halo/Run-BenchLoop.ps1`, `--reasoning off`, `--ctx-size 262144`, MTP draft n-max 2, llama.cpp `b9551` Vulkan, suites `speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent`. Matrix manifest: [`kv-matrix-gemma26-qwopus35.json`](windows-strix-halo/configs/kv-matrix-gemma26-qwopus35.json). Copied run artifacts: [`windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/`](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/).
+
+| Model / run | Target + draft KV | BL overall | BL quality | BL speed | Reliability | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath | Runtime |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvq4.run.json) | `q4_0 / q4_0` | **80.54** | **84.41** | **73.67** | **77.53** | **58.62 tok/s** | 91.67 | 83.33 | 96.88 | **82.33** | **85.56** | 66.67 | 379.3s |
+| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvq8.run.json) | `q8_0 / q8_0` | 79.19 | 82.98 | 73.64 | 75.28 | 58.56 tok/s | 91.67 | 83.33 | 96.88 | 80.43 | 78.89 | 66.67 | 390.6s |
+| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvf16.run.json) | `f16 / f16` | 80.03 | 84.09 | 73.39 | 76.40 | 58.36 tok/s | 91.67 | 83.33 | 96.88 | 80.43 | 78.89 | **73.33** | 387.1s |
+| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvq4.run.json) | `q4_0 / q4_0` | **82.61** | **87.95** | 71.45 | 79.78 | 50.43 tok/s | 100.00 | 96.67 | 96.88 | 88.60 | **72.23** | 73.33 | 383.6s |
+| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvq8.run.json) | `q8_0 / q8_0` | 82.33 | 87.30 | 71.87 | 79.78 | 51.55 tok/s | 100.00 | 96.67 | 96.88 | 89.12 | 67.78 | 73.33 | 377.4s |
+| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvf16.run.json) | `f16 / f16` | 82.28 | 87.15 | **72.02** | 79.78 | **51.87 tok/s** | 100.00 | 96.67 | 96.88 | **90.45** | 65.56 | 73.33 | **366.2s** |
 
 ## Qwen/Qwopus Harness Fair BenchLoop (2026-06-13)
 

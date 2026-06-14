@@ -39,18 +39,18 @@ Start `llama-server` with the model file, then add the shared runtime, KV cache,
 Default:
 
 ```powershell
---cache-type-k q8_0 `
---cache-type-v q8_0
-```
-
-Memory fallback for large models only:
-
-```powershell
 --cache-type-k q4_0 `
 --cache-type-v q4_0
 ```
 
-Keep q8/q8 for small Gemma E2B/E4B unless you are deliberately retesting quality loss.
+For MTP draft KV, use the same cache precision:
+
+```powershell
+--spec-draft-type-k q4_0 `
+--spec-draft-type-v q4_0
+```
+
+Use q8/q8 or f16/f16 only when deliberately running a comparison matrix or reproducing an older benchmark.
 
 ## Qwopus
 

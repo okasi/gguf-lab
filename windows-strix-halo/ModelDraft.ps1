@@ -55,6 +55,20 @@ function Add-SpeculativeServerArgs {
 
     $nMin = if ($Model.ContainsKey("SpecDraftNMin") -and $null -ne $Model.SpecDraftNMin) { "$($Model.SpecDraftNMin)" } else { "1" }
     $nMax = if ($Model.ContainsKey("SpecDraftNMax") -and $null -ne $Model.SpecDraftNMax) { "$($Model.SpecDraftNMax)" } else { "2" }
+    $draftCacheK = if ($Model.ContainsKey("SpecDraftTypeK") -and $null -ne $Model.SpecDraftTypeK -and "$($Model.SpecDraftTypeK)" -ne "") {
+        [string]$Model.SpecDraftTypeK
+    } elseif ($Model.ContainsKey("SpecDraftCacheTypeK") -and $null -ne $Model.SpecDraftCacheTypeK -and "$($Model.SpecDraftCacheTypeK)" -ne "") {
+        [string]$Model.SpecDraftCacheTypeK
+    } else {
+        "q4_0"
+    }
+    $draftCacheV = if ($Model.ContainsKey("SpecDraftTypeV") -and $null -ne $Model.SpecDraftTypeV -and "$($Model.SpecDraftTypeV)" -ne "") {
+        [string]$Model.SpecDraftTypeV
+    } elseif ($Model.ContainsKey("SpecDraftCacheTypeV") -and $null -ne $Model.SpecDraftCacheTypeV -and "$($Model.SpecDraftCacheTypeV)" -ne "") {
+        [string]$Model.SpecDraftCacheTypeV
+    } else {
+        "q4_0"
+    }
     $args = $ServerArgs + @("--spec-type", "draft-mtp", "--spec-draft-n-min", $nMin, "--spec-draft-n-max", $nMax)
 
     $draftPath = $null
@@ -74,6 +88,7 @@ function Add-SpeculativeServerArgs {
     if ($draftPath) {
         $args += @("--model-draft", $draftPath)
     }
+    $args += @("--spec-draft-type-k", $draftCacheK, "--spec-draft-type-v", $draftCacheV)
     return $args
 }
 
@@ -92,12 +107,12 @@ function Get-CacheTypeValues {
     $cacheK = if ($Model.ContainsKey("CacheTypeK") -and $null -ne $Model.CacheTypeK -and "$($Model.CacheTypeK)" -ne "") {
         [string]$Model.CacheTypeK
     } else {
-        "q8_0"
+        "q4_0"
     }
     $cacheV = if ($Model.ContainsKey("CacheTypeV") -and $null -ne $Model.CacheTypeV -and "$($Model.CacheTypeV)" -ne "") {
         [string]$Model.CacheTypeV
     } else {
-        "q8_0"
+        "q4_0"
     }
     if ((Get-FlashAttnValue -Model $Model) -eq "off") {
         if ($cacheK -eq "q8_0") { $cacheK = "f16" }
