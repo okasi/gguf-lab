@@ -68,29 +68,28 @@ Notes:
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the 2026-06-06 sampler sweep used `mmproj-F32.gguf` from the MTP repo snapshot.
 - Older Qwen/Qwopus harness BenchLoop tables live in [`windows-strix-halo/historical-benchloop.md`](windows-strix-halo/historical-benchloop.md).
 
-## Gemma 26B / Qwopus 35B KV Matrix (2026-06-14)
+## Reasoning-Off 131K q4_0 MTP Toggle BenchLoop (2026-06-15)
 
-Requested direct/raw BenchLoop matrix for three same-precision target + draft KV settings: `q4_0`, `q8_0`, and `f16`. Runs used `windows-strix-halo/Run-BenchLoop.ps1`, `--reasoning off`, `--ctx-size 262144`, MTP draft n-max 2, llama.cpp `b9551` Vulkan, suites `speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent`. Matrix manifest: [`kv-matrix-gemma26-qwopus35.json`](windows-strix-halo/configs/kv-matrix-gemma26-qwopus35.json). Copied run artifacts: [`windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/`](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/).
+BenchLoop v0.2.3 raw rerun with family sampler settings, `--ctx-size 131072`, target KV `q4_0/q4_0`, draft KV `q4_0/q4_0` for MTP rows, and reasoning disabled with `--reasoning off --reasoning-format none --reasoning-budget -1 --chat-template-kwargs '{"enable_thinking":false,"preserve_thinking":false}'`. MTP rows use Gemma draft models or Jackrong MTP GGUFs; no-MTP rows omit speculative decoding. BenchLoop has no image suite, so these rows were run without `mmproj`. E4B MTP used `--flash-attn on` because q4_0 V-cache requires flash attention in this llama.cpp build.
 
-| Model / run | Target + draft KV | BL overall | BL quality | BL speed | Reliability | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath | Runtime |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvq4.run.json) | `q4_0 / q4_0` | **80.54** | **84.41** | **73.67** | **77.53** | **58.62 tok/s** | 91.67 | 83.33 | 96.88 | **82.33** | **85.56** | 66.67 | 379.3s |
-| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvq8.run.json) | `q8_0 / q8_0` | 79.19 | 82.98 | 73.64 | 75.28 | 58.56 tok/s | 91.67 | 83.33 | 96.88 | 80.43 | 78.89 | 66.67 | 390.6s |
-| [Gemma 4 26B A4B QAT](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-gemma4-26b-qat-mtp-kvf16.run.json) | `f16 / f16` | 80.03 | 84.09 | 73.39 | 76.40 | 58.36 tok/s | 91.67 | 83.33 | 96.88 | 80.43 | 78.89 | **73.33** | 387.1s |
-| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvq4.run.json) | `q4_0 / q4_0` | **82.61** | **87.95** | 71.45 | 79.78 | 50.43 tok/s | 100.00 | 96.67 | 96.88 | 88.60 | **72.23** | 73.33 | 383.6s |
-| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvq8.run.json) | `q8_0 / q8_0` | 82.33 | 87.30 | 71.87 | 79.78 | 51.55 tok/s | 100.00 | 96.67 | 96.88 | 89.12 | 67.78 | 73.33 | 377.4s |
-| [Qwopus 35B A3B v1 MTP Q5_K_M](windows-strix-halo/logs/20260614-kv-matrix-gemma26-qwopus35/run-json/kv-matrix-qwopus35b-mtp-q5-kvf16.run.json) | `f16 / f16` | 82.28 | 87.15 | **72.02** | 79.78 | **51.87 tok/s** | 100.00 | 96.67 | 96.88 | **90.45** | 65.56 | 73.33 | **366.2s** |
+Config: [`reasoning-off-131k-q4-mtp-toggle.json`](windows-strix-halo/configs/reasoning-off-131k-q4-mtp-toggle.json). Local ignored export: `windows-strix-halo/logs/rerun-131k-q4-mtp-toggle-benchloop-export.json`.
 
-## Qwopus 35B MTP Reasoning Toggle BenchLoop (2026-06-13)
-
-Requested raw rerun for the main 35B profile: `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` label served from `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf`, `--ctx-size 262144`, sampler `0.85 / 0.95 / 20`, `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`, `q8_0/q8_0` KV, llama.cpp `b9551` Vulkan, BenchLoop raw harness.
-
-Artifacts: reasoning auto run `C:\Users\Admin\.bench-loop\runs\20260613-162833-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-reasoning-auto-mtp2-20260613-local-openai_compat\run.json`; reasoning off run `C:\Users\Admin\.bench-loop\runs\20260613-163957-jackrong-qwopus3.6-35b-a3b-v1-mtp-q5-k-m-nmax2-noreason-mtp2-20260613-local-openai_compat\run.json`.
-
-| Reasoning | BL overall | BL quality | BL speed | Reliability | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath | Runtime |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| auto | 64.97 | 63.20 | 73.81 | 61.80 | 56.37 tok/s | 60.42 | 81.67 | 93.75 | 0.00 | 70.00 | 73.33 | 1146.6s |
-| off | 82.08 | 87.25 | 70.76 | 79.78 | 48.55 tok/s | 100.00 | 96.67 | 96.88 | 88.82 | 67.78 | 73.33 | 389.8s |
+| Model / file | Mode | Max ctx | Sampler | BL overall | BL quality | BL speed | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath |
+|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.0 | 82.5 | 80.3 | 85.62 tok/s | 91.7 | 90.0 | 96.9 | 68.7 | 67.8 | 80.0 |
+| `gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 79.9 | 83.1 | 78.3 | 74.84 tok/s | 100.0 | 90.0 | 96.9 | 70.9 | 67.8 | 73.3 |
+| `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 78.7 | 82.8 | 74.3 | 60.28 tok/s | 100.0 | 80.0 | 96.9 | 76.8 | 63.3 | 80.0 |
+| `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 77.0 | 82.2 | 69.0 | 44.22 tok/s | 100.0 | 75.0 | 96.9 | 81.0 | 63.3 | 77.0 |
+| `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 62.1 | 62.4 | 65.6 | 36.86 tok/s | 100.0 | 83.3 | 96.9 | 0.0 | 14.4 | 80.0 |
+| `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 59.8 | 61.3 | 58.5 | 24.47 tok/s | 100.0 | 83.3 | 96.9 | 0.0 | 14.4 | 73.3 |
+| `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 60.6 | 58.3 | 73.9 | 58.81 tok/s | 91.7 | 83.3 | 96.9 | 0.0 | 11.1 | 66.7 |
+| `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 60.1 | 58.1 | 72.2 | 53.28 tok/s | 77.1 | 90.0 | 96.9 | 0.0 | 11.1 | 73.3 |
+| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 58.9 | 61.5 | 52.5 | 17.61 tok/s | 100.0 | 90.0 | 96.9 | 0.0 | 8.9 | 73.3 |
+| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | No MTP | 131072 | `0.85 / 0.95 / 20` | 58.1 | 62.6 | 43.7 | 10.65 tok/s | 100.0 | 96.7 | 96.9 | 0.0 | 8.9 | 73.3 |
+| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 64.1 | 63.4 | 71.7 | 51.16 tok/s | 100.0 | 96.7 | 96.9 | 0.0 | 13.3 | 73.3 |
+| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | No MTP | 131072 | `0.85 / 0.95 / 20` | 63.3 | 62.1 | 71.3 | 50.22 tok/s | 100.0 | 93.3 | 96.9 | 0.0 | 8.9 | 73.3 |
+| `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 60.3 | 63.2 | 54.6 | 19.87 tok/s | 100.0 | 83.3 | 96.9 | 0.0 | 18.9 | 80.0 |
+| `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 58.1 | 63.2 | 43.9 | 10.83 tok/s | 100.0 | 83.3 | 96.9 | 0.0 | 18.9 | 80.0 |
 
 ## Benchmark Results
 
