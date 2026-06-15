@@ -1,0 +1,242 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-06-12T11:37:38.212897+00:00",
+  "model": {
+    "model_id": "gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized",
+    "family": "",
+    "parameter_count": "",
+    "quantization": ""
+  },
+  "machine": {
+    "machine_id": "remote:127.0.0.1",
+    "cpu": "",
+    "gpu": "Apple M1 Pro",
+    "gpu_memory_gb": 25.0,
+    "system_memory_gb": 0.0,
+    "os": "remote",
+    "backend": "ollama",
+    "is_remote": true,
+    "remote_host": "127.0.0.1",
+    "endpoint": "http://127.0.0.1:8092",
+    "hardware_label": "Apple M1 Pro 32GB unified memory"
+  },
+  "provider": "openai_compat",
+  "harness": "raw",
+  "harness_version": "v1",
+  "total_runtime_sec": 831.9833426669938,
+  "overall_score": 80.0,
+  "quality_score": 100.0,
+  "speed_score": 0.0,
+  "reliability_score": 100.0,
+  "value_score": 50.0,
+  "speed_metrics": {
+    "ttft_ms": 0.0,
+    "prompt_eval_tok_per_sec": 0.0,
+    "generation_tok_per_sec": 0.0,
+    "total_latency_ms": 0.0
+  },
+  "suites": {
+    "coding": {
+      "suite": "coding",
+      "score": 100.0,
+      "task_count": 12,
+      "pass_count": 12,
+      "fail_count": 0,
+      "median_latency_ms": 64552.5845624943,
+      "tasks": [
+        {
+          "task_id": "coding-csv-parser",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 68788.5746670072,
+          "tokens_generated": 562,
+          "tokens_prompt": 57,
+          "error": "",
+          "output": "import csv\nimport io\n\ndef parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text into a list of dictionaries.\n    The first row is treated as the header.\n    Handles quoted fields containing commas.\n    \"\"\"\n    # Use io.StringIO to treat the string like a file object\n    f = io.StringIO(text.strip())\n    \n    # Use DictReader to automatically map rows to dictionaries based on headers\n    reader = csv.DictReader(f)\n    \n    # Convert the reader object into a list of dictionaries\n    retu",
+          "metadata": {
+            "stdout": "{'Name': 'Smith, John', 'Occupation': 'Engineer', 'Location': 'New York, NY'}\n{'Name': 'Jane Doe', 'Occupation': 'Designer', 'Location': 'San Francisco, CA'}\n{'Name': 'Brown, Charlie', 'Occupation': 'Manager', 'Location': 'London, UK'}\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-fibonacci-memo",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 61842.18000000692,
+          "tokens_generated": 548,
+          "tokens_prompt": 50,
+          "error": "",
+          "output": "def fib(n: int) -> int:\n    # Dictionary to store calculated Fibonacci numbers\n    memo = {0: 0, 1: 1}\n    \n    def helper(x: int) -> int:\n        # Check if the value is already in our memo\n        if x in memo:\n            return memo[x]\n        \n        # Recursive step: Calculate and store the result\n        memo[x] = helper(x - 1) + helper(x - 2)\n        return memo[x]\n    \n    return helper(n)\n\n# Examples:\nprint(fib(0))  # Output: 0\nprint(fib(1))  # Output: 1\nprint(fib(10)) # Output: 55\npr",
+          "metadata": {
+            "stdout": "0\n1\n55\n12586269025\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-flatten-nested",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 60946.16895899526,
+          "tokens_generated": 517,
+          "tokens_prompt": 70,
+          "error": "",
+          "output": "def flatten(lst: list) -> list:\n    \"\"\"\n    Flattens an arbitrarily nested list into a single-level list.\n    \"\"\"\n    result = []\n    for item in lst:\n        if isinstance(item, list):\n            # Recursively flatten the sub-list and extend the result\n            result.extend(flatten(item))\n        else:\n            # Append the individual element\n            result.append(item)\n    return result\n\n# Examples\nprint(flatten([1, [2, [3, 4], 5]]))           # Output: [1, 2, 3, 4, 5]\nprint(flatte",
+          "metadata": {
+            "stdout": "[1, 2, 3, 4, 5]\n[1, 2, 3, 4]\n[1, 'a', True, None]\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-bug-fix-off-by-one",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 38607.1009169973,
+          "tokens_generated": 320,
+          "tokens_prompt": 118,
+          "error": "",
+          "output": "def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-json-validator",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 55245.70120900171,
+          "tokens_generated": 492,
+          "tokens_prompt": 98,
+          "error": "",
+          "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary based on specific constraints.\n    \n    Args:\n        data: A dictionary containing 'name', 'email', and 'age'.\n        \n    Returns:\n        A tuple containing a boolean (True if valid) and a list of error messages.\n    \"\"\"\n    errors = []\n\n    # Validate 'name'\n    name = data.get('name')\n    if not isinstance(name, str) or not name.strip():\n        errors.append(\"Field 'name' must be a non-empty s",
+          "metadata": {
+            "stdout": "(True, [])\n(False, [\"Field 'name' must be a non-empty string.\", \"Field 'email' must be a string containing '@'.\", \"Field 'age' must be between 0 and 150.\"])\n(False, [\"Field 'age' must be an integer.\"])\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-retry-decorator",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 67262.98912498169,
+          "tokens_generated": 542,
+          "tokens_prompt": 64,
+          "error": "",
+          "output": "import time\nimport functools\n\ndef retry(max_attempts=3, delay=1.0):\n    def decorator(func):\n        @functools.wraps(func)\n        def wrapper(*args, **kwargs):\n            last_exception = None\n            \n            for attempt in range(1, max_attempts + 1):\n                try:\n                    return func(*args, **kwargs)\n                except Exception as e:\n                    last_exception = e\n                    print(f\"Attempt {attempt}/{max_attempts} failed: {e}\")\n             ",
+          "metadata": {
+            "stdout": "Trying to connect...\nAttempt 1/4 failed: Server unreachable\nTrying to connect...\nAttempt 2/4 failed: Server unreachable\nTrying to connect...\nAttempt 3/4 failed: Server unreachable\nTrying to connect...\nAttempt 4/4 failed: Server unreachable\nFinal Catch: Operation failed after all retries. Error: Server unreachable\nAttempt 1/3 failed: not yet\nAttempt 2/3 failed: not yet\nAttempt 1/2 failed: boom\nAttempt 2/2 failed: boom\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-deduplicate-preserve-order",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 53190.61654197867,
+          "tokens_generated": 479,
+          "tokens_prompt": 43,
+          "error": "",
+          "output": "def dedupe(lst: list) -> list:\n    \"\"\"\n    Removes duplicates from a list while preserving the order \n    of the first occurrence of each element.\n    \"\"\"\n    seen = set()\n    result = []\n    for item in lst:\n        if item not in seen:\n            result.append(item)\n            seen.add(item)\n    return result\n\n# Example usage:\nif __name__ == \"__main__\":\n    numbers = [1, 2, 3, 2, 1, 4, 5, 3]\n    print(dedupe(numbers))  # Output: [1, 2, 3, 4, 5]\n\n    strings = [\"apple\", \"banana\", \"apple\", \"or",
+          "metadata": {
+            "stdout": "[1, 2, 3, 4, 5]\n['apple', 'banana', 'orange']\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-add-error-handling",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 76006.0502080014,
+          "tokens_generated": 613,
+          "tokens_prompt": 73,
+          "error": "",
+          "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Safely navigates a nested dictionary/list structure.\n    Returns the value if found, otherwise returns None.\n    \"\"\"\n    result = data\n    try:\n        for key in keys:\n            # This handles both dict[key] and list[index]\n            result = result[key]\n        return result\n    except (KeyError, TypeError, IndexError, AttributeError):\n        # KeyError: Key doesn't exist in dict\n        # TypeError: Trying to index an unindexable object (e.g.",
+          "metadata": {
+            "stdout": "Alice\nNone\nNone\nNone\nNone\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-lru-cache",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 111460.2571669966,
+          "tokens_generated": 871,
+          "tokens_prompt": 85,
+          "error": "",
+          "output": "from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity: int):\n        \"\"\"\n        Initialize the LRU cache with a fixed capacity.\n        \"\"\"\n        self.capacity = capacity\n        # OrderedDict stores items in insertion order.\n        # We will treat the \"end\" as most recent and \"beginning\" as least recent.\n        self.cache = OrderedDict()\n\n    def get(self, key: str) -> int | None:\n        \"\"\"\n        Retrieve the value of the key. \n        Move the accessed k",
+          "metadata": {
+            "stdout": "1\nNone\nNone\n3\n4\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-rate-limiter",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 83246.47370897583,
+          "tokens_generated": 688,
+          "tokens_prompt": 72,
+          "error": "",
+          "output": "import time\nfrom collections import deque\n\nclass RateLimiter:\n    def __init__(self, max_calls: int, window_seconds: float):\n        \"\"\"\n        :param max_calls: Maximum number of allowed calls.\n        :param window_seconds: The sliding window duration in seconds.\n        \"\"\"\n        self.max_calls = max_calls\n        self.window_seconds = window_seconds\n        # Use a deque for efficient removal from the left (oldest timestamps)\n        self.calls = deque()\n\n    def allow(self) -> bool:\n    ",
+          "metadata": {
+            "stdout": "Call 1: Allowed\nCall 2: Allowed\nCall 3: Allowed\nCall 4: Rate Limited\nCall 5: Rate Limited\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-async-to-sync-refactor",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 55995.27687500813,
+          "tokens_generated": 441,
+          "tokens_prompt": 220,
+          "error": "",
+          "output": "def step1_sync(data: list[int]) -> list[int]:\n    return [x * 2 for x in data]\n\ndef step2_sync(data: list[int]) -> list[int]:\n    return [x for x in data if x > 4]\n\ndef step3_sync(data: list[int]) -> int:\n    return sum(data)\n\ndef process_pipeline_sync(data: list[int]) -> int:\n    # The data flows linearly through the functions\n    result1 = step1_sync(data)\n    result2 = step2_sync(result1)\n    result3 = step3_sync(result2)\n    return result3\n\n# Example usage:\n# data = [1, 2, 3, 4, 5]\n# step1: ",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-parse-log-entries",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 94737.43958299747,
+          "tokens_generated": 740,
+          "tokens_prompt": 89,
+          "error": "",
+          "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dictionaries. Skips malformed lines.\n    \"\"\"\n    # Regular Expression breakdown:\n    # ^\\[(.*?)\\]        -> Matches the timestamp inside brackets at the start\n    # \\s+               -> Matches the whitespace after the bracket\n    # ([A-Z]+):         -> Matches the uppercase level followed by a colon\n    # \\s*               -> Matches optional wh",
+          "metadata": {
+            "stdout": "{'timestamp': '2023-10-01 10:00:01', 'level': 'INFO', 'message': 'System started'}\n{'timestamp': '2023-10-01 10:05:22', 'level': 'ERROR', 'message': 'Failed to connect to database'}\n{'timestamp': '2023-10-01 10:10:00', 'level': 'WARNING', 'message': 'High memory usage'}\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        }
+      ]
+    }
+  }
+}

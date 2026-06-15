@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gemma 4 12B QAT + Unsloth MTP nmax2 through the optimized Gemma 4 harness.
+# Gemma 4 12B QAT + Unsloth MTP nmax2 through the merged proxy harness.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -11,8 +11,8 @@ OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-12b-promoted-kvq4-harness}"
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
 TARGET_MODEL="${TARGET_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
 DRAFT_MODEL="${DRAFT_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
+POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
@@ -29,7 +29,7 @@ CACHE_TYPE_K="${CACHE_TYPE_K:-q4_0}"
 CACHE_TYPE_V="${CACHE_TYPE_V:-q4_0}"
 CACHE_TYPE_K_DRAFT="${CACHE_TYPE_K_DRAFT:-q4_0}"
 CACHE_TYPE_V_DRAFT="${CACHE_TYPE_V_DRAFT:-q4_0}"
-ALIAS="${ALIAS:-gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized}"
+ALIAS="${ALIAS:-gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4_harness}"
 
 KV_ARGS=(
   --cache-type-k "$CACHE_TYPE_K"
@@ -123,7 +123,7 @@ echo "Starting llama-server (MTP n-max=${SPEC_DRAFT_N_MAX}, reasoning=${REASONIN
 SERVER_PID=$!
 wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server"
 
-echo "Starting Gemma 4 harness proxy"
+echo "Starting merged harness proxy"
 node "$PROXY_BIN" \
   --host "$HOST" --port "$PROXY_PORT" \
   --upstream "$UPSTREAM_ENDPOINT" \

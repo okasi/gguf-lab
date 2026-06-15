@@ -1,10 +1,14 @@
 # Local LLM Agent Settings
 
-Shared LAN tooling (`lan-adapter.js`, `lan-models.json`) lives at the repo root. Windows/Strix Halo scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). See [`windows-strix-halo/AGENTS.md`](windows-strix-halo/AGENTS.md) for the full serving runbook.
+Shared LAN/proxy server tooling lives in [`proxy-lan-server/`](proxy-lan-server/). Windows/Strix Halo scripts, llama.cpp builds, and benchmark harnesses live in [`windows-strix-halo/`](windows-strix-halo/). See [`windows-strix-halo/AGENTS.md`](windows-strix-halo/AGENTS.md) for the full serving runbook.
 
-macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/). See [`macos-m1-pro/AGENTS.md`](macos-m1-pro/AGENTS.md) for the promoted **Gemma 4 12B Unsloth MTP nmax2, KV Q4, no cap** serving profile (`run_gemma4_12b_promoted_serve.sh` → harness on `:8092`). The general Gemma 4 harness is [`gemma4_harness/`](gemma4_harness/) (`npm install && npm test` there), and should stay useful for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and other OpenAI-compatible agent clients.
+macOS M1 Pro Gemma 4 QAT / MTP BenchLoop runs live in [`macos-m1-pro/`](macos-m1-pro/). See [`macos-m1-pro/AGENTS.md`](macos-m1-pro/AGENTS.md) for the promoted **Gemma 4 12B Unsloth MTP nmax2, KV Q4, no cap** serving profile (`run_gemma4_12b_promoted_serve.sh` → harness on `:8092`). The merged Gemma/Qwen harness lives in [`proxy-lan-server/`](proxy-lan-server/): [`proxy.mjs`](proxy-lan-server/proxy.mjs), [`test.mjs`](proxy-lan-server/test.mjs), [`lan-adapter.js`](proxy-lan-server/lan-adapter.js), and [`gemma_qwen_merged_policy.json`](proxy-lan-server/gemma_qwen_merged_policy.json). Run `npm install && npm test` from `proxy-lan-server/`.
+
+Merged Gemma/Qwen harness work must keep sampler profiles separate and pinned unless the user explicitly asks for a sampler sweep. Use Gemma 4 `temp=1.0`, `top_p=0.95`, `top_k=64`, `min_p=0.0`; use Qwen/Qwopus `temp=0.85`, `top_p=0.95`, `top_k=20`, `min_p=0.0`. These profiles are defaults for clients that omit sampler fields; raw-compatible clients with explicit sampler values should be respected. Focus policy changes on generic protocol adaptation, parsing, retries, and output normalization rather than sampler tuning.
 
 Benchmark results belong in the repo root [`README.md`](README.md).
+
+Use `--ctx-size 131072` as the maximum serving and benchmark context unless the user explicitly asks for a larger context run. Larger windows such as `262144` make prefills too slow for normal comparisons.
 
 ### Peak memory (llama-server, macOS + Windows)
 

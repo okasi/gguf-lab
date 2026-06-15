@@ -5,10 +5,10 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
 cd "$MACOS_DIR"
 
-OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-harness-optimized/final}"
+OUT_DIR="${OUT_DIR:-results/benchloop/harness/final}"
 SERVER_BIN="${SERVER_BIN:-llama.cpp/build/bin/llama-server}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
+POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 if [[ ! -d "$HARNESS_DIR/node_modules" ]]; then
   echo "Missing harness dependencies. Run: (cd \"$HARNESS_DIR\" && npm install)" >&2
@@ -79,7 +79,7 @@ fi
 
 for entry in "${MODELS[@]}"; do
   IFS="|" read -r model_id model_path <<< "$entry"
-  alias="${model_id}-gemma4-harness-optimized"
+  alias="${model_id}-gemma4_harness"
   bench_log="${OUT_DIR}/${alias}.benchloop.log"
   server_log="${OUT_DIR}/${alias}.llama-server.log"
   proxy_log="${OUT_DIR}/${alias}.proxy.log"
@@ -103,7 +103,7 @@ for entry in "${MODELS[@]}"; do
   SERVER_PID=$!
   wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server"
 
-  echo "Starting Gemma 4 harness proxy for ${alias}"
+  echo "Starting merged harness proxy for ${alias}"
   node "$PROXY_BIN" \
     --host "$HOST" --port "$PROXY_PORT" \
     --upstream "$UPSTREAM_ENDPOINT" \

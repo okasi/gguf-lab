@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gemma 4 E2B / E4B / 12B BenchLoop matrix: raw llama-server vs optimized Gemma 4 harness.
+# Gemma 4 E2B / E4B / 12B BenchLoop matrix: raw llama-server vs merged proxy harness.
 # 12B uses Unsloth MTP nmax2; E2B/E4B use promoted sampler (no local MTP draft).
 set -euo pipefail
 
@@ -9,8 +9,8 @@ CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-
 cd "$MACOS_DIR"
 
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
-POLICY="${POLICY:-$REPO_ROOT/gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
+POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
@@ -230,7 +230,7 @@ for entry in "${MODELS[@]}"; do
 
   if [[ "$MODE" == "all" || "$MODE" == "harness" ]]; then
     ensure_ports_free
-    harness_alias="${model_id}${ALIAS_TAG}-gemma4-harness-optimized"
+    harness_alias="${model_id}${ALIAS_TAG}-gemma4_harness"
     bench_log="${OUT_DIR}/${harness_alias}.benchloop.log"
     server_log="${OUT_DIR}/${harness_alias}.llama-server.log"
     server_stdout="${OUT_DIR}/${harness_alias}.llama-server.stdout.log"

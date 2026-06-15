@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Promoted Gemma 4 12B: Unsloth MTP n-max=2, KV q4, no cap, + Gemma 4 harness proxy.
+# Promoted Gemma 4 12B: Unsloth MTP n-max=2, KV q4, no cap, plus merged proxy harness.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
 CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-for-unsloth-gemma-4}"
-HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/gemma4_harness}"
-POLICY="${POLICY:-$HARNESS_DIR/configs/gemma4_qat_q4_optimized_policy.json}"
+HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
+POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
 TARGET_MODEL="${TARGET_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
@@ -14,7 +14,7 @@ DRAFT_MODEL="${DRAFT_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
 HOST="${HOST:-127.0.0.1}"
-ALIAS="${ALIAS:-gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized}"
+ALIAS="${ALIAS:-gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4_harness}"
 CTX_SIZE="${CTX_SIZE:-0}"
 FIT_TARGET_MIB="${FIT_TARGET_MIB:-28672}"
 SPEC_DRAFT_N_MAX="${SPEC_DRAFT_N_MAX:-2}"
@@ -97,7 +97,7 @@ echo "Starting llama-server: 12B MTP n-max=${SPEC_DRAFT_N_MAX}, KV ${CACHE_TYPE_
 SERVER_PID=$!
 wait_for_health "http://${HOST}:${UPSTREAM_PORT}/health"
 
-echo "Starting Gemma 4 harness proxy on http://${HOST}:${PROXY_PORT}"
+echo "Starting merged harness proxy on http://${HOST}:${PROXY_PORT}"
 node "$PROXY_BIN" \
   --host "$HOST" --port "$PROXY_PORT" \
   --upstream "http://${HOST}:${UPSTREAM_PORT}" \

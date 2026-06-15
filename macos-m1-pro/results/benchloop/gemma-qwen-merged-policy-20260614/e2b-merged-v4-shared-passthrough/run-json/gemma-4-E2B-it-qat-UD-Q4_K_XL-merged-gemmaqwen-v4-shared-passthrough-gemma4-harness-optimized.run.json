@@ -1,0 +1,2727 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-06-14T21:10:55.914820+00:00",
+  "model": {
+    "model_id": "gemma-4-E2B-it-qat-UD-Q4_K_XL-merged-gemmaqwen-v4-shared-passthrough-gemma4-harness-optimized",
+    "family": "",
+    "parameter_count": "",
+    "quantization": ""
+  },
+  "machine": {
+    "machine_id": "remote:127.0.0.1",
+    "cpu": "",
+    "gpu": "Apple M1 Pro",
+    "gpu_memory_gb": 25.0,
+    "system_memory_gb": 0.0,
+    "os": "remote",
+    "backend": "ollama",
+    "is_remote": true,
+    "remote_host": "127.0.0.1",
+    "endpoint": "http://127.0.0.1:8092",
+    "hardware_label": "Apple M1 Pro 32GB unified memory"
+  },
+  "provider": "openai_compat",
+  "harness": "raw",
+  "harness_version": "v1",
+  "total_runtime_sec": 587.195540916,
+  "overall_score": 76.11318258426968,
+  "quality_score": 80.995,
+  "speed_score": 73.56,
+  "reliability_score": 67.41573033707866,
+  "value_score": 30.981034942489345,
+  "speed_metrics": {
+    "ttft_ms": 0.0,
+    "prompt_eval_tok_per_sec": 0.0,
+    "generation_tok_per_sec": 56.73831944114969,
+    "total_latency_ms": 3070.9272313332704
+  },
+  "suites": {
+    "agent": {
+      "suite": "agent",
+      "score": 96.88,
+      "task_count": 8,
+      "pass_count": 7,
+      "fail_count": 1,
+      "median_latency_ms": 0.0,
+      "tasks": [
+        {
+          "task_id": "agent-01-weather-math",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "23",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "What is the temperature difference between Berlin and Tokyo in Fahrenheit? Use the tools, then state the difference as a single integer in your final answer.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "Berlin: 48\u00b0F, rain",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "Berlin",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "Berlin: 48\u00b0F, rain"
+              },
+              {
+                "role": "tool",
+                "content": "Tokyo: 71\u00b0F, clear",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "Tokyo",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "Tokyo: 71\u00b0F, clear"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "23",
+                "tool_name": "calculator",
+                "tool_args": {
+                  "expression": "71 - 48"
+                },
+                "tool_result": "23"
+              },
+              {
+                "role": "assistant",
+                "content": "23",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 3,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 6
+          }
+        },
+        {
+          "task_id": "agent-02-stock-portfolio",
+          "suite": "agent",
+          "passed": false,
+          "score": 75.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "The total value of your portfolio is $3948.",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 0,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "I own 10 shares of AAPL and 5 shares of MSFT. What is my total portfolio value? Use the tools and state the final dollar amount, rounded to the nearest dollar.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "AAPL: $188.43",
+                "tool_name": "get_stock_price",
+                "tool_args": {
+                  "ticker": "AAPL"
+                },
+                "tool_result": "AAPL: $188.43"
+              },
+              {
+                "role": "tool",
+                "content": "MSFT: $412.65",
+                "tool_name": "get_stock_price",
+                "tool_args": {
+                  "ticker": "MSFT"
+                },
+                "tool_result": "MSFT: $412.65"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "3947.55",
+                "tool_name": "calculator",
+                "tool_args": {
+                  "expression": "(10 * 188.43) + (5 * 412.65)"
+                },
+                "tool_result": "3947.55"
+              },
+              {
+                "role": "assistant",
+                "content": "The total value of your portfolio is $3948.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 3,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 6
+          }
+        },
+        {
+          "task_id": "agent-03-string-roundtrip",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "5",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "Reverse this sentence: 'hello world from bench loop' and tell me how many words are in the reversed string. State the count as a single integer.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "pool hcneb morf dlrow olleh",
+                "tool_name": "reverse_text",
+                "tool_args": {
+                  "text": "hello world from bench loop"
+                },
+                "tool_result": "pool hcneb morf dlrow olleh"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "5",
+                "tool_name": "word_count",
+                "tool_args": {
+                  "text": "pool hcneb morf dlrow olleh"
+                },
+                "tool_result": "5"
+              },
+              {
+                "role": "assistant",
+                "content": "5",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 2,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 5
+          }
+        },
+        {
+          "task_id": "agent-04-multi-step-calc",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "93.0",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "Compute (12 * 7) + (45 / 5) using the calculator tool. State the final result as a single number.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "93.0",
+                "tool_name": "calculator",
+                "tool_args": {
+                  "expression": "(12 * 7) + (45 / 5)"
+                },
+                "tool_result": "93.0"
+              },
+              {
+                "role": "assistant",
+                "content": "93.0",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 1,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 4
+          }
+        },
+        {
+          "task_id": "agent-05-refuse-unknown-tool",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "I cannot provide the population of Reykjavik. I only have access to tools for getting weather and stock prices.",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "What is the population of Reykjavik? You only have weather and stock tools. If you cannot answer from those tools, say so explicitly.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "I cannot provide the population of Reykjavik. I only have access to tools for getting weather and stock prices.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 0,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 4
+          }
+        },
+        {
+          "task_id": "agent-06-weather-fahrenheit",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "The current temperature in Paris is 55\u00b0F with overcast conditions.",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "Tell me the current temperature in Paris in Fahrenheit and the condition. Use the tool. Then give a one-sentence final answer.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "Paris: 55\u00b0F, overcast",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "Paris",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "Paris: 55\u00b0F, overcast"
+              },
+              {
+                "role": "assistant",
+                "content": "The current temperature in Paris is 55\u00b0F with overcast conditions.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 1,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 4
+          }
+        },
+        {
+          "task_id": "agent-07-stocks-compare",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "The price per share for NVDA is $925.10, and the price per share for TSLA is $198.50. NVDA is more expensive per share.\n\nThe winner's ticker is **NVDA**.",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "Which is more expensive per share right now: NVDA or TSLA? Use the tools and state the winner's ticker in your final answer.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "NVDA: $925.10",
+                "tool_name": "get_stock_price",
+                "tool_args": {
+                  "ticker": "NVDA"
+                },
+                "tool_result": "NVDA: $925.10"
+              },
+              {
+                "role": "tool",
+                "content": "TSLA: $198.50",
+                "tool_name": "get_stock_price",
+                "tool_args": {
+                  "ticker": "TSLA"
+                },
+                "tool_result": "TSLA: $198.50"
+              },
+              {
+                "role": "assistant",
+                "content": "The price per share for NVDA is $925.10, and the price per share for TSLA is $198.50. NVDA is more expensive per share.\n\nThe winner's ticker is **NVDA**.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 2,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 4
+          }
+        },
+        {
+          "task_id": "agent-08-chained-tools",
+          "suite": "agent",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 0.0,
+          "tokens_generated": 0,
+          "tokens_prompt": 0,
+          "error": "",
+          "output": "The sum of the temperatures in London (52\u00b0F) and NYC (58\u00b0F) is 110.",
+          "metadata": {
+            "agent_components": {
+              "correct_final": 25,
+              "efficient": 25,
+              "no_hallucinated_tools": 25,
+              "all_required_called": 25
+            },
+            "turns": [
+              {
+                "role": "user",
+                "content": "What is the temperature in London plus the temperature in NYC (both Fahrenheit)? Use tools to fetch each, then use the calculator to add them. State the sum as a single integer.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "assistant",
+                "content": "1. **Analyze the user's request:** The user wants to find the sum of the temperature in London and the temperature in NYC, both in Fahrenheit.\n\n2. **Identify necessary tools:**\n    * `get_weather`: Needed to fetch the temperature for London and NYC.\n    * `calculator`: Needed to sum the two temperatures obtained from `get_weather`.\n\n3. **Determine the steps:**\n    * **Step 1: Get the temperature f",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "London: 52\u00b0F, drizzle",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "London",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "London: 52\u00b0F, drizzle"
+              },
+              {
+                "role": "tool",
+                "content": "Nyc: 58\u00b0F, partly cloudy",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "NYC",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "Nyc: 58\u00b0F, partly cloudy"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "London: 52\u00b0F, drizzle",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "London",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "London: 52\u00b0F, drizzle"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "Nyc: 58\u00b0F, partly cloudy",
+                "tool_name": "get_weather",
+                "tool_args": {
+                  "location": "NYC",
+                  "units": "fahrenheit"
+                },
+                "tool_result": "Nyc: 58\u00b0F, partly cloudy"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              },
+              {
+                "role": "tool",
+                "content": "110",
+                "tool_name": "calculator",
+                "tool_args": {
+                  "expression": "52 + 58"
+                },
+                "tool_result": "110"
+              },
+              {
+                "role": "assistant",
+                "content": "The sum of the temperatures in London (52\u00b0F) and NYC (58\u00b0F) is 110.",
+                "tool_name": null,
+                "tool_args": null,
+                "tool_result": ""
+              }
+            ],
+            "tool_calls_total": 5,
+            "hallucinated_tools": [],
+            "completed": true,
+            "stop_reason": "model_finished",
+            "max_turns": 6
+          }
+        }
+      ]
+    },
+    "coding": {
+      "suite": "coding",
+      "score": 93.75,
+      "task_count": 12,
+      "pass_count": 11,
+      "fail_count": 1,
+      "median_latency_ms": 14764.364312499765,
+      "tasks": [
+        {
+          "task_id": "coding-csv-parser",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 16086.370832999819,
+          "tokens_generated": 782,
+          "tokens_prompt": 53,
+          "error": "",
+          "output": "import csv\nfrom io import StringIO\n\ndef parse_csv(text: str) -> list[dict]:\n    \"\"\"\n    Parses CSV text (first row is headers) into a list of dicts.\n    Handles quoted fields with commas inside them.\n\n    Args:\n        text: The CSV data as a string.\n\n    Returns:\n        A list of dictionaries, where each dictionary represents a row \n        and keys are derived from the first row (headers).\n    \"\"\"\n    # Use StringIO to treat the input string as a file\n    f = StringIO(text)\n    \n    # The csv",
+          "metadata": {
+            "stdout": "--- Example 1 ---\n{'Name': 'Alice', 'Age': '30', 'City': 'New York'}\n{'Name': 'Bob', 'Age': '25', 'City': 'Los Angeles, CA'}\n{'Name': 'Charlie', 'Age': '35', 'City': 'Chicago'}\n\n==============================\n\n--- Example 2 ---\nWarning: Skipping row due to inconsistent column count: ['2', 'Product B', 'This is a \"special\" item with a comma', ' inside.']\n{'ID': '1', 'Description': 'Product A', 'Notes': 'This item costs 100.'}\n\n==============================\n\n--- Example 3 (Empty Input) ---\nResult: []\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-fibonacci-memo",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 5247.441540999716,
+          "tokens_generated": 331,
+          "tokens_prompt": 46,
+          "error": "",
+          "output": "def fib(n: int) -> int:\n    \"\"\"\n    Returns the nth Fibonacci number using memoization.\n\n    Args:\n        n: The index of the Fibonacci number to retrieve (n >= 0).\n\n    Returns:\n        The nth Fibonacci number.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"Input must be a non-negative integer.\")\n\n    # Initialize the memoization dictionary (cache)\n    memo = {}\n\n    def helper(k: int) -> int:\n        # Base cases\n        if k == 0:\n            return 0\n        if k == 1:\n            return ",
+          "metadata": {
+            "stdout": "0\n1\n1\n2\n3\n5\n8\n55\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-flatten-nested",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 10941.004333999444,
+          "tokens_generated": 534,
+          "tokens_prompt": 66,
+          "error": "",
+          "output": "def flatten(lst: list) -> list:\n    result = []\n    for element in lst:\n        if isinstance(element, list):\n            # Recursively flatten the sublist and extend the result\n            result.extend(flatten(element))\n        else:\n            # If it's not a list, append it\n            result.append(element)\n    return result\n\n# Example Usage:\nlist1 = [1, [2, [3, 4], 5]]\nprint(f\"Input: {list1}\")\nprint(f\"Output: {flatten(list1)}\")  # Expected: [1, 2, 3, 4, 5]\n\nlist2 = [1, [2, [3, [4, [5]]]]]",
+          "metadata": {
+            "stdout": "Input: [1, [2, [3, 4], 5]]\nOutput: [1, 2, 3, 4, 5]\n\nInput: [1, [2, [3, [4, [5]]]]]\nOutput: [1, 2, 3, 4, 5]\n\nInput: [1, 2, 3]\nOutput: [1, 2, 3]\n\nInput: [[], [1, [2]], [3, [4]]]\nOutput: [1, 2, 3, 4]\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-bug-fix-off-by-one",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 16380.035499999394,
+          "tokens_generated": 795,
+          "tokens_prompt": 114,
+          "error": "",
+          "output": "def binary_search(arr, target):\n    left, right = 0, len(arr) - 1  # Initialize right to the last valid index\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1  # Look in the right half\n        else:  # arr[mid] > target\n            right = mid - 1 # Look in the left half\n    return -1",
+          "metadata": {
+            "stdout": "PASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-json-validator",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 13442.357791999711,
+          "tokens_generated": 656,
+          "tokens_prompt": 94,
+          "error": "",
+          "output": "def validate_user(data: dict) -> tuple[bool, list[str]]:\n    \"\"\"\n    Validates a user dictionary.\n\n    Required fields:\n    - 'name' (str, non-empty)\n    - 'email' (str, must contain @)\n    - 'age' (int, 0-150)\n\n    Args:\n        data: The dictionary containing user information.\n\n    Returns:\n        A tuple (is_valid, list_of_errors).\n        Returns (True, []) if valid, otherwise (False, list_of_errors).\n    \"\"\"\n    errors = []\n\n    # 1. Check for 'name'\n    if 'name' not in data or not isinst",
+          "metadata": {
+            "stdout": "Valid Test: (True, [])\n--------------------\nInvalid Test 1: (False, [\"Field 'name' is required and must be a non-empty string.\", \"Field 'email' is required and must be a string containing '@'.\", \"Field 'age' is required and must be an integer between 0 and 150, inclusive.\"])\n--------------------\nMissing Test: (False, [\"Field 'email' is required and must be a string containing '@'.\", \"Field 'age' is required and must be an integer between 0 and 150, inclusive.\"])\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-retry-decorator",
+          "suite": "coding",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 21718.667875000392,
+          "tokens_generated": 1014,
+          "tokens_prompt": 60,
+          "error": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 81, in <module>\n    always_fail_task()\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 31, in wrapper\n    raise last_exception\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 19, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 77, in always_fail_task\n    return always_fail()\n           ^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 73, in always_fail\n    raise ValueError(\"Fatal error that won't be fixed\")\nValueError: Fatal error that won't be fixed\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 84, in <module>\n    print(f\"Type: {type(e).__name}\")\n                   ^^^^^^^^^^^^^^\nAttributeError: type object 'ValueError' has no attribute '__name'",
+          "output": "import time\nimport functools\n\ndef retry(max_attempts=3, delay=1.0):\n    \"\"\"\n    A decorator that retries a function on exception up to max_attempts times.\n\n    Args:\n        max_attempts (int): The maximum number of times to try executing the function.\n        delay (float): The delay in seconds between retries.\n    \"\"\"\n    def decorator(func):\n        @functools.wraps(func)\n        def wrapper(*args, **kwargs):\n            last_exception = None\n            for attempt in range(max_attempts):\n  ",
+          "metadata": {
+            "stdout": "--- Test Case 1: Successful retry ---\n\n--- Executing unstable_operation (Call #1) ---\nSimulating failure!\nAttempt 1 failed. Retrying in 0.5 seconds...\n\n--- Executing unstable_operation (Call #2) ---\nSimulating failure!\nAttempt 2 failed. Retrying in 0.5 seconds...\n\n--- Executing unstable_operation (Call #3) ---\nSimulating success on call #3\nFinal result: Success on call 3\n\n==================================================\n\n--- Test Case 2: Failed after maximum attempts ---\n\n--- Executing always_fail (Call #1) ---\nAttempt 1 failed. Retrying in 0.1 seconds...\n\n--- Executing always_fail (Call #2) ---\nAttempt 2 failed. Retrying in 0.1 seconds...\n\n--- Executing always_fail (Call #3) ---\nSuccessfully caught final exception:\n",
+            "stderr": "Traceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 81, in <module>\n    always_fail_task()\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 31, in wrapper\n    raise last_exception\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 19, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 77, in always_fail_task\n    return always_fail()\n           ^^^^^^^^^^^^^\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 73, in always_fail\n    raise ValueError(\"Fatal error that won't be fixed\")\nValueError: Fatal error that won't be fixed\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/var/folders/n1/63fgvh314s3bspjn5dzp7xp00000gn/T/bench-loop-coding-u_vrpnac/task.py\", line 84, in <module>\n    print(f\"Type: {type(e).__name}\")\n                   ^^^^^^^^^^^^^^\nAttributeError: type object 'ValueError' has no attribute '__name'\n",
+            "evaluation_status": "tests_failed_or_runtime_error"
+          }
+        },
+        {
+          "task_id": "coding-deduplicate-preserve-order",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 17447.308791999603,
+          "tokens_generated": 849,
+          "tokens_prompt": 39,
+          "error": "",
+          "output": "def dedupe(lst: list) -> list:\n    \"\"\"\n    Removes duplicate elements from a list while preserving the order \n    of their first occurrence.\n\n    Args:\n        lst: The input list potentially containing duplicates.\n\n    Returns:\n        A new list containing only the unique elements from the input list,\n        in the order they first appeared.\n    \"\"\"\n    seen = set()\n    result = []\n    \n    for item in lst:\n        if item not in seen:\n            # If the item hasn't been seen yet, add it to",
+          "metadata": {
+            "stdout": "Original List 1: [1, 2, 2, 3, 4, 1, 5, 3]\nDeduplicated List 1: [1, 2, 3, 4, 5]\n\nOriginal List 2: ['a', 'b', 'a', 'c', 'b', 'd', 'c']\nDeduplicated List 2: ['a', 'b', 'c', 'd']\n\nOriginal List 3: []\nDeduplicated List 3: []\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-add-error-handling",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 13233.137082999747,
+          "tokens_generated": 686,
+          "tokens_prompt": 69,
+          "error": "",
+          "output": "def get_nested_value(data, keys):\n    \"\"\"\n    Safely retrieves a value from a nested dictionary using a list of keys.\n    Returns None if data is not a dictionary, or if any key in the path\n    does not exist.\n\n    Args:\n        data: The dictionary to search within.\n        keys: A list of keys representing the path to the value.\n\n    Returns:\n        The nested value found, or None if an error occurs.\n    \"\"\"\n    if not isinstance(data, dict):\n        return None\n\n    current_data = data\n    f",
+          "metadata": {
+            "stdout": "Test 1 (Success): 3\nTest 2 (Missing Key): None\nTest 3 (Shallow Access): None\nTest 4 (Empty Keys): {'a': 1, 'b': {'c': 2, 'd': 3}}\nTest 5 (Invalid Data Type): None\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-lru-cache",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 34527.309250000144,
+          "tokens_generated": 1609,
+          "tokens_prompt": 81,
+          "error": "",
+          "output": "from collections import OrderedDict\n\nclass LRUCache:\n    \"\"\"\n    Implements a Least Recently Used (LRU) cache.\n\n    Evicts the least recently used item when the capacity is exceeded.\n    'get' and 'put' operations both mark the item as most recently used.\n    \"\"\"\n\n    def __init__(self, capacity: int):\n        \"\"\"\n        Initializes the LRU Cache with a given capacity.\n        \"\"\"\n        if capacity <= 0:\n            raise ValueError(\"Capacity must be a positive integer.\")\n            \n       ",
+          "metadata": {
+            "stdout": "Cache initialized with capacity 3\n\nAfter putting A, B, C:\nCache state (LRU -> MRU): ['A', 'B', 'C']\n\nGetting 'A': 1\n\nAfter putting D (Eviction expected):\nCache state (LRU -> MRU): ['C', 'A', 'D']\nGetting 'B' (should be None): None\nGetting 'C' (should be 3): 3\nGetting 'D' (should be 4): 4\n\nAfter updating C to 300:\nCache state (LRU -> MRU): ['A', 'D', 'C']\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-rate-limiter",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 23170.676749999984,
+          "tokens_generated": 1178,
+          "tokens_prompt": 68,
+          "error": "",
+          "output": "import time\nfrom collections import deque\n\nclass RateLimiter:\n    \"\"\"\n    A rate limiter that checks if the number of calls within a sliding window \n    of 'window_seconds' exceeds 'max_calls'.\n    \"\"\"\n\n    def __init__(self, max_calls: int, window_seconds: float):\n        \"\"\"\n        Initializes the rate limiter.\n\n        Args:\n            max_calls: The maximum number of calls allowed in the window.\n            window_seconds: The duration of the sliding window in seconds.\n        \"\"\"\n        ",
+          "metadata": {
+            "stdout": "Testing Rate Limiter (Max 3 calls per 5 seconds):\nCall 1 (Time 1781471656.00): True\nCall 2 (Time 1781471656.00): True\nCall 3 (Time 1781471656.00): True\nCall 4 (Time 1781471656.00): False\n\nWaiting 5.1 seconds...\nCall 5 (Time 1781471661.11): True\nCall 6 (Time 1781471661.11): True\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-async-to-sync-refactor",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 8468.862042000183,
+          "tokens_generated": 519,
+          "tokens_prompt": 216,
+          "error": "",
+          "output": "def process_pipeline_sync(data: list[int]) -> int:\n    \"\"\"\n    Synchronously executes the three steps of the pipeline defined by the original \n    callback-based structure and returns the final result.\n    \"\"\"\n    \n    # Step 1: step1(data, step1_done)\n    # step1 performs: [x * 2 for x in data]\n    result1 = [x * 2 for x in data]\n    \n    # Step 2: step2(result1, step2_done)\n    # step2 performs: [x for x in result1 if x > 4]\n    result2 = [x for x in result1 if x > 4]\n    \n    # Step 3: step3(",
+          "metadata": {
+            "stdout": "Input Data: [1, 2, 3, 4, 5]\nSynchronous Result: 24\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        },
+        {
+          "task_id": "coding-parse-log-entries",
+          "suite": "coding",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 11375.613457999862,
+          "tokens_generated": 756,
+          "tokens_prompt": 85,
+          "error": "",
+          "output": "import re\n\ndef parse_logs(text: str) -> list[dict]:\n    \"\"\"\n    Parses log lines in the format: [YYYY-MM-DD HH:MM:SS] LEVEL: message\n    into a list of dicts with keys 'timestamp', 'level', and 'message'.\n\n    Args:\n        text: A string containing one or more log lines.\n\n    Returns:\n        A list of dictionaries, each representing a successfully parsed log line.\n    \"\"\"\n    parsed_logs = []\n    \n    # Regex to capture the three main parts:\n    # 1. Timestamp inside brackets: \\[([\\d\\- :]+)\\]\n",
+          "metadata": {
+            "stdout": "[{'level': 'INFO',\n  'message': 'System startup successful.',\n  'timestamp': '2023-10-27 10:00:00'},\n {'level': 'ERROR',\n  'message': 'Database connection failed: Timeout occurred.',\n  'timestamp': '2023-10-27 10:01:15'},\n {'level': 'DEBUG',\n  'message': 'Processing request ID 12345',\n  'timestamp': '2023-10-27 10:02:30'},\n {'level': 'WARNING',\n  'message': 'Low disk space detected.',\n  'timestamp': '2023-10-27 10:03:45'}]\nPASS\n",
+            "stderr": "",
+            "evaluation_status": "all_tests_passed"
+          }
+        }
+      ]
+    },
+    "dataextract": {
+      "suite": "dataextract",
+      "score": 70.0,
+      "task_count": 15,
+      "pass_count": 4,
+      "fail_count": 11,
+      "median_latency_ms": 2935.8570410004177,
+      "tasks": [
+        {
+          "task_id": "de-01",
+          "suite": "dataextract",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 2277.8299580004386,
+          "tokens_generated": 138,
+          "tokens_prompt": 410,
+          "error": "",
+          "output": "{\n\"name\": \"Dr. Sarah Chen, Ph.D.\",\n\"title\": \"Senior Research Scientist\",\n\"company\": \"BioGen Therapeutics, Inc.\",\n\"address\": \"1420 Harbor Blvd, Suite 300\",\n\"city\": \"San Diego\",\n\"state\": \"CA\",\n\"zip\": \"92101\",\n\"phone\": \"(858) 555-0147\",\n\"email\": \"s.chen@biogentherapeutics.com\",\n\"linkedin_url\": \"linkedin.com/in/sarahchen-phd\"\n}",
+          "metadata": {
+            "scenario_id": "DE-01",
+            "evaluation_status": "pass",
+            "summary": "10/10 atomic fields correct (100%). shape ok, fields only, no missing fields.",
+            "note": "",
+            "category": "A",
+            "title": "Business Card / Contact Info"
+          }
+        },
+        {
+          "task_id": "de-02",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 62.0,
+          "latency_ms": 2935.8570410004177,
+          "tokens_generated": 189,
+          "tokens_prompt": 491,
+          "error": "items.price: expected number | items.price: expected number | items.price: expected number | subtotal: expected number | tax_amount: expected number | total: expected number",
+          "output": "{\"store_name\": \"URBAN BEAN COFFEE\", \"store_address\": \"847 Market Street\\nSan Francisco, CA 94103\", \"date\": \"03/15/2026\", \"time\": \"08:42 AM\", \"items\": [{\"name\": \"Americano (L)\", \"price\": \"$4.75\"}, {\"name\": \"Oat Milk Latte (M)\", \"price\": \"$5.50\"}, {\"name\": \"Blueberry Muffin\", \"price\": \"$3.25\"}], \"subtotal\": \"$13.50\", \"tax_rate\": \"8.625%\", \"tax_amount\": \"$1.16\", \"total\": \"$14.66\", \"payment_method\": \"Visa\", \"card_last_four\": \"4821\"}",
+          "metadata": {
+            "scenario_id": "DE-02",
+            "evaluation_status": "partial",
+            "summary": "10/16 atomic fields correct (62%). shape ok, fields only, no missing fields.",
+            "note": "items.price: expected number | items.price: expected number | items.price: expected number | subtotal: expected number | tax_amount: expected number | total: expected number",
+            "category": "A",
+            "title": "Receipt / Invoice"
+          }
+        },
+        {
+          "task_id": "de-03",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 67.0,
+          "latency_ms": 3353.86812500019,
+          "tokens_generated": 191,
+          "tokens_prompt": 512,
+          "error": "experience_years_min: expected number | salary_max: expected number | salary_min: expected number | work_model: mismatch",
+          "output": "{\n\"job_title\": \"Senior Frontend Engineer\",\n\"location\": \"Austin, TX\",\n\"work_model\": \"Hybrid - 3 days in office\",\n\"team\": \"Product Engineering\",\n\"reports_to\": \"VP of Engineering\",\n\"salary_min\": \"$145,000\",\n\"salary_max\": \"$185,000\",\n\"required_skills\": [\n\"React\",\n\"TypeScript\",\n\"CSS-in-JS\",\n\"accessibility (WCAG 2.1)\"\n],\n\"preferred_skills\": [\n\"GraphQL\",\n\"Storybook\",\n\"animation (Framer Motion)\"\n],\n\"experience_years_min\": \"3+\",\n\"apply_url\": \"careers.example.com/senior-fe\",\n\"apply_email\": \"jobs@example.c",
+          "metadata": {
+            "scenario_id": "DE-03",
+            "evaluation_status": "partial",
+            "summary": "8/12 atomic fields correct (67%). shape ok, fields only, no missing fields.",
+            "note": "experience_years_min: expected number | salary_max: expected number | salary_min: expected number | work_model: mismatch",
+            "category": "A",
+            "title": "Job Posting"
+          }
+        },
+        {
+          "task_id": "de-04",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 57.0,
+          "latency_ms": 2455.259125000339,
+          "tokens_generated": 104,
+          "tokens_prompt": 554,
+          "error": "meeting_name: mismatch | note: mismatch | room: mismatch",
+          "output": "{\n\"meeting_name\": \"sprint planning??\",\n\"day\": \"Thursday\",\n\"time\": \"10am\",\n\"room\": \"Maple room\",\n\"organizer_name\": \"Lisa Park\",\n\"organizer_email\": \"lisa.p@company.com\",\n\"note\": \"bring your laptops, we're gonna do live estimation this time\\nthe retro from last sprint is still on for Friday 2pm in Birch\"\n}",
+          "metadata": {
+            "scenario_id": "DE-04",
+            "evaluation_status": "fail",
+            "summary": "4/7 atomic fields correct (57%). shape ok, fields only, no missing fields.",
+            "note": "meeting_name: mismatch | note: mismatch | room: mismatch",
+            "category": "B",
+            "title": "Informal Email Thread"
+          }
+        },
+        {
+          "task_id": "de-05",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 36.0,
+          "latency_ms": 3975.477791999765,
+          "tokens_generated": 245,
+          "tokens_prompt": 602,
+          "error": "extra top-level fields: competitor_2_price | battery_life_hours: expected number | charging_type: mismatch | competitor_1_price: expected number | product_name: mismatch | product_price_original: expected number | product_price_paid: expected number | rating_stars: expected number | recommendation: mismatch | weight_grams: expected number",
+          "output": "{\n\"product_name\": \"XR-7500 Pro noise-cancelling headphones\",\n\"product_price_paid\": \"$279\",\n\"product_price_original\": \"$329\",\n\"rating_stars\": \"\u2605\u2605\u2605\u2605\u2606\",\n\"reviewer_name\": \"TechDad_42\",\n\"battery_life_hours\": \"about 38 hours on a single charge\",\n\"weight_grams\": \"254g\",\n\"bluetooth_version\": \"5.3\",\n\"charging_type\": \"USB-C charging\",\n\"competitor_1_name\": \"Sony WH-1000XM5\",\n\"competitor_1_price\": \"$348\",\n\"competitor_2_name\": \"Bose QC45s\",\n\"competitor_2_price\": null,\n\"complaint\": \"the app (v3.2.1) is buggy ",
+          "metadata": {
+            "scenario_id": "DE-05",
+            "evaluation_status": "fail",
+            "summary": "5/14 atomic fields correct (36%). shape ok, extra fields, no missing fields.",
+            "note": "extra top-level fields: competitor_2_price | battery_life_hours: expected number | charging_type: mismatch | competitor_1_price: expected number | product_name: mismatch | product_price_original: expected number | product_price_paid: expected number | rating_stars: expected number | recommendation: mismatch | weight_grams: expected number",
+            "category": "B",
+            "title": "Product Review with Embedded Specs"
+          }
+        },
+        {
+          "task_id": "de-06",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 80.0,
+          "latency_ms": 2677.3178330004157,
+          "tokens_generated": 185,
+          "tokens_prompt": 529,
+          "error": "medication_dose: mismatch | oxygen_saturation: expected number | referral: expected null",
+          "output": "{\"patient_name\": \"Margaret Liu\", \"date_of_birth\": \"5/12/1958\", \"visit_date\": \"3-20-2026\", \"provider\": \"Dr. Patel\", \"chief_complaint\": \"persistent cough x 3 weeks, worse at night\", \"blood_pressure_systolic\": 128, \"blood_pressure_diastolic\": 82, \"heart_rate\": 76, \"temperature\": 98.4, \"oxygen_saturation\": \"97%\", \"assessment\": \"likely post-nasal drip r/t seasonal allergies\", \"medication_name\": \"fluticasone propionate\", \"medication_dose\": \"50mcg\", \"medication_duration\": \"30 days\", \"referral\": \"none a",
+          "metadata": {
+            "scenario_id": "DE-06",
+            "evaluation_status": "partial",
+            "summary": "12/15 atomic fields correct (80%). shape ok, fields only, no missing fields.",
+            "note": "medication_dose: mismatch | oxygen_saturation: expected number | referral: expected null",
+            "category": "B",
+            "title": "Handwritten-Style Notes (OCR Simulation)"
+          }
+        },
+        {
+          "task_id": "de-07",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 71.0,
+          "latency_ms": 4878.835709000668,
+          "tokens_generated": 302,
+          "tokens_prompt": 512,
+          "error": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | hourly_rate: expected number | note: mismatch",
+          "output": "[\n  {\n    \"name\": \"Marcus Washington\",\n    \"role\": \"Senior Designer\",\n    \"location\": \"NYC office\",\n    \"email\": \"m.washington@studio.com\",\n    \"phone\": \"212-555-0189\",\n    \"hourly_rate\": null,\n    \"note\": \"is taking over the Acme rebrand from Sarah. He'll be on-site in Chicago next week.\"\n  },\n  {\n    \"name\": \"Sarah Kim\",\n    \"role\": null,\n    \"location\": \"relocating from Chicago to the LA office\",\n    \"email\": \"sarah.k@studio.com\",\n    \"phone\": null,\n    \"hourly_rate\": null,\n    \"note\": \"is tr",
+          "metadata": {
+            "scenario_id": "DE-07",
+            "evaluation_status": "partial",
+            "summary": "15/21 atomic fields correct (71%). shape ok, fields only, no missing fields.",
+            "note": "location: mismatch | note: mismatch | location: mismatch | note: mismatch | hourly_rate: expected number | note: mismatch",
+            "category": "C",
+            "title": "Multiple People in One Document"
+          }
+        },
+        {
+          "task_id": "de-08",
+          "suite": "dataextract",
+          "passed": true,
+          "score": 90.0,
+          "latency_ms": 2102.5404160000107,
+          "tokens_generated": 137,
+          "tokens_prompt": 547,
+          "error": "",
+          "output": "{\n  \"event_name\": \"Annual Company Picnic\",\n  \"date\": \"Saturday, June 14\",\n  \"start_time\": \"11:30 AM\",\n  \"end_time\": \"4:00 PM\",\n  \"location_park\": \"Lincoln Park\",\n  \"location_shelter\": \"Shelter A\",\n  \"rsvp_deadline\": \"May 15\",\n  \"rsvp_email\": \"events@company.com\",\n  \"catering_company\": \"Fresh Bites\",\n  \"catering_price_per_person\": \"$25/person\"\n}",
+          "metadata": {
+            "scenario_id": "DE-08",
+            "evaluation_status": "pass",
+            "summary": "9/10 atomic fields correct (90%). shape ok, fields only, no missing fields.",
+            "note": "catering_price_per_person: expected number",
+            "category": "C",
+            "title": "Conflicting Information"
+          }
+        },
+        {
+          "task_id": "de-09",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 60.0,
+          "latency_ms": 3102.4918330003857,
+          "tokens_generated": 113,
+          "tokens_prompt": 600,
+          "error": "attendee_count: expected number | date: mismatch | requester_name: mismatch | room: mismatch",
+          "output": "{\n\"requester_name\": \"Alice\",\n\"requester_email\": \"alice@company.com\",\n\"room\": \"Atlas room\",\n\"date\": \"March 28, 2026\",\n\"start_time\": \"2:00 PM\",\n\"end_time\": \"3:30 PM\",\n\"attendee_count\": \"8\",\n\"needs_projector\": true,\n\"needs_whiteboard\": true,\n\"needs_catering\": false\n}",
+          "metadata": {
+            "scenario_id": "DE-09",
+            "evaluation_status": "partial",
+            "summary": "6/10 atomic fields correct (60%). shape ok, fields only, no missing fields.",
+            "note": "attendee_count: expected number | date: mismatch | requester_name: mismatch | room: mismatch",
+            "category": "C",
+            "title": "Nested Quotes \u2014 Email Within Email"
+          }
+        },
+        {
+          "task_id": "de-10",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 80.0,
+          "latency_ms": 2918.3500829994955,
+          "tokens_generated": 103,
+          "tokens_prompt": 460,
+          "error": "cuisine_type: mismatch | neighborhood: expected null",
+          "output": "{\n  \"restaurant_name\": \"Sakura Sushi\",\n  \"cuisine_type\": \"sushi\",\n  \"neighborhood\": \"Nob Hill neighborhood\",\n  \"street_address\": null,\n  \"chef_name\": null,\n  \"price_paid\": null,\n  \"visit_duration\": \"about 2 hours\",\n  \"rating_score\": null,\n  \"reservation_required\": null,\n  \"parking_available\": null\n}",
+          "metadata": {
+            "scenario_id": "DE-10",
+            "evaluation_status": "partial",
+            "summary": "8/10 atomic fields correct (80%). shape ok, fields only, no missing fields.",
+            "note": "cuisine_type: mismatch | neighborhood: expected null",
+            "category": "D",
+            "title": "The Over-Extraction Trap"
+          }
+        },
+        {
+          "task_id": "de-11",
+          "suite": "dataextract",
+          "passed": true,
+          "score": 86.0,
+          "latency_ms": 1889.1099170004964,
+          "tokens_generated": 68,
+          "tokens_prompt": 493,
+          "error": "",
+          "output": "{\"destination\": \"Lake Tahoe\", \"budget_per_person\": \"$450\", \"start_date\": \"April 11\", \"end_date\": \"April 13\", \"num_rooms\": 6, \"hotel_name\": \"Mountain View Lodge\", \"total_attendees\": null}",
+          "metadata": {
+            "scenario_id": "DE-11",
+            "evaluation_status": "pass",
+            "summary": "6/7 atomic fields correct (86%). shape ok, fields only, no missing fields.",
+            "note": "budget_per_person: expected number",
+            "category": "D",
+            "title": "Negation and Correction in Text"
+          }
+        },
+        {
+          "task_id": "de-12",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 50.0,
+          "latency_ms": 4267.135292000603,
+          "tokens_generated": 170,
+          "tokens_prompt": 583,
+          "error": "battery_life_hours: expected number | complaint: mismatch | price: expected number | product_name: mismatch | ram_gb: expected number | rating: expected number | weight_kg: expected number",
+          "output": "{\"product_name\": \"ZenBook Pro 15 laptop\", \"brand\": \"ASUS\", \"price\": \"$1,299\", \"store\": \"Best Buy\", \"display_type\": \"OLED\", \"display_size\": \"15-inch\", \"ram_gb\": \"16GB\", \"processor\": \"i7-13700H\", \"storage\": \"512GB SSD\", \"battery_life_hours\": \"about 10 hours\", \"weight_kg\": \"1.8kg\", \"rating\": \"4/5 stars\", \"operating_system\": null, \"complaint\": \"came with McAfee preinstalled and a bunch of other bloatware. The ASUS customer support was also pretty bad when I called about a driver issue.\"}",
+          "metadata": {
+            "scenario_id": "DE-12",
+            "evaluation_status": "fail",
+            "summary": "7/14 atomic fields correct (50%). shape ok, fields only, no missing fields.",
+            "note": "battery_life_hours: expected number | complaint: mismatch | price: expected number | product_name: mismatch | ram_gb: expected number | rating: expected number | weight_kg: expected number",
+            "category": "D",
+            "title": "Decoy Entity \u2014 Don't Extract the Wrong Thing"
+          }
+        },
+        {
+          "task_id": "de-13",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 59.0,
+          "latency_ms": 11020.115040999372,
+          "tokens_generated": 464,
+          "tokens_prompt": 819,
+          "error": "discounts.amount: expected number | discounts.amount: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | payment_method: mismatch | subtotal: expected number | total_due: expected number",
+          "output": "{\"invoice_number\": \"INV-2026-0847\", \"vendor_name\": \"CloudTech Solutions, LLC\", \"vendor_address\": \"123 Innovation Way, Seattle, WA 98101\", \"vendor_tax_id\": \"91-7654321\", \"client_name\": \"Meridian Corp\", \"client_po\": \"MC-2026-445\", \"invoice_date\": \"March 15, 2026\", \"due_date\": \"April 14, 2026\", \"payment_terms\": \"Net 30\", \"line_items\": [{\"description\": \"Cloud Hosting - Pro Plan\", \"qty\": 12, \"unit_price\": \"$149.00\", \"amount\": \"$1,788.00\"}, {\"description\": \"API Gateway - Standard\", \"qty\": 1, \"unit_pri",
+          "metadata": {
+            "scenario_id": "DE-13",
+            "evaluation_status": "fail",
+            "summary": "22/37 atomic fields correct (59%). shape ok, fields only, no missing fields.",
+            "note": "discounts.amount: expected number | discounts.amount: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | line_items.amount: expected number | line_items.unit_price: expected number | payment_method: mismatch | subtotal: expected number | total_due: expected number",
+            "category": "E",
+            "title": "Multi-Section Invoice with Discounts"
+          }
+        },
+        {
+          "task_id": "de-14",
+          "suite": "dataextract",
+          "passed": false,
+          "score": 53.0,
+          "latency_ms": 5689.257207999617,
+          "tokens_generated": 229,
+          "tokens_prompt": 639,
+          "error": "battery_life_earbuds_hours: expected number | battery_life_with_case_hours: expected number | case_weight_grams: expected number | array values did not match expected set | earbud_weight_grams: expected number | array values did not match expected set | price_jpy: expected number | product_name: mismatch",
+          "output": "{\"product_name\": \"AirPulse X3 Wireless Earbuds\", \"product_type\": \"Wireless Earbuds\", \"price_jpy\": \"\u00a512,980\", \"tax_included\": true, \"colors\": [\"\u30df\u30c3\u30c9\u30ca\u30a4\u30c8\u30d6\u30e9\u30c3\u30af (Midnight Black)\", \"\u30d1\u30fc\u30eb\u30db\u30ef\u30a4\u30c8 (Pearl White)\", \"\u30b5\u30af\u30e9\u30d4\u30f3\u30af (Sakura Pink)\"], \"driver_size\": \"10mm\", \"bluetooth_version\": \"5.3\", \"battery_life_earbuds_hours\": \"8\u6642\u9593\", \"battery_life_with_case_hours\": \"32\u6642\u9593\", \"water_resistance_rating\": \"IPX5\", \"earbud_weight_grams\": \"5.2g\", \"case_weight_grams\": \"42g\", \"has_anc\": true, \"anc_type\": \"Adaptive\", \"included_item",
+          "metadata": {
+            "scenario_id": "DE-14",
+            "evaluation_status": "fail",
+            "summary": "9/17 atomic fields correct (53%). shape ok, fields only, no missing fields.",
+            "note": "battery_life_earbuds_hours: expected number | battery_life_with_case_hours: expected number | case_weight_grams: expected number | array values did not match expected set | earbud_weight_grams: expected number | array values did not match expected set | price_jpy: expected number | product_name: mismatch",
+            "category": "E",
+            "title": "Multi-Language Document"
+          }
+        },
+        {
+          "task_id": "de-15",
+          "suite": "dataextract",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1980.1973750008983,
+          "tokens_generated": 81,
+          "tokens_prompt": 434,
+          "error": "",
+          "output": "{\n\"company_name\": null,\n\"founding_year\": null,\n\"ceo_name\": null,\n\"employee_count\": null,\n\"headquarters_city\": null,\n\"industry\": null,\n\"annual_revenue\": null,\n\"phone_number\": null,\n\"email\": null,\n\"website_url\": null\n}",
+          "metadata": {
+            "scenario_id": "DE-15",
+            "evaluation_status": "pass",
+            "summary": "10/10 atomic fields correct (100%). shape ok, fields only, no missing fields.",
+            "note": "",
+            "category": "E",
+            "title": "The Empty Document Trap"
+          }
+        }
+      ]
+    },
+    "instructfollow": {
+      "suite": "instructfollow",
+      "score": 63.34,
+      "task_count": 15,
+      "pass_count": 6,
+      "fail_count": 9,
+      "median_latency_ms": 1057.2789589996319,
+      "tasks": [
+        {
+          "task_id": "if-01",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1102.312625000195,
+          "tokens_generated": 42,
+          "tokens_prompt": 139,
+          "error": "",
+          "output": "1. Exercise improves physical health.\n2. It boosts mood and happiness.\n3. Regular movement lowers blood pressure.\n4. Fitness increases energy levels.\n5. Exercise strengthens your bones.",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 2,
+            "checks": {
+              "five_numbered_items": true,
+              "period_and_word_count": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-02",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 634.9376250000205,
+          "tokens_generated": 17,
+          "tokens_prompt": 147,
+          "error": "",
+          "output": "Vast blue water.\nWaves crash on shore.\nDeep mysteries exist.",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 2,
+            "checks": {
+              "three_lines": true,
+              "word_counts_3_4_3": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-03",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 1410.0811250000334,
+          "tokens_generated": 49,
+          "tokens_prompt": 147,
+          "error": "three_paragraphs; one_sentence_each; coffee_start_question_end_under_60_words",
+          "output": "Coffee is a caffeinated beverage enjoyed worldwide for its rich, stimulating flavor. This dark brew offers a variety of roasts and brewing methods to suit diverse tastes. Its aroma alone is often enough to wake up the senses and start the day.",
+          "metadata": {
+            "matched_rules": 0,
+            "total_rules": 3,
+            "checks": {
+              "three_paragraphs": false,
+              "one_sentence_each": false,
+              "coffee_start_question_end_under_60_words": false
+            },
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "if-04",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 50.0,
+          "latency_ms": 654.5284169997103,
+          "tokens_generated": 18,
+          "tokens_prompt": 139,
+          "error": "reverse_alpha_order",
+          "output": "* tulip\n* zebra\n* mango\n* lemon\n* cedar\n* apricot",
+          "metadata": {
+            "matched_rules": 1,
+            "total_rules": 2,
+            "checks": {
+              "six_bullet_items": true,
+              "reverse_alpha_order": false
+            },
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "if-05",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 66.7,
+          "latency_ms": 1079.4227500000488,
+          "tokens_generated": 38,
+          "tokens_prompt": 187,
+          "error": "at_least_one_under_1kg",
+          "output": "Elephant - 4000 kg\nHorse - 500 kg\nDog - 20 kg\nCat - 4.5 kg\nRabbit - 2 kg",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 3,
+            "checks": {
+              "five_entries": true,
+              "format_and_sorted_heaviest_to_lightest": true,
+              "at_least_one_under_1kg": false
+            },
+            "evaluation_status": "partial"
+          }
+        },
+        {
+          "task_id": "if-06",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1042.9904580005314,
+          "tokens_generated": 32,
+          "tokens_prompt": 192,
+          "error": "",
+          "output": "2016 - team formed\n2017 - first funding\n2018 - prototype drafted\n2019 - beta test",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 2,
+            "checks": {
+              "four_milestones": true,
+              "chronological_allowed_set": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-07",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1057.2789589996319,
+          "tokens_generated": 27,
+          "tokens_prompt": 173,
+          "error": "",
+          "output": "[EN] A black cat sleeps.\n[FR] Un chat parle bien.\n[ES] Este es mi gato.",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 2,
+            "checks": {
+              "three_lines": true,
+              "tagged_translations": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-08",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 50.0,
+          "latency_ms": 985.0363750001634,
+          "tokens_generated": 20,
+          "tokens_prompt": 166,
+          "error": "allowed_items_unique_starts",
+          "output": "1. apple\n2. banana\n3. cherry\n4. grape\n5. mango",
+          "metadata": {
+            "matched_rules": 1,
+            "total_rules": 2,
+            "checks": {
+              "five_numbered_items": true,
+              "allowed_items_unique_starts": false
+            },
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "if-09",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1292.575499999657,
+          "tokens_generated": 42,
+          "tokens_prompt": 171,
+          "error": "",
+          "output": "Azure hues glow with 7 bright stars!\nCobalt depths reach 3 million miles high!\nIndigo shadows conceal 9 secrets near!\nCerulean tones shimmer with 10 wonders!",
+          "metadata": {
+            "matched_rules": 3,
+            "total_rules": 3,
+            "checks": {
+              "four_lines": true,
+              "line_shape_forbidden_words_under_60_words": true,
+              "colors_once_each": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-10",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 66.7,
+          "latency_ms": 1693.8987920002546,
+          "tokens_generated": 64,
+          "tokens_prompt": 156,
+          "error": "exactly_50_words_humanity_to_stars",
+          "output": "Humanity seeks new worlds far beyond our blue home.  Space craft fly to moon rocks and red dust.  We wish to find life and learn more.  This grand quest takes many years of hard work and great hope.  Exploring the dark and vast holds a bright, grand dream among the distant stars.",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 3,
+            "checks": {
+              "single_paragraph": true,
+              "exactly_50_words_humanity_to_stars": false,
+              "max_word_length_10": true
+            },
+            "evaluation_status": "partial"
+          }
+        },
+        {
+          "task_id": "if-11",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 66.7,
+          "latency_ms": 1772.7551669995592,
+          "tokens_generated": 72,
+          "tokens_prompt": 196,
+          "error": "required_terms_once_no_food_or_eat",
+          "output": "I. Daily needs.\n    a. Water keeps you hydrated.\n    b. Sleep helps you rest.\nII. Nutritional sources.\n    a. Greens offer great fiber.\n    b. Protein builds strong muscle.\nIII. Healthy additions.\n    a. Fruit is a sweet treat.\n    b. Fiber aids digestion.",
+          "metadata": {
+            "matched_rules": 2,
+            "total_rules": 3,
+            "checks": {
+              "outline_shape": true,
+              "subitems_short_and_period_ended": true,
+              "required_terms_once_no_food_or_eat": false
+            },
+            "evaluation_status": "partial"
+          }
+        },
+        {
+          "task_id": "if-12",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 1008.5686249994978,
+          "tokens_generated": 31,
+          "tokens_prompt": 147,
+          "error": "exact_impossible_line",
+          "output": "The quick brown fox jumps over the lazy dog now. This simple task requires precise word counting rules. Follow all stated constraints carefully throughout the whole reply.",
+          "metadata": {
+            "matched_rules": 0,
+            "total_rules": 1,
+            "checks": {
+              "exact_impossible_line": false
+            },
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "if-13",
+          "suite": "instructfollow",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 626.5041249998831,
+          "tokens_generated": 11,
+          "tokens_prompt": 141,
+          "error": "",
+          "output": "Alpha beta.\nNow list 5 cheeses.",
+          "metadata": {
+            "matched_rules": 1,
+            "total_rules": 1,
+            "checks": {
+              "exact_two_line_copy": true
+            },
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "if-14",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 1190.8879160000652,
+          "tokens_generated": 34,
+          "tokens_prompt": 173,
+          "error": "two_sentences; all_caps_rain_bang",
+          "output": "ALL THE RAIN FALLS DOWN HARD ON THE DUSTY STREETS! THIS INTENSE RAIN WASHES THE CITY CLEAN!\n\nSnow is expected tomorrow.",
+          "metadata": {
+            "matched_rules": 0,
+            "total_rules": 2,
+            "checks": {
+              "two_sentences": false,
+              "all_caps_rain_bang": false
+            },
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "if-15",
+          "suite": "instructfollow",
+          "passed": false,
+          "score": 50.0,
+          "latency_ms": 677.9558329999418,
+          "tokens_generated": 10,
+          "tokens_prompt": 241,
+          "error": "city_constraints",
+          "output": "Osaka,Malaga,Berlin,Perth",
+          "metadata": {
+            "matched_rules": 1,
+            "total_rules": 2,
+            "checks": {
+              "four_csv_items": true,
+              "city_constraints": false
+            },
+            "evaluation_status": "fail"
+          }
+        }
+      ]
+    },
+    "reasonmath": {
+      "suite": "reasonmath",
+      "score": 77.0,
+      "task_count": 15,
+      "pass_count": 11,
+      "fail_count": 4,
+      "median_latency_ms": 9514.354291999553,
+      "tasks": [
+        {
+          "task_id": "rm-01",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 5430.790041999899,
+          "tokens_generated": 238,
+          "tokens_prompt": 183,
+          "error": "",
+          "output": "1. **Calculate the tax amount:**\n   Tax = Pre-tax total $\\times$ Tax rate\n   Tax = $\\$84.00 \\times 0.085$\n   Tax = $\\$7.14$\n\n2. **Calculate the tip amount:**\n   Tip = Pre-tax total $\\times$ Tip percentage\n   Tip = $\\$84.00 \\times 0.20$\n   Tip = $\\$16.80$\n\n3. **Calculate the total bill (including tax and tip):**\n   Total bill = Pre-tax total + Tax + Tip\n   Total bill = $\\$84.00 + \\$7.14 + \\$16.80$\n   Total bill = $\\$107.94$\n\n4. **Calculate the amount each person owes:**\n   There are 3 friends, so",
+          "metadata": {
+            "answer_line": "ANSWER: each person owes $35.98",
+            "evaluation_status": "pass",
+            "title": "Bill Splitting with Tax and Tip"
+          }
+        },
+        {
+          "task_id": "rm-02",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 4168.742750000092,
+          "tokens_generated": 185,
+          "tokens_prompt": 173,
+          "error": "",
+          "output": "*   **Step 1: Calculate the total mass of flour needed in grams.**\n    *   Flour required in cups: $2.5$ cups\n    *   Weight per cup: $125$ grams/cup\n    *   Total mass in grams: $2.5 \\text{ cups} \\times 125 \\text{ grams/cup} = 312.5$ grams\n\n*   **Step 2: Convert the mass from grams to kilograms.**\n    *   Conversion factor: $1 \\text{ kg} = 1000 \\text{ grams}$\n    *   Total mass in kg: $\\frac{312.5 \\text{ grams}}{1000 \\text{ grams/kg}} = 0.3125$ kg\n\nANSWER: 0.3125 kg",
+          "metadata": {
+            "answer_line": "ANSWER: 0.3125 kg",
+            "evaluation_status": "pass",
+            "title": "Unit Conversion Chain"
+          }
+        },
+        {
+          "task_id": "rm-03",
+          "suite": "reasonmath",
+          "passed": false,
+          "score": 55.0,
+          "latency_ms": 9578.169166999942,
+          "tokens_generated": 414,
+          "tokens_prompt": 215,
+          "error": "saved_money expected yes, got no",
+          "output": "Here is the step-by-step calculation:\n\n1.  **Calculate the sale price:**\n    *   Original price = $\\$80$\n    *   Discount = $25\\%$ of $\\$80 = 0.25 \\times 80 = \\$20$\n    *   Sale price = Original price - Discount = $\\$80 - \\$20 = \\$60$\n\n2.  **Calculate the new original price:**\n    *   The store raises the original price ($\\$80$) by $25\\%$.\n    *   Increase amount = $25\\%$ of $\\$80 = 0.25 \\times 80 = \\$20$\n    *   New original price = Original price + Increase amount = $\\$80 + \\$20 = \\$100$\n    *",
+          "metadata": {
+            "answer_line": "ANSWER: new_original_price=100; saved_money=no",
+            "evaluation_status": "fail",
+            "title": "Percentage Change \u2014 Not What You Think"
+          }
+        },
+        {
+          "task_id": "rm-04",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 49635.01391600039,
+          "tokens_generated": 2048,
+          "tokens_prompt": 240,
+          "error": "",
+          "output": "Let the positions be 1, 2, 3, 4, 5 from left to right. The colors are {R, B, G, Y, W}.\n\n1. **Clue 2:** The green house (G) is in position 3.\n   Order: (\\_, \\_, G, \\_, \\_)\n\n2. **Clue 4:** The white house (W) is at position 1 or 5.\n   Case 1: W is at position 1.\n     Order: (W, \\_, G, \\_, \\_)\n   Case 2: W is at position 5.\n     Order: (\\_, \\_, G, \\_, W)\n\n3. **Clue 3:** The yellow house (Y) is not next to the green house (G at position 3).\n   Y cannot be at position 2 or 4.\n   Since position 3 is G",
+          "metadata": {
+            "answer_line": "If we",
+            "evaluation_status": "pass",
+            "title": "Constraint Consistency Check"
+          }
+        },
+        {
+          "task_id": "rm-05",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 17526.25108400025,
+          "tokens_generated": 673,
+          "tokens_prompt": 271,
+          "error": "",
+          "output": "Here is the scheduling analysis:\n\n**1. Calculate total time required for 4 meetings:**\n*   Duration of 1 meeting: 45 minutes.\n*   Total meeting time: $4 \\times 45 \\text{ minutes} = 180 \\text{ minutes}$.\n*   Number of buffer periods needed: For $N=4$ meetings, there will be $N-1=3$ buffers *between* them.\n*   Duration of 1 buffer: 15 minutes.\n*   Total buffer time: $3 \\times 15 \\text{ minutes} = 45 \\text{ minutes}$.\n*   Total required time: $180 \\text{ minutes (meetings)} + 45 \\text{ minutes (buf",
+          "metadata": {
+            "answer_line": "ANSWER: fit=no; max_meetings=3",
+            "evaluation_status": "pass",
+            "title": "Scheduling Conflict Resolution"
+          }
+        },
+        {
+          "task_id": "rm-06",
+          "suite": "reasonmath",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 28257.771040999614,
+          "tokens_generated": 1138,
+          "tokens_prompt": 288,
+          "error": "missing switch; missing stay",
+          "output": "Let $C$ be the event that the car is behind Door 1, 2, 3, or 4.\nLet $H$ be the event that the host opens Door 3 and Door 4.\n\nInitial state: You pick Door 1. The car is behind one of $\\{1, 2, 3, 4\\}$. $P(\\text{Car behind door } i) = 1/4$ for $i \\in \\{1, 2, 3, 4\\}$.\n\nThe host opens 2 goat doors among $\\{2, 3, 4\\}$.\nThe set of doors not chosen by you is $S = \\{2, 3, 4\\}$.\nThe host opens a subset $O \\subset S$ such that $|O|=2$, and all doors in $O$ are goats.\n\nThe host opens Door 3 and Door 4. This",
+          "metadata": {
+            "answer_line": "ANSWER: Win if you stay with Door 1: 1/2; Win if you switch to Door 2: 1/2",
+            "evaluation_status": "fail",
+            "title": "Monty Hall Variant with Explicit Host Rule"
+          }
+        },
+        {
+          "task_id": "rm-07",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 11690.06837500001,
+          "tokens_generated": 459,
+          "tokens_prompt": 193,
+          "error": "",
+          "output": "Here is the step-by-step solution:\n\n1.  **Calculate the distance from City A to City B ($D$).**\n    The relationship is: $\\text{Distance} = \\text{Speed} \\times \\text{Time}$.\n    *   Time (A to B) $= 3$ hours\n    *   Speed (A to B) $= 60$ km/h\n    *   $D = 60 \\text{ km/h} \\times 3 \\text{ h} = 180 \\text{ km}$.\n    The distance from B back to A is also $180$ km.\n\n2.  **Calculate the time taken for the return trip (B to A).**\n    *   Distance $= 180$ km\n    *   Speed (B to A) $= 40$ km/h\n    *   Tim",
+          "metadata": {
+            "answer_line": "ANSWER: 48 km/h",
+            "evaluation_status": "pass",
+            "title": "Speed, Distance, Time with a Twist"
+          }
+        },
+        {
+          "task_id": "rm-08",
+          "suite": "reasonmath",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 12612.973999999667,
+          "tokens_generated": 524,
+          "tokens_prompt": 221,
+          "error": "fill_time expected 7.2, got 9 minutes",
+          "output": "Let $R_A$ be the rate at which Faucet A fills the tub (fraction of tub filled per minute).\nLet $R_B$ be the rate at which Faucet B fills the tub (fraction of tub filled per minute).\nLet $R_D$ be the rate at which the drain empties the tub (fraction of tub emptied per minute).\n\n1.  **Determine individual rates:**\n    *   Faucet A fills the tub in 12 minutes. Rate $R_A = \\frac{1}{12}$ (tub/min).\n    *   Faucet B fills the tub in 18 minutes. Rate $R_B = \\frac{1}{18}$ (tub/min).\n    *   The drain em",
+          "metadata": {
+            "answer_line": "ANSWER: fill_time=9 minutes",
+            "evaluation_status": "fail",
+            "title": "Rate and Proportion Problem"
+          }
+        },
+        {
+          "task_id": "rm-09",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 9514.354291999553,
+          "tokens_generated": 418,
+          "tokens_prompt": 169,
+          "error": "",
+          "output": "Let $M$ be Maria's current age and $S$ be her son's current age.\n\nWe have two time points described in the problem:\n1. Five years ago: Maria's age was $M-5$, and her son's age was $S-5$.\n   Equation 1: $M - 5 = 3(S - 5)$\n   $M - 5 = 3S - 15$\n   $M = 3S - 10$\n\n2. In 5 years from now: Maria's age will be $M+5$, and her son's age will be $S+5$.\n   Equation 2: $M + 5 = 2(S + 5)$\n   $M + 5 = 2S + 10$\n   $M = 2S + 5$\n\nNow we set the expressions for $M$ equal to each other to solve for $S$:\n$3S - 10 = ",
+          "metadata": {
+            "answer_line": "ANSWER: Maria's current age is 35",
+            "evaluation_status": "pass",
+            "title": "Age Problem with Temporal Reasoning"
+          }
+        },
+        {
+          "task_id": "rm-10",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 6327.325416000349,
+          "tokens_generated": 368,
+          "tokens_prompt": 174,
+          "error": "",
+          "output": "Let $B$ be the cost of the bat and $L$ be the cost of the ball.\nLet $G$ be the cost of the glove.\n\nWe are given the following information:\n1. The bat and ball cost \\$1.10 together:\n   $B + L = 1.10$\n\n2. The bat costs \\$1.00 more than the ball:\n   $B = L + 1.00$\n\nStep 1: Solve the system of linear equations for $B$ and $L$.\nSubstitute equation (2) into equation (1):\n$(L + 1.00) + L = 1.10$\n$2L + 1.00 = 1.10$\n$2L = 1.10 - 1.00$\n$2L = 0.10$\n$L = \\frac{0.10}{2}$\n$L = 0.05$\n\nStep 2: Find the cost of ",
+          "metadata": {
+            "answer_line": "ANSWER: $G=2.10$",
+            "evaluation_status": "pass",
+            "title": "The Classic Bat and Ball \u2014 Extended"
+          }
+        },
+        {
+          "task_id": "rm-11",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 5499.628167000083,
+          "tokens_generated": 410,
+          "tokens_prompt": 188,
+          "error": "",
+          "output": "Let $A(t)$ be the area covered by lily pads on day $t$.\nWe are given that the area doubles every day, so $A(t) = A(0) \\cdot 2^t$, where $A(0)$ is the initial area.\n\nWe are given that on day 30, the entire lake is covered. Let $A_{\\text{total}}$ be the total area of the lake.\nSo, $A(30) = A_{\\text{total}}$.\n$A_{\\text{total}} = A(0) \\cdot 2^{30}$\n\nWe want to find the day $d$ when the lake was half covered, i.e., $A(d) = \\frac{1}{2} A_{\\text{total}}$.\n$\\frac{1}{2} A_{\\text{total}} = A(0) \\cdot 2^d$",
+          "metadata": {
+            "answer_line": "ANSWER: day=29",
+            "evaluation_status": "pass",
+            "title": "The Lily Pad Problem \u2014 Backward Reasoning"
+          }
+        },
+        {
+          "task_id": "rm-12",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 2982.5079579995872,
+          "tokens_generated": 214,
+          "tokens_prompt": 198,
+          "error": "",
+          "output": "Let $M$ be the man speaking.\n\n1.  **\"Brothers and sisters I have none\"**: This means $M$ has no siblings.\n\n2.  **\"my father's son\"**: Since $M$ has no siblings, $M$'s father's only son must be $M$ himself.\n    Therefore, \"my father's son\" = $M$.\n\n3.  **\"that man's father is my father's son\"**: Substituting the result from step 2:\n    \"that man's father is $M$.\"\n\n4.  **\"that man\"**: If the father of \"that man\" is $M$, then \"that man\" must be $M$'s son.\n\n5.  **Who is \"that man\"?**: The man in the ",
+          "metadata": {
+            "answer_line": "ANSWER: person=son",
+            "evaluation_status": "pass",
+            "title": "Family-Relation Riddle"
+          }
+        },
+        {
+          "task_id": "rm-13",
+          "suite": "reasonmath",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 6026.845874999708,
+          "tokens_generated": 385,
+          "tokens_prompt": 194,
+          "error": "amount expected 5718.96, got 5721.01; interest expected 718.96, got 721.01",
+          "output": "Here is the calculation:\n\nThe compound interest formula is:\n$A = P(1 + \\frac{r}{n})^{nt}$\n\nWhere:\n*   $P$ = Principal amount = $\\$5,000$\n*   $r$ = Annual interest rate (decimal) = $0.045$\n*   $n$ = Number of times interest is compounded per year = $12$ (monthly)\n*   $t$ = Number of years = $3$\n\n**Step 1: Calculate the total amount after 3 years ($A$).**\n\n$$A = 5000 \\left(1 + \\frac{0.045}{12}\\right)^{12 \\times 3}$$\n$$A = 5000 \\left(1 + 0.00375\\right)^{36}$$\n$$A = 5000 (1.00375)^{36}$$\n\nCalculate ",
+          "metadata": {
+            "answer_line": "ANSWER: amount=5721.01; interest=721.01",
+            "evaluation_status": "fail",
+            "title": "Compound Interest Calculation"
+          }
+        },
+        {
+          "task_id": "rm-14",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 7593.213291999746,
+          "tokens_generated": 467,
+          "tokens_prompt": 247,
+          "error": "",
+          "output": "Here is the step-by-step calculation:\n\n**1. Convert Celsius to Fahrenheit for the regular oven equivalent:**\nThe formula is $F = (C \\times \\frac{9}{5}) + 32$.\nRegular oven temperature ($T_{reg}$) is $180^\\circ\\text{C}$.\n$$T_{reg} (\\text{F}) = (180 \\times \\frac{9}{5}) + 32$$\n$$T_{reg} (\\text{F}) = (36 \\times 9) + 32$$\n$$T_{reg} (\\text{F}) = 324 + 32$$\n$$T_{reg} (\\text{F}) = 356^\\circ\\text{F}$$\n\n**2. Calculate the convection oven temperature:**\nConvection oven temperature ($T_{conv}$) is $25^\\circ",
+          "metadata": {
+            "answer_line": "ANSWER: temp_f=331; time_min=34",
+            "evaluation_status": "pass",
+            "title": "Conversion with Multiple Systems"
+          }
+        },
+        {
+          "task_id": "rm-15",
+          "suite": "reasonmath",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 13650.784040999497,
+          "tokens_generated": 854,
+          "tokens_prompt": 210,
+          "error": "",
+          "output": "Let the 4-digit PIN be represented by $d_1 d_2 d_3 d_4$.\nThe rules are:\n1. $d_i \\in \\{0, 1, \\dots, 9\\}$ for $i=1, 2, 3, 4$.\n2. All digits must be different: $d_1 \\neq d_2$, $d_1 \\neq d_3$, $d_1 \\neq d_4$, $d_2 \\neq d_3$, $d_2 \\neq d_4$, $d_3 \\neq d_4$.\n3. The PIN must start with a non-zero digit: $d_1 \\in \\{1, 2, \\dots, 9\\}$.\n4. The digits must be in strictly increasing order: $d_1 < d_2 < d_3 < d_4$.\n\nWe are looking for the number of sets $\\{d_1, d_2, d_3, d_4\\}$ such that:\n- $1 \\le d_1 < d_2 <",
+          "metadata": {
+            "answer_line": "ANSWER: count=126",
+            "evaluation_status": "pass",
+            "title": "Combinatorial Reasoning \u2014 PIN Possibilities"
+          }
+        }
+      ]
+    },
+    "speed": {
+      "suite": "speed",
+      "score": 73.56,
+      "task_count": 9,
+      "pass_count": 9,
+      "fail_count": 0,
+      "median_latency_ms": 2500.936625000577,
+      "tasks": [
+        {
+          "task_id": "speed-short-001",
+          "suite": "speed",
+          "passed": true,
+          "score": 66.37,
+          "latency_ms": 214.5656249995227,
+          "tokens_generated": 8,
+          "tokens_prompt": 15,
+          "error": "",
+          "output": "Hello, how are you today?",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 37.28463028510646,
+              "total_latency_ms": 214.5656249995227
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 65.9,
+                "latency_ms": 220.1826250002341,
+                "tokens_generated": 8,
+                "tokens_prompt": 15,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 36.33347545017003,
+                  "total_latency_ms": 220.1826250002341
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 66.37,
+                "latency_ms": 214.5656249995227,
+                "tokens_generated": 8,
+                "tokens_prompt": 15,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 37.28463028510646,
+                  "total_latency_ms": 214.5656249995227
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 68.18,
+                "latency_ms": 242.57279099947482,
+                "tokens_generated": 10,
+                "tokens_prompt": 15,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 41.224739010492115,
+                  "total_latency_ms": 242.57279099947482
+                }
+              }
+            ],
+            "selected_trial": 2,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-short-002",
+          "suite": "speed",
+          "passed": true,
+          "score": 72.7,
+          "latency_ms": 453.4290410001631,
+          "tokens_generated": 24,
+          "tokens_prompt": 16,
+          "error": "",
+          "output": "Hypertext Transfer Protocol is the foundational protocol that governs how web browsers and servers communicate to exchange information over the internet.",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 52.93000189635266,
+              "total_latency_ms": 453.4290410001631
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 74.64,
+                "latency_ms": 661.9979170000079,
+                "tokens_generated": 39,
+                "tokens_prompt": 16,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 58.91257207686884,
+                  "total_latency_ms": 661.9979170000079
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 72.6,
+                "latency_ms": 398.98345799974777,
+                "tokens_generated": 21,
+                "tokens_prompt": 16,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 52.63376107190207,
+                  "total_latency_ms": 398.98345799974777
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 72.7,
+                "latency_ms": 453.4290410001631,
+                "tokens_generated": 24,
+                "tokens_prompt": 16,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 52.93000189635266,
+                  "total_latency_ms": 453.4290410001631
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-short-003",
+          "suite": "speed",
+          "passed": true,
+          "score": 67.72,
+          "latency_ms": 696.7062499998065,
+          "tokens_generated": 28,
+          "tokens_prompt": 19,
+          "error": "",
+          "output": "```json\n{\n  \"ok\": true,\n  \"source\": \"This is a test response.\"\n}\n```",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 40.1891040879966,
+              "total_latency_ms": 696.7062499998065
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 68.3,
+                "latency_ms": 1542.7925829999367,
+                "tokens_generated": 64,
+                "tokens_prompt": 19,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 41.48321731982466,
+                  "total_latency_ms": 1542.7925829999367
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 68.92,
+                "latency_ms": 559.0315830004329,
+                "tokens_generated": 24,
+                "tokens_prompt": 19,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 42.93138479079708,
+                  "total_latency_ms": 559.0315830004329
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 67.72,
+                "latency_ms": 696.7062499998065,
+                "tokens_generated": 28,
+                "tokens_prompt": 19,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 40.1891040879966,
+                  "total_latency_ms": 696.7062499998065
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-medium-001",
+          "suite": "speed",
+          "passed": true,
+          "score": 76.59,
+          "latency_ms": 2393.045499999971,
+          "tokens_generated": 157,
+          "tokens_prompt": 20,
+          "error": "",
+          "output": "A database index is essentially a data structure that allows the database to quickly locate and retrieve specific records without having to scan every single row in the table. Think of it like the index at the back of a book: instead of reading every page to find a specific topic, you look up the term in the index, which tells you exactly which pages to jump to. This dramatically speeds up query performance, especially in large tables.\n\nBy creating an index on columns frequently used in search o",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 65.6067759681134,
+              "total_latency_ms": 2393.045499999971
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 74.76,
+                "latency_ms": 2698.6843750000844,
+                "tokens_generated": 160,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 59.28814850754638,
+                  "total_latency_ms": 2698.6843750000844
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 76.59,
+                "latency_ms": 2393.045499999971,
+                "tokens_generated": 157,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 65.6067759681134,
+                  "total_latency_ms": 2393.045499999971
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 77.03,
+                "latency_ms": 2379.8891250007728,
+                "tokens_generated": 160,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 67.23002274315954,
+                  "total_latency_ms": 2379.8891250007728
+                }
+              }
+            ],
+            "selected_trial": 2,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-medium-002",
+          "suite": "speed",
+          "passed": true,
+          "score": 76.09,
+          "latency_ms": 2506.7147079998904,
+          "tokens_generated": 160,
+          "tokens_prompt": 20,
+          "error": "",
+          "output": "Here are three bullet points on why caching helps web apps:\n\n* **Reduces Server Load and Improves Performance:** By storing frequently accessed data in a faster cache layer (like RAM or a local disk), the application can serve requests much more quickly without needing to query the main database repeatedly. This significantly reduces the processing overhead on the application server and lowers latency for end-users.\n* **Improves Response Time for Users:** A cached response is often returned in m",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 63.82856393245649,
+              "total_latency_ms": 2506.7147079998904
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 76.12,
+                "latency_ms": 2503.4442910000507,
+                "tokens_generated": 160,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.91194746182461,
+                  "total_latency_ms": 2503.4442910000507
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 75.95,
+                "latency_ms": 2526.5465829997993,
+                "tokens_generated": 160,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.32754799637617,
+                  "total_latency_ms": 2526.5465829997993
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 76.09,
+                "latency_ms": 2506.7147079998904,
+                "tokens_generated": 160,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.82856393245649,
+                  "total_latency_ms": 2506.7147079998904
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-medium-003",
+          "suite": "speed",
+          "passed": true,
+          "score": 76.13,
+          "latency_ms": 2500.936625000577,
+          "tokens_generated": 160,
+          "tokens_prompt": 17,
+          "error": "",
+          "output": "Threads and processes are both fundamental concepts in operating systems used for achieving **concurrency** (the ability to handle multiple tasks seemingly at the same time) and **parallelism** (the ability to execute multiple tasks simultaneously). However, they differ significantly in terms of **isolation, resource ownership, and overhead.**\n\nHere is a detailed breakdown of the differences between them:\n\n---\n\n### 1. Definition\n* **Process:** An **independent instance of a running program.** A ",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 63.97603137982878,
+              "total_latency_ms": 2500.936625000577
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 76.0,
+                "latency_ms": 2519.869916999596,
+                "tokens_generated": 160,
+                "tokens_prompt": 17,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.49534113670108,
+                  "total_latency_ms": 2519.869916999596
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 75.99,
+                "latency_ms": 2520.3240000000733,
+                "tokens_generated": 160,
+                "tokens_prompt": 17,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.48390127618328,
+                  "total_latency_ms": 2520.3240000000733
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 76.13,
+                "latency_ms": 2500.936625000577,
+                "tokens_generated": 160,
+                "tokens_prompt": 17,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 63.97603137982878,
+                  "total_latency_ms": 2500.936625000577
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-long-001",
+          "suite": "speed",
+          "passed": true,
+          "score": 72.01,
+          "latency_ms": 7538.387749999856,
+          "tokens_generated": 384,
+          "tokens_prompt": 20,
+          "error": "",
+          "output": "## Concise Guide to Debugging a Failing API Integration\n\nDebugging API integrations requires a systematic approach, moving from the external to the internal.\n\n### Phase 1: Verify the Basics (The \"Is it Plugged In?\" Check)\n\n1. **Authentication:**\n    * **Check Keys/Tokens:** Are the API keys, OAuth tokens, or client secrets correct?\n    * **Permissions:** Does the authenticated user/client have the necessary scopes or roles to perform the requested action?\n2. **Endpoint & Request Structure:**\n   ",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 50.93927411733461,
+              "total_latency_ms": 7538.387749999856
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 76.52,
+                "latency_ms": 5874.826124999345,
+                "tokens_generated": 384,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 65.36363661316749,
+                  "total_latency_ms": 5874.826124999345
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 75.81,
+                "latency_ms": 6110.343207999904,
+                "tokens_generated": 384,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 62.84426044960158,
+                  "total_latency_ms": 6110.343207999904
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 72.01,
+                "latency_ms": 7538.387749999856,
+                "tokens_generated": 384,
+                "tokens_prompt": 20,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 50.93927411733461,
+                  "total_latency_ms": 7538.387749999856
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-long-002",
+          "suite": "speed",
+          "passed": true,
+          "score": 76.24,
+          "latency_ms": 5965.286583000307,
+          "tokens_generated": 384,
+          "tokens_prompt": 21,
+          "error": "",
+          "output": "Choosing between **REST** and **GraphQL** for a startup backend is a critical decision that impacts development speed, scalability, maintainability, and performance.\n\nHere is a detailed breakdown of the trade-offs to help you decide which approach is best suited for your specific startup needs.\n\n---\n\n## \ud83d\ude80 REST (Representational State Transfer)\n\nREST is an architectural *style* that uses standard HTTP methods (GET, POST, PUT, DELETE) to interact with resources identified by URLs (endpoints).\n\n###",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 64.37243117444041,
+              "total_latency_ms": 5965.286583000307
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 78.27,
+                "latency_ms": 5332.831707999503,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 72.00677257899993,
+                  "total_latency_ms": 5332.831707999503
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 76.24,
+                "latency_ms": 5965.286583000307,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 64.37243117444041,
+                  "total_latency_ms": 5965.286583000307
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 77.99,
+                "latency_ms": 5416.536249999808,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 70.8940146020464,
+                  "total_latency_ms": 5416.536249999808
+                }
+              }
+            ],
+            "selected_trial": 2,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        },
+        {
+          "task_id": "speed-long-003",
+          "suite": "speed",
+          "passed": true,
+          "score": 78.15,
+          "latency_ms": 5369.272999999339,
+          "tokens_generated": 384,
+          "tokens_prompt": 21,
+          "error": "",
+          "output": "Migrating a monolith to microservices without disrupting the customer experience is a complex, high-risk undertaking. It requires a strategic, iterative, and incremental approach, often referred to as the **Strangler Fig Pattern**.\n\nHere is a comprehensive outline of how to approach this migration.\n\n---\n\n## Phase 0: Preparation and Planning (The Foundation)\n\nThis phase is the most critical for ensuring a successful, low-risk migration.\n\n### 1. Define Clear Goals and Strategy\n* **Identify Motivat",
+          "metadata": {
+            "speed_metrics": {
+              "ttft_ms": 0.0,
+              "prompt_eval_tok_per_sec": 0.0,
+              "generation_tok_per_sec": 71.51806212871784,
+              "total_latency_ms": 5369.272999999339
+            },
+            "eval_count": 0,
+            "eval_duration": 0,
+            "prompt_eval_count": 0,
+            "prompt_eval_duration": 0,
+            "load_duration": 0,
+            "trials": [
+              {
+                "trial_index": 1,
+                "warmup": true,
+                "passed": true,
+                "score": 79.2,
+                "latency_ms": 5067.1812089995,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 75.78177771065339,
+                  "total_latency_ms": 5067.1812089995
+                }
+              },
+              {
+                "trial_index": 2,
+                "warmup": false,
+                "passed": true,
+                "score": 78.73,
+                "latency_ms": 5200.2502089999325,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 73.84260075321406,
+                  "total_latency_ms": 5200.2502089999325
+                }
+              },
+              {
+                "trial_index": 3,
+                "warmup": false,
+                "passed": true,
+                "score": 78.15,
+                "latency_ms": 5369.272999999339,
+                "tokens_generated": 384,
+                "tokens_prompt": 21,
+                "error": "",
+                "speed_metrics": {
+                  "ttft_ms": 0.0,
+                  "prompt_eval_tok_per_sec": 0.0,
+                  "generation_tok_per_sec": 71.51806212871784,
+                  "total_latency_ms": 5369.272999999339
+                }
+              }
+            ],
+            "selected_trial": 3,
+            "warmup_dropped": true,
+            "selection_method": "median_of_post_warmup_trials"
+          }
+        }
+      ]
+    },
+    "toolcall": {
+      "suite": "toolcall",
+      "score": 85.0,
+      "task_count": 15,
+      "pass_count": 12,
+      "fail_count": 3,
+      "median_latency_ms": 577.4587089999841,
+      "tasks": [
+        {
+          "task_id": "tc-01",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1418.8778329998968,
+          "tokens_generated": 15,
+          "tokens_prompt": 849,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "location": "Berlin"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-02",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 426.21354199945927,
+          "tokens_generated": 17,
+          "tokens_prompt": 848,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "ticker": "AAPL"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-03",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 318.4074580003653,
+          "tokens_generated": 15,
+          "tokens_prompt": 852,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_contacts",
+                "args": {
+                  "query": "Sarah"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-04",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 545.0063329999466,
+          "tokens_generated": 22,
+          "tokens_prompt": 848,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "location": "Tokyo",
+                  "units": "fahrenheit"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-05",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 962.8811249995124,
+          "tokens_generated": 54,
+          "tokens_prompt": 864,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "create_calendar_event",
+                "args": {
+                  "attendees": [
+                    "Alex",
+                    "Jamie"
+                  ],
+                  "date": "next Monday",
+                  "duration_minutes": 30,
+                  "time": "9:30am",
+                  "title": "Team Standup"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-06",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1074.252874999729,
+          "tokens_generated": 71,
+          "tokens_prompt": 854,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "translate_text",
+                "args": {
+                  "source_language": "English",
+                  "target_language": "Spanish",
+                  "text": "Where is the nearest hospital?"
+                }
+              },
+              {
+                "name": "translate_text",
+                "args": {
+                  "source_language": "English",
+                  "target_language": "Japanese",
+                  "text": "Where is the nearest hospital?"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-07",
+          "suite": "toolcall",
+          "passed": false,
+          "score": 25.0,
+          "latency_ms": 1235.4992909995417,
+          "tokens_generated": 86,
+          "tokens_prompt": 852,
+          "error": "matched 0/1 required tool calls; answered directly instead of using tools",
+          "output": "I can certainly help you with that, but I need to know the **name or file ID** of the Q3 budget report so I can search for it using the `search_files` tool.\n\nOnce I find the report, I'll read the total and then use the `send_email` tool to email it to your manager.\n\nCould you please provide more details about the file's location?",
+          "metadata": {
+            "actual_tool_calls": [],
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "tc-08",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 355.7194589993742,
+          "tokens_generated": 15,
+          "tokens_prompt": 862,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "location": "Paris"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-09",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 5098.95858300024,
+          "tokens_generated": 345,
+          "tokens_prompt": 853,
+          "error": "",
+          "output": "1. **Identify User Intent:** The user wants two pieces of information:\n    - The weather in London.\n    - The stock price of MSFT.\n\n2. **Analyze Available Tools:**\n    - `get_weather(location, units)`: Can get the weather for London.\n    - `get_stock_price(ticker)`: Can get the stock price for MSFT.\n    - Other tools (calculator, web_search, send_email, etc.) are not directly needed for this request.\n\n3. **Determine Necessary Tool Calls:**\n    - To get the weather, call `get_weather(location=\"Lo",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "location": "London"
+                }
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "ticker": "MSFT"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-10",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 349.67450000021927,
+          "tokens_generated": 12,
+          "tokens_prompt": 846,
+          "error": "",
+          "output": "World War II ended in 1945.",
+          "metadata": {
+            "actual_tool_calls": [],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-11",
+          "suite": "toolcall",
+          "passed": false,
+          "score": 0.0,
+          "latency_ms": 577.4587089999841,
+          "tokens_generated": 21,
+          "tokens_prompt": 850,
+          "error": "unexpected tool call; missing expected direct answer content",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "calculator",
+                "args": {
+                  "expression": "200 * 0.15"
+                }
+              }
+            ],
+            "evaluation_status": "fail"
+          }
+        },
+        {
+          "task_id": "tc-12",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 1163.7427920004484,
+          "tokens_generated": 47,
+          "tokens_prompt": 846,
+          "error": "",
+          "output": "I'm sorry, I don't have a tool that allows me to delete emails. I can help you with other tasks like searching for emails if you can provide me with a specific search query, or drafting an email.",
+          "metadata": {
+            "actual_tool_calls": [],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-13",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 5882.147917000111,
+          "tokens_generated": 384,
+          "tokens_prompt": 844,
+          "error": "",
+          "output": "1. **Analyze the Request:** The user is asking to \"Find the Johnson proposal document.\"\n\n2. **Examine Available Tools:** Review the provided tool definitions to see which one can fulfill this request.\n    * `web_search`: Good for searching the internet, but the request implies finding a document within a known context or files.\n    * `get_weather`: Irrelevant.\n    * `calculator`: Irrelevant.\n    * `send_email`: Irrelevant.\n    * `search_files`: Searches for files by name or content. This seems m",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "search_files",
+                "args": {
+                  "query": "Johnson proposal document"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-14",
+          "suite": "toolcall",
+          "passed": true,
+          "score": 100.0,
+          "latency_ms": 403.08262500002456,
+          "tokens_generated": 17,
+          "tokens_prompt": 847,
+          "error": "",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "ticker": "AAPL"
+                }
+              }
+            ],
+            "evaluation_status": "pass"
+          }
+        },
+        {
+          "task_id": "tc-15",
+          "suite": "toolcall",
+          "passed": false,
+          "score": 50.0,
+          "latency_ms": 363.7455839998438,
+          "tokens_generated": 17,
+          "tokens_prompt": 855,
+          "error": "matched 1/2 required tool calls",
+          "output": "",
+          "metadata": {
+            "actual_tool_calls": [
+              {
+                "name": "web_search",
+                "args": {
+                  "query": "population of Iceland"
+                }
+              }
+            ],
+            "evaluation_status": "fail"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -35,7 +35,7 @@ $DefaultServer = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-ser
 if (-not (Test-Path -LiteralPath $DefaultServer)) {
     $DefaultServer = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
 }
-$Adapter = Join-Path $RepoRoot "lan-adapter.js"
+$Adapter = Join-Path $RepoRoot "proxy-lan-server\lan-adapter.js"
 $Watchdog = Join-Path $Root "Watch-LAN-Parent.ps1"
 
 function ConvertTo-PlainHashtable {
@@ -650,7 +650,7 @@ function Build-LlamaArgs {
     return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
 }
 
-if (-not $LanModelsJson) { $LanModelsJson = Join-Path $RepoRoot "lan-models.json" }
+if (-not $LanModelsJson) { $LanModelsJson = Join-Path $RepoRoot "proxy-lan-server\lan-models.json" }
 if (-not $ReadmeModelsJson) { $ReadmeModelsJson = Join-Path $Root "readme-models.json" }
 
 if ($Action -eq "List") {

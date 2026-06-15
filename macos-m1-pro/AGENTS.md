@@ -2,20 +2,20 @@
 
 ## Promoted Gemma 4 12B serving — Unsloth MTP nmax2, KV Q4, no cap
 
-Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, KV `q4_0`, `-c 0` with `--fit-target 28672`** on Apple M1 Pro 32 GB. Serve through the **Gemma 4 harness proxy** on port **8092** (upstream llama-server on **8091**).
+Default to **Unsloth MTP, `--spec-draft-n-max 2`, reasoning off, KV `q4_0`, `-c 0` with `--fit-target 28672`** on Apple M1 Pro 32 GB. Serve through the **merged Gemma/Qwen harness proxy** on port **8092** (upstream llama-server on **8091**).
 
-Current selected shared harness policy is `temperature=0.90`, `top_p=0.95`, `top_k=64`. Latest 12B all-suite BenchLoop result with harness: overall **79.0**, quality **87.2**, **18.13 gen tok/s**, ~1219s runtime, load RSS **~8.4 GB**. Artifacts: [`results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/`](results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/). Matching 26B check: overall **78.8**, quality **84.5** at [`results/benchloop/gemma4-26b-quality-goal-20260613/temp090/`](results/benchloop/gemma4-26b-quality-goal-20260613/temp090/). The current harness policy removes prompt-derived direct answers, prompt-to-tool-call synthesis, prompt-specific answer formatting, and benchmark-specific phrase/word transforms.
+Current selected shared harness policy is `proxy-lan-server/gemma_qwen_merged_policy.json`. It keeps Gemma 4 and Qwen/Qwopus sampler profiles separate, respects explicit client sampler values, and uses shared generic parsing/output-normalization behavior. The 2026-06-15 same-runtime q4_0 BenchLoop rerun improved quality and overall score on E2B, E4B, 12B, and 26B. The current harness policy removes prompt-derived direct answers, prompt-to-tool-call synthesis, prompt-specific answer formatting, and benchmark-specific phrase/word transforms.
 
 | item | value |
 |---|---|
 | Target | `models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` |
 | MTP draft | `models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf` |
 | Server sampler | `--temp 1 --top-p 0.95 --top-k 64 -n 256` |
-| Harness policy sampler | `temperature=0.90`, `top_p=0.95`, `top_k=64` |
+| Harness policy sampler | Gemma defaults: `temperature=1.0`, `top_p=0.95`, `top_k=64`, `min_p=0.0`; Qwen defaults: `temperature=0.85`, `top_p=0.95`, `top_k=20`, `min_p=0.0` |
 | KV cache | `--cache-type-k q4_0 --cache-type-v q4_0 --spec-draft-type-k q4_0 --spec-draft-type-v q4_0` |
 | Context | `-c 0` with `--fit on --fit-target 28672` (no 16 GB cap) |
-| Harness policy | `gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json` |
-| Model alias | `gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4-harness-optimized` |
+| Harness policy | `proxy-lan-server/gemma_qwen_merged_policy.json` |
+| Model alias | `gemma-4-12B-it-qat-UD-Q4_K_XL-gemma4_harness` |
 
 ```bash
 # Daily serve: llama-server + harness proxy (from repo root)
@@ -45,11 +45,13 @@ llama-server \
 
 Do not use **reasoning on** with MTP for quality work (instructfollow/reasonmath regress badly). Do not use Janvitos MTP configs in this tree.
 
+For merged Gemma/Qwen harness policy work, keep family sampler settings pinned and separate: Gemma 4 uses `temperature=1.0`, `top_p=0.95`, `top_k=64`, `min_p=0.0`; Qwen/Qwopus uses `temperature=0.85`, `top_p=0.95`, `top_k=20`, `min_p=0.0`. Treat those as defaults for clients that omit sampler fields, and respect explicit sampler values from raw-compatible clients. Do not change those sampler baselines unless the user explicitly asks for a sampler sweep; optimize generic parsing, protocol adaptation, retries, and output normalization instead.
+
 ## Gemma 4 E2B/E4B QAT + harness
 
 - Benchmark artifacts live under `results/benchloop/`.
-- General Gemma 4 harness: `gemma4_harness/` (`npm install && npm test`).
-- Promoted harness policy: `gemma4_harness/configs/gemma4_qat_q4_optimized_policy.json`.
+- Merged Gemma/Qwen harness: `proxy-lan-server/` (`npm install && npm test` from there).
+- Promoted harness policy: `proxy-lan-server/gemma_qwen_merged_policy.json`.
 - Optimized all-category runner: `./scripts/run_gemma4_harness_optimized.sh`.
 - Keep the harness generic for BenchLoop, OpenClaw/ClawBench, Hermes Agent, opencode, and other OpenAI-compatible clients.
 - Models and `llama.cpp` are local-only; not committed to the repo.
