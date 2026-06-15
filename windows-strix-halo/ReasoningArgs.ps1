@@ -37,7 +37,6 @@ function Add-ReasoningServerArgs {
     $args = @(Remove-ReasoningServerArgs -ArgumentList $ServerArgs)
     if ($Reasoning -eq "off") {
         $args += @(
-            "--reasoning-format", "none",
             "--reasoning-budget", "-1",
             "--chat-template-kwargs", '{"enable_thinking":false,"preserve_thinking":false}'
         )

@@ -13,7 +13,9 @@ param(
     [int]$CacheReuse = 0,
     [int]$BatchSize = 0,
     [int]$UBatchSize = 0,
-    [int]$ThreadsBatch = 0
+    [int]$ThreadsBatch = 0,
+    [switch]$StripThoughtMarkers,
+    [int]$ProxyPort = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,7 +32,11 @@ if ($ServerOverride) {
     $Server = $ServerOverride
 }
 $BenchLoop = Join-Path $Root ".venv-benchloop\Scripts\benchloop.exe"
-$Endpoint = "http://127.0.0.1:$Port"
+if ($StripThoughtMarkers -and $ProxyPort -le 0) {
+    $ProxyPort = $Port + 1
+}
+$EndpointPort = if ($StripThoughtMarkers) { $ProxyPort } else { $Port }
+$Endpoint = "http://127.0.0.1:$EndpointPort"
 $Suites = "speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent"
 if ($SuitesOverride) {
     $Suites = $SuitesOverride
@@ -189,6 +195,9 @@ if (-not (Test-Path $BenchLoop)) {
 if (-not (Test-Path $Server)) {
     throw "llama-server not found: $Server"
 }
+if ($StripThoughtMarkers -and -not (Test-Path (Join-Path $Root "benchloop-strip-thought-proxy.mjs"))) {
+    throw "BenchLoop thought-strip proxy not found"
+}
 
 $env:BENCHLOOP_NO_SUBMIT = "1"
 $env:BENCHLOOP_HARDWARE_LABEL = $Hardware
@@ -296,10 +305,25 @@ foreach ($m in $Models) {
     }
 
     $serverProcess = $null
+    $proxyProcess = $null
     try {
         $serverForRun = if ($m.ContainsKey("Server") -and -not [string]::IsNullOrWhiteSpace($m.Server)) { $m.Server } else { $Server }
         $serverProcess = Start-LoggedProcess -FilePath $serverForRun -ArgumentList $serverArgs -WorkingDirectory $Root -StdOutLog $serverOut -StdErrLog $serverErr
         Write-Host "Started llama-server PID $($serverProcess.Id)"
+        if ($StripThoughtMarkers) {
+            $proxyOut = Join-Path $LogDir "benchloop-$runAlias-proxy.out.log"
+            $proxyErr = Join-Path $LogDir "benchloop-$runAlias-proxy.err.log"
+            Remove-Item $proxyOut,$proxyErr -ErrorAction SilentlyContinue
+            $proxyEnv = @{
+                PROXY_PORT = "$ProxyPort"
+                UPSTREAM = "http://127.0.0.1:$Port"
+            }
+            foreach ($key in $proxyEnv.Keys) {
+                [System.Environment]::SetEnvironmentVariable($key, $proxyEnv[$key], "Process")
+            }
+            $proxyProcess = Start-LoggedProcess -FilePath "node" -ArgumentList @((Join-Path $Root "benchloop-strip-thought-proxy.mjs")) -WorkingDirectory $Root -StdOutLog $proxyOut -StdErrLog $proxyErr
+            Write-Host "Started thought-strip proxy PID $($proxyProcess.Id) on port $ProxyPort"
+        }
         Wait-Model -Alias $runAlias
 
         $env:BENCHLOOP_TEMPERATURE = $temp
@@ -333,6 +357,7 @@ foreach ($m in $Models) {
         }
         Write-Host "BenchLoop finished for $($m.Name)"
     } finally {
+        Stop-Server -Process $proxyProcess
         Stop-Server -Process $serverProcess
         Start-Sleep -Seconds 3
     }
