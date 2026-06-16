@@ -59,7 +59,7 @@ Notes:
 
 - Vision runs used the matching `mmproj` when it loaded successfully.
 - `Image gen` is `N/A` when no usable vision run was completed.
-- Jackrong Qwopus3.6 35B files are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` (base) and `Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF` (MTP). Vision uses `mmproj.gguf`. **Primary 35B profile:** `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` with Jackrong MTP weights, `--spec-draft-n-max 2`, sampler `0.85 / 0.95 / 20`, `--reasoning off`.
+- Jackrong Qwopus3.6 35B files are from `Jackrong/Qwopus3.6-35B-A3B-v1-GGUF` (base) and `Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF` (MTP). Vision uses `mmproj.gguf`. **Primary 35B profile:** `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf` with Jackrong MTP weights, `--spec-draft-n-max 2`, sampler `0.85 / 0.95 / 20`, `--reasoning off`.
 - The 2026-06-09 refresh reran reasoning-on rows with `q8_0/q8_0` KV cache, model-card or family sampler settings, hard TypeScript max output at `7168`, and llama.cpp `b9535` Vulkan. The 2026-06-10 reasoning-off refresh used llama.cpp `b9551` Vulkan.
 - The 2026-06-03 requested batch used existing compatible `mmproj` files where they loaded: Gemma E2B with the Unsloth E2B projector and Qwen/Qwopus 27B/35B variants with the matching local 27B/35B projectors.
 - `Unsloth Gemma4 E4B` and `Unsloth Gemma4 E2B` required `--image-min-tokens 256` for their `mmproj` files to load; the earlier `1024` setting exceeded their image pixel limits.
@@ -85,5 +85,5 @@ Config: [`reasoning-off-131k-q4-mtp-toggle.json`](windows-strix-halo/configs/rea
 | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 81.1 | 86.9 | 65.6 | 36.86 tok/s | 100.0 | 83.3 | 96.9 | 81.2 | 80.0 | 80.0 |
 | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.1 | 84.1 | 73.9 | 58.81 tok/s | 91.7 | 83.3 | 96.9 | 80.4 | 85.6 | 66.7 |
 | `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 76.2 | 84.6 | 52.5 | 17.61 tok/s | 100.0 | 90.0 | 96.9 | 80.9 | 66.7 | 73.3 |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 83.5 | 88.4 | 71.7 | 51.16 tok/s | 100.0 | 96.7 | 96.9 | 91.3 | 72.2 | 73.3 |
+| `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 78.3 | 83.9 | 69.2 | 47.25 tok/s | 93.8 | 96.7 | 96.9 | 78.4 | 64.5 | 73.3 |
 | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.8 | 89.2 | 54.6 | 19.87 tok/s | 100.0 | 83.3 | 96.9 | 89.3 | 85.6 | 80.0 |
