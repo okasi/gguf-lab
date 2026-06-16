@@ -4,6 +4,54 @@ const listenPort = Number(process.env.PROXY_PORT || 18081);
 const upstream = process.env.UPSTREAM || "http://127.0.0.1:18080";
 const upstreamUrl = new URL(upstream);
 
+const requestSampler = {
+  temperature: process.env.REQUEST_TEMPERATURE,
+  top_p: process.env.REQUEST_TOP_P,
+  top_k: process.env.REQUEST_TOP_K,
+  min_p: process.env.REQUEST_MIN_P,
+  repetition_penalty: process.env.REQUEST_REPETITION_PENALTY,
+  presence_penalty: process.env.REQUEST_PRESENCE_PENALTY,
+  frequency_penalty: process.env.REQUEST_FREQUENCY_PENALTY,
+};
+
+function parseNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function rewriteRequestBody(req, body) {
+  if (req.method !== "POST" || !req.url.includes("/chat/completions")) {
+    return body;
+  }
+
+  const overrides = {
+    temperature: parseNumber(requestSampler.temperature),
+    top_p: parseNumber(requestSampler.top_p),
+    top_k: parseNumber(requestSampler.top_k),
+    min_p: parseNumber(requestSampler.min_p),
+    repetition_penalty: parseNumber(requestSampler.repetition_penalty),
+    presence_penalty: parseNumber(requestSampler.presence_penalty),
+    frequency_penalty: parseNumber(requestSampler.frequency_penalty),
+  };
+  const active = Object.entries(overrides).filter(([, value]) => value !== undefined);
+  if (active.length === 0 || body.length === 0) {
+    return body;
+  }
+
+  try {
+    const payload = JSON.parse(body.toString("utf8"));
+    for (const [key, value] of active) {
+      payload[key] = value;
+    }
+    return Buffer.from(JSON.stringify(payload), "utf8");
+  } catch {
+    return body;
+  }
+}
+
 function stripLeadingThoughtMarkers(content) {
   if (typeof content !== "string" || content.length === 0) {
     return { content, extracted: "" };
@@ -85,6 +133,7 @@ function sanitizeJsonResponse(payload) {
 }
 
 function forward(req, res, body) {
+  body = rewriteRequestBody(req, body);
   const headers = { ...req.headers };
   delete headers.host;
   headers["content-length"] = Buffer.byteLength(body);
@@ -140,5 +189,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(listenPort, "127.0.0.1", () => {
-  console.log(`benchloop thought-strip proxy listening on http://127.0.0.1:${listenPort}, upstream ${upstream}`);
+  const sampler = Object.entries(requestSampler)
+    .filter(([, value]) => value !== undefined && value !== "")
+    .map(([key, value]) => `${key}=${value}`)
+    .join(" ");
+  console.log(`benchloop thought-strip proxy listening on http://127.0.0.1:${listenPort}, upstream ${upstream}${sampler ? `, request sampler ${sampler}` : ""}`);
 });

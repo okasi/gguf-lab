@@ -317,6 +317,13 @@ foreach ($m in $Models) {
             $proxyEnv = @{
                 PROXY_PORT = "$ProxyPort"
                 UPSTREAM = "http://127.0.0.1:$Port"
+                REQUEST_TEMPERATURE = "$temp"
+                REQUEST_TOP_P = "$topP"
+                REQUEST_TOP_K = "$topK"
+                REQUEST_MIN_P = "$minP"
+                REQUEST_REPETITION_PENALTY = "$repeatPenalty"
+                REQUEST_PRESENCE_PENALTY = "0.0"
+                REQUEST_FREQUENCY_PENALTY = "0.0"
             }
             foreach ($key in $proxyEnv.Keys) {
                 [System.Environment]::SetEnvironmentVariable($key, $proxyEnv[$key], "Process")
