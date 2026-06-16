@@ -93,29 +93,6 @@ Config: [`reasoning-off-131k-q4-mtp-toggle.json`](windows-strix-halo/configs/rea
 | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.8 | 89.2 | 54.6 | 19.87 tok/s | 100.0 | 83.3 | 96.9 | 89.3 | 85.6 | 80.0 |
 | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 78.5 | 89.0 | 43.9 | 10.83 tok/s | 100.0 | 83.3 | 96.9 | 88.1 | 85.6 | 80.0 |
 
-## Qwopus 27B / 35B Request-Temp Sweep (2026-06-16)
-
-BenchLoop v0.2.3 raw rerun for Qwopus 27B Coder and Qwopus 35B A3B at `--ctx-size 131072`, target KV `q4_0/q4_0`, draft KV `q4_0/q4_0` for MTP rows, reasoning off, and thought-marker stripping. These rows use the proxy request-sampler override so every `/v1/chat/completions` request is forced to the listed temperature, `top_p=0.95`, `top_k=20`, `min_p=0`, even though BenchLoop's task fixtures default to `temperature: 0.0`.
-
-The prior `0.85` corrected rows above remain better overall for 35B MTP (`83.5`) and competitive for 27B, so raising Qwopus request temperature to `0.90+` did not improve this BenchLoop matrix.
-
-Manifest: local ignored `windows-strix-halo/logs/qwopus-27-35-q5-131k-q4-mtp-request-temp090-100.json`.
-
-| Model / file | Mode | Temp | BL overall | BL quality | BL speed | BL gen | Coding | Toolcall | Agent | Dataextract | Instructfollow | Reasonmath | Runtime |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | MTP | 0.90 | 76.2 | 84.6 | 51.4 | 16.60 tok/s | 93.8 | 90.0 | 96.9 | 83.9 | 70.0 | 73.3 | 1079.5s |
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | No MTP | 0.90 | 75.6 | 85.7 | 43.8 | 10.72 tok/s | 100.0 | 90.0 | 96.9 | 80.9 | 73.3 | 73.3 | 1864.2s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | MTP | 0.90 | 78.8 | 84.1 | 70.1 | 49.67 tok/s | 93.8 | 96.7 | 96.9 | 79.2 | 64.5 | 73.3 | 372.6s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | No MTP | 0.90 | 76.3 | 80.7 | 71.4 | 50.53 tok/s | 85.4 | 81.7 | 96.9 | 80.0 | 66.7 | 73.3 | 422.7s |
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | MTP | 0.95 | 75.6 | 84.4 | 51.5 | 16.64 tok/s | 93.8 | 90.0 | 96.9 | 80.5 | 65.6 | 80.0 | 1097.8s |
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | No MTP | 0.95 | 74.6 | 84.5 | 43.7 | 10.65 tok/s | 93.8 | 96.7 | 96.9 | 80.9 | 65.5 | 73.3 | 1837.2s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | MTP | 0.95 | 78.4 | 83.4 | 69.8 | 49.00 tok/s | 93.8 | 96.7 | 96.9 | 82.0 | 57.8 | 73.3 | 370.1s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | No MTP | 0.95 | 77.8 | 82.3 | 71.1 | 49.91 tok/s | 93.8 | 91.7 | 96.9 | 80.7 | 57.8 | 73.3 | 427.7s |
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | MTP | 1.00 | 75.2 | 83.8 | 51.4 | 16.47 tok/s | 93.8 | 90.0 | 96.9 | 78.9 | 70.0 | 73.3 | 1136.9s |
-| `Qwopus3.6-27B-Coder-MTP-Q5_K_M.gguf` | No MTP | 1.00 | 75.9 | 86.4 | 43.7 | 10.69 tok/s | 100.0 | 90.0 | 96.9 | 83.9 | 67.8 | 80.0 | 1835.8s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | MTP | 1.00 | 78.6 | 83.6 | 69.2 | 47.14 tok/s | 93.8 | 96.7 | 96.9 | 83.2 | 57.8 | 73.3 | 371.2s |
-| `Qwopus3.6-35B-A3B-v1-Q5_K_M.gguf` | No MTP | 1.00 | 76.5 | 80.4 | 71.3 | 50.29 tok/s | 100.0 | 86.7 | 96.9 | 78.9 | 53.3 | 66.7 | 433.6s |
-
 ## Benchmark Results
 
 BenchLoop v0.2.3 was run locally through llama.cpp's OpenAI-compatible endpoint with `--harness raw`, `BENCHLOOP_NO_SUBMIT=1`, and suites `speed,toolcall,coding,dataextract,instructfollow,reasonmath,agent`. BenchLoop has no image/vision suite, so `Image gen` comes from the custom harness only.
