@@ -141,6 +141,29 @@ function Get-LanPublicAliases {
     return @($aliases | Select-Object -Unique)
 }
 
+function Get-LanAliasTokens {
+    param([string]$Text)
+
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return @()
+    }
+
+    $noise = @(
+        "start","lan","whisper","asr","reasoning","reasoningoff","off","on","no","noreason","noreasoning","q4kv","q4_0","q40","q4","kv","q8_0","q5kv","131k","131072","plus"
+    )
+    $tokens = @{}
+    foreach ($match in [regex]::Matches($Text.ToLowerInvariant(), '[a-z0-9]+')) {
+        $token = $match.Value
+        if ([string]::IsNullOrEmpty($token)) { continue }
+        if ($token -eq "v") { continue }
+        if ($token -match '^\d+$') { continue }
+        if ($noise -contains $token) { continue }
+        $tokens[$token] = $true
+    }
+
+    return @($tokens.Keys)
+}
+
 function Set-ReasoningServerArgs {
     param(
         [object[]]$ServerArgs,
@@ -541,6 +564,44 @@ function Resolve-LanModelConfig {
 
     $lanModels = Load-JsonModels -Path $LanManifestPath
     $lanEntry = $lanModels | Where-Object { $_.Key -eq $ModelKey } | Select-Object -First 1
+    if (-not $lanEntry) {
+        $requestedTokens = Get-LanAliasTokens -Text $ModelKey
+        $matches = @()
+        foreach ($entry in $lanModels) {
+            $entryAliases = @($entry.Key, $entry.LanAlias) + (ConvertTo-LanAliasStrings -Value $entry.PublicAliases)
+            $bestScore = -1
+            foreach ($alias in @($entryAliases | Where-Object { $_ })) {
+                $aliasTokens = Get-LanAliasTokens -Text $alias
+                if ($aliasTokens.Count -eq 0) { continue }
+
+                $missing = $requestedTokens | Where-Object { -not ($aliasTokens -contains $_) }
+                if ($missing.Count -gt 0) { continue }
+
+                $score = 0
+                foreach ($token in $requestedTokens) {
+                    if ($aliasTokens -contains $token) { $score++ }
+                }
+                if ($score -gt $bestScore) { $bestScore = $score }
+            }
+            if ($bestScore -ge 0) {
+                $matches += [pscustomobject]@{ Entry = $entry; Score = $bestScore }
+            }
+        }
+
+        if ($matches.Count -eq 0 -or $requestedTokens.Count -eq 0) {
+            $known = ($lanModels | ForEach-Object { $_.Key }) -join ", "
+            throw "Unknown LAN model '$ModelKey'. Known models: $known"
+        }
+
+        $maxScore = ($matches | Measure-Object -Property Score -Maximum).Maximum
+        $top = $matches | Where-Object { $_.Score -eq $maxScore }
+        if ($top.Count -gt 1) {
+            $ambiguous = ($top | ForEach-Object { $_.Entry.Key }) -join ", "
+            throw "Model '$ModelKey' is ambiguous. Did you mean one of: $ambiguous?"
+        }
+
+        $lanEntry = $top[0].Entry
+    }
     if (-not $lanEntry) {
         $known = ($lanModels | ForEach-Object { $_.Key }) -join ", "
         throw "Unknown LAN model '$ModelKey'. Known models: $known"
