@@ -11,8 +11,8 @@ param(
     [Alias("c")]
     [int]$CtxSize = 0,
     [int]$CacheReuse = 0,
-    [int]$BatchSize = 0,
-    [int]$UBatchSize = 0,
+    [int]$BatchSize = 4096, # 4096 = long-context prefill profile (adjust down for memory experiments)
+    [int]$UBatchSize = 1024, # 1024 = long-context micro-batch prefill profile
     [int]$ThreadsBatch = 0,
     [switch]$StripThoughtMarkers,
     [int]$ProxyPort = 0

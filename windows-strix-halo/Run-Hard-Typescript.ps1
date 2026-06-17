@@ -18,8 +18,8 @@ param(
     [Alias("c")]
     [int]$CtxSizeOverride = 0,
     [int]$CacheReuse = 0,
-    [int]$BatchSize = 0,
-    [int]$UBatchSize = 0,
+    [int]$BatchSize = 4096, # prefill batch size for long-context runs
+    [int]$UBatchSize = 1024, # micro-batch for long-context runs
     [int]$ThreadsBatch = 0
 )
 
@@ -94,8 +94,8 @@ function New-BatchRun {
         [string]$CacheTypeK = "",
         [string]$CacheTypeV = "",
         [int]$CacheReuse = 0,
-        [int]$BatchSize = 0,
-        [int]$UBatchSize = 0,
+        [int]$BatchSize = 4096, # prefill batch size for long-context runs
+        [int]$UBatchSize = 1024, # micro-batch for long-context runs
         [int]$ThreadsBatch = 0
     )
     $resolvedCacheK = if ($CacheTypeK) { $CacheTypeK } else { $script:DefaultCacheTypeK }

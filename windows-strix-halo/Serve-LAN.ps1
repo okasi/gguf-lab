@@ -13,10 +13,10 @@ param(
     [int]$MaxTokens = 32768,
     [int]$Parallel = 1,
     [Alias("c")]
-    [int]$CtxSize = 0,
-    [int]$CacheReuse = 0,
-    [int]$BatchSize = 0,
-    [int]$UBatchSize = 0,
+    [int]$CtxSize = 131072, # keep LAN fast prefill profile: 128K context max
+    [int]$CacheReuse = 0, # cache reuse is opt-in; enable explicitly when needed
+    [int]$BatchSize = 4096, # long-context prefill batch size
+    [int]$UBatchSize = 1024, # long-context micro-batch size
     [int]$ThreadsBatch = 0,
 
     [switch]$DisableAsr,
@@ -25,6 +25,17 @@ param(
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "auto"
 )
+
+<#
+LAN default fast prefill profile (agent-facing serving shortcuts):
+  -c 131072            (context window)
+  -b 4096              (batch size)
+  -ub 1024             (micro-batch size)
+  -np 1                (threads per sequence)
+  -ngl 99              (default GPU layer count)
+  --seed 3407          (fixed seed for consistency)
+  -n 32768             (default max tokens)
+#>
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot

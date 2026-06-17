@@ -9,10 +9,10 @@ param(
     [int]$BackendPort = 18081,
     [int]$AsrBackendPort = 52625,
     [Alias("c")]
-    [int]$CtxSize = 0,
-    [int]$CacheReuse = 0,
-    [int]$BatchSize = 0,
-    [int]$UBatchSize = 0,
+    [int]$CtxSize = 131072, # keep LAN fast prefill profile: 128K context max
+    [int]$CacheReuse = 0, # cache reuse is opt-in; enable explicitly when needed
+    [int]$BatchSize = 4096, # long-context prefill batch size
+    [int]$UBatchSize = 1024, # long-context micro-batch size
     [int]$ThreadsBatch = 0,
     [ValidateSet("auto", "off")]
     [string]$Reasoning = "off",

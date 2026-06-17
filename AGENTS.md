@@ -10,6 +10,8 @@ Benchmark results belong in the repo root [`README.md`](README.md).
 
 Use `--ctx-size 131072` as the maximum serving and benchmark context unless the user explicitly asks for a larger context run. Larger windows such as `262144` make prefills too slow for normal comparisons.
 
+Use `-b 4096 -ub 1024` for long-context prefill speed in benchmark and LAN shortcut profiles.
+
 ### Peak memory (llama-server, macOS + Windows)
 
 README memory columns use the same **llama.cpp log + idle load** recipe on both platforms. Prompt cache must be enabled (default); capture server stdout/stderr to a log file.

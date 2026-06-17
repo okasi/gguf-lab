@@ -12,10 +12,10 @@ Every model uses these unless a row-specific override is documented in the READM
 
 - `--reasoning auto`
 - `--ctx-size` at each model's largest supported window for native-max benchmark rows
-- For agent-facing LAN serving, prefer the prompt-reuse profile: script alias `-c 131072` plus `-CacheReuse 256`
+- For agent-facing LAN serving, prefer the fast prefill profile: `-c 131072 -b 4096 -ub 1024`.
 - Use `131072` as the maximum serving and benchmark context unless the user explicitly asks for a larger context run. Larger windows such as `262144` make prefills too slow for normal comparisons.
 
-Do not add `--batch-size`, `--ubatch-size`, or `--split-mode` to native benchmark defaults. The launch scripts expose `-BatchSize`, `-UBatchSize`, and `-ThreadsBatch` only for explicit prompt-processing trials.
+The launch scripts expose `-BatchSize`, `-UBatchSize`, and `-ThreadsBatch`; keep benchmark defaults on the fast prefill profile with `-BatchSize 4096` and `-UBatchSize 1024`, and set these to `0` only when explicitly testing memory-sensitive baselines.
 
 For merged Gemma/Qwen harness work, do not tune sampler settings unless the user explicitly requests a sampler sweep. Keep Gemma 4 pinned to `temp=1.0`, `top_p=0.95`, `top_k=64`, `min_p=0.0`; keep Qwen/Qwopus pinned to `temp=0.85`, `top_p=0.95`, `top_k=20`, `min_p=0.0`. Treat those as defaults for clients that omit sampler fields, and respect explicit sampler values from raw-compatible clients. Improvements should come from generic protocol adaptation, parser behavior, retries, and output normalization.
 
@@ -29,7 +29,6 @@ Start `llama-server` with the model file, then add the shared runtime, KV cache,
   --host 0.0.0.0 `
   --port 8080 `
   -c 131072 `
-  --cache-reuse 256 `
   --ngl 99 `
   -np 1 `
   --flash-attn on `
@@ -58,7 +57,7 @@ Use q8/q8 or f16/f16 only when deliberately running a comparison matrix or repro
 
 ## Qwopus
 
-Use the shared defaults for `--reasoning auto`. Native-max benchmark rows use `--ctx-size 262144`; agent-facing LAN shortcuts use the prompt-reuse profile `-c 131072`.
+Use the shared defaults for `--reasoning auto`. Native-max benchmark rows use `--ctx-size 262144`; agent-facing LAN shortcuts use the prompt-reuse profile `-c 131072 -b 4096 -ub 1024`.
 
 Sampler:
 

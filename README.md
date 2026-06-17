@@ -52,8 +52,10 @@ Unless noted otherwise, runs used:
 - `--presence-penalty 0.0`
 - `--seed 3407`
 - `-n 32768`
+- `-b 4096` (`--batch-size`) for long-context prefill batching
+- `-ub 1024` (`--ubatch-size`) for long-context micro-batch processing
 
-Agent-facing LAN shortcuts use the prompt-reuse profile `-c 131072 -CacheReuse 256`. Native-max benchmark rows and historical tables keep their documented context sizes.
+Agent-facing LAN shortcuts use `-c 131072 -b 4096 -ub 1024`. Native-max benchmark rows and historical tables keep their documented context sizes.
 
 Notes:
 
