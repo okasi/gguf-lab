@@ -35,27 +35,44 @@ Runs were done on a Strix Halo mini PC:
 - System RAM reported by Windows: `32 GiB`
 - Vulkan-visible GPU memory in llama.cpp logs: `114507 MiB` total, about `111.82 GiB`, on the Radeon 8060S UMA pool
 
-Unless noted otherwise, runs used:
+Unless noted otherwise, we recommend using this profile for the Qwopus 35B no-reasoning WAN/LAN setup:
 
-- `--ctx-size` set to each model's native maximum (see **Max ctx** column; most rows use `262144`)
-- `--cache-type-k q4_0`
-- `--cache-type-v q4_0`
-- `--spec-draft-type-k q4_0` for MTP rows
-- `--spec-draft-type-v q4_0` for MTP rows
-- `--ngl 99`
-- `-np 1`
-- `--flash-attn on`
-- `--reasoning auto` or `off` per model (see **Reasoning** column in benchmark table)
-- `--temp 0.75` (Qwopus family: `0.85`; see `windows-strix-halo/AGENTS.md`)
-- `--top-p 0.95`
-- `--top-k 20`
-- `--presence-penalty 0.0`
-- `--seed 3407`
-- `-n 32768`
-- `-b 4096` (`--batch-size`) for long-context prefill batching
-- `-ub 1024` (`--ubatch-size`) for long-context micro-batch processing
+```powershell
+--ctx-size 131072                         # Context window: 128K tokens
+-n 32768                                  # Max generated tokens
 
-Agent-facing LAN shortcuts use `-c 131072 -b 4096 -ub 1024`. Native-max benchmark rows and historical tables keep their documented context sizes.
+-ngl 999                                  # Offload all layers to GPU
+--flash-attn on                           # Enable Flash Attention
+--no-mmap                                 # Better Strix Halo behavior
+
+-b 4096                                   # Prompt batch size
+-ub 1024                                  # Micro-batch size
+--parallel 1                              # Single active sequence
+
+--cache-type-k q4_0                       # Quantized K cache, saves memory
+--cache-type-v q4_0                       # Quantized V cache, saves memory
+
+--temp "0.85"                            # Model-family temperature
+--top-k "20"                             # Model-family top-k
+--top-p 0.95                              # Nucleus sampling
+--min-p 0.0                               # Disable min-p cutoff
+--presence-penalty 0.0                    # No topic novelty penalty
+--repeat-penalty 1.0                      # No repetition penalty
+--seed 3407                               # Reproducible sampling
+
+--reasoning off                           # Disable reasoning mode
+--chat-template-kwargs '{"enable_thinking":false,"preserve_thinking":false}' # Disable/purge thinking
+
+--image-min-tokens "1024"        			# Vision token floor
+
+--spec-type draft-mtp                     # Use MTP speculative decoding
+--spec-draft-n-min 1                      # Minimum draft tokens
+--spec-draft-n-max 2                      # Maximum draft tokens
+--spec-draft-type-k q4_0                  # Quantized draft K cache
+--spec-draft-type-v q4_0                  # Quantized draft V cache
+```
+
+Agent-facing LAN shortcuts for this profile are now aligned to this recommended preset. Native-max benchmark rows and historical tables keep their documented context sizes.
 
 Notes:
 

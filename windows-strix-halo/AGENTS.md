@@ -14,6 +14,42 @@ Every model uses these unless a row-specific override is documented in the READM
 - `--ctx-size` at each model's largest supported window for native-max benchmark rows
 - For agent-facing LAN serving, prefer the fast prefill profile: `-c 131072 -b 4096 -ub 1024`.
 - Use `131072` as the maximum serving and benchmark context unless the user explicitly asks for a larger context run. Larger windows such as `262144` make prefills too slow for normal comparisons.
+- Exact LAN preset we recommend for Qwopus 35B no-reasoning + Whisper ASR:
+
+```powershell
+--ctx-size 131072                         # Context window: 128K tokens
+-n 32768                                  # Max generated tokens
+
+-ngl 999                                  # Offload all layers to GPU
+--flash-attn on                           # Enable Flash Attention
+--no-mmap                                 # Better Strix Halo behavior
+
+-b 4096                                   # Prompt batch size
+-ub 1024                                  # Micro-batch size
+--parallel 1                              # Single active sequence
+
+--cache-type-k q4_0                       # Quantized K cache, saves memory
+--cache-type-v q4_0                       # Quantized V cache, saves memory
+
+--temp "0.85"                            # Model-family temperature
+--top-k "20"                             # Model-family top-k
+--top-p 0.95                              # Nucleus sampling
+--min-p 0.0                               # Disable min-p cutoff
+--presence-penalty 0.0                    # No topic novelty penalty
+--repeat-penalty 1.0                      # No repetition penalty
+--seed 3407                               # Reproducible sampling
+
+--reasoning off                           # Disable reasoning mode
+--chat-template-kwargs '{"enable_thinking":false,"preserve_thinking":false}' # Disable/purge thinking
+
+--image-min-tokens "1024"                  # Vision token floor
+
+--spec-type draft-mtp                     # Use MTP speculative decoding
+--spec-draft-n-min 1                      # Minimum draft tokens
+--spec-draft-n-max 2                      # Maximum draft tokens
+--spec-draft-type-k q4_0                  # Quantized draft K cache
+--spec-draft-type-v q4_0                  # Quantized draft V cache
+```
 
 The launch scripts expose `-BatchSize`, `-UBatchSize`, and `-ThreadsBatch`; keep benchmark defaults on the fast prefill profile with `-BatchSize 4096` and `-UBatchSize 1024`, and set these to `0` only when explicitly testing memory-sensitive baselines.
 

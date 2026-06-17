@@ -18,6 +18,7 @@ param(
     [int]$BatchSize = 4096, # long-context prefill batch size
     [int]$UBatchSize = 1024, # long-context micro-batch size
     [int]$ThreadsBatch = 0,
+    [string[]]$ExtraServerArgs = @(),
 
     [switch]$DisableAsr,
     [switch]$DisableMtp,
@@ -589,6 +590,7 @@ function Build-LlamaArgs {
         [int]$BatchSize,
         [int]$UBatchSize,
         [int]$ThreadsBatch,
+        [string[]]$ExtraServerArgs = @(),
         [ValidateSet("auto", "off")]
         [string]$Reasoning,
         [switch]$DisableMtp
@@ -656,6 +658,9 @@ function Build-LlamaArgs {
     }
     if ($ModelConfig.ContainsKey("ExtraServerArgs") -and $null -ne $ModelConfig.ExtraServerArgs) {
         $args += $ModelConfig.ExtraServerArgs
+    }
+    if ($ExtraServerArgs -and $ExtraServerArgs.Count -gt 0) {
+        $args += $ExtraServerArgs
     }
     $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
     return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
@@ -763,7 +768,7 @@ foreach ($TargetPort in $portTargets) {
     }
 }
 
-$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -CtxSizeOverride $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch -Reasoning $Reasoning -DisableMtp:$DisableMtp
+$LlamaArgs = Build-LlamaArgs -ModelConfig $modelConfig -BackendPort $BackendPort -MaxTokens $MaxTokens -Parallel $Parallel -CtxSizeOverride $CtxSize -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch -ExtraServerArgs $ExtraServerArgs -Reasoning $Reasoning -DisableMtp:$DisableMtp
 $Out = Join-Path $LogDir "lan-$slug-llama.out.log"
 $Err = Join-Path $LogDir "lan-$slug-llama.err.log"
 $AsrOut = Join-Path $LogDir "lan-$slug-whisper-asr.out.log"
