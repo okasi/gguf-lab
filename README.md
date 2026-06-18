@@ -89,7 +89,7 @@ Notes:
 
 ## Reasoning-Off 131K q4_0 MTP Toggle BenchLoop (2026-06-15)
 
-BenchLoop v0.2.3 raw rerun with family sampler settings, `--ctx-size 131072`, target KV `q4_0/q4_0`, draft KV `q4_0/q4_0` for MTP rows, and reasoning disabled with `--reasoning off --reasoning-budget -1 --chat-template-kwargs '{"enable_thinking":false,"preserve_thinking":false}'`. MTP rows use Gemma draft models or Jackrong MTP GGUFs; no-MTP rows omit speculative decoding. BenchLoop has no image suite, so these rows were run without `mmproj`. E4B MTP used `--flash-attn on` because q4_0 V-cache requires flash attention in this llama.cpp build.
+BenchLoop v0.2.3 raw rerun with family sampler settings, `--ctx-size 131072`, target KV `q4_0/q4_0`, draft KV `q4_0/q4_0` for MTP rows, and reasoning disabled with `--reasoning off --reasoning-budget -1 --chat-template-kwargs '{"enable_thinking":false,"preserve_thinking":false}'`. MTP rows use Gemma draft models, Jackrong MTP GGUFs, or embedded bytkim MTP GGUFs; no-MTP rows omit speculative decoding. BenchLoop has no image suite, so these rows were run without `mmproj`. E4B MTP used `--flash-attn on` because q4_0 V-cache requires flash attention in this llama.cpp build.
 
 The initial full run used `--reasoning-format none`, which left leading thought markers in `message.content` for the larger Gemma and Qwopus rows. The table below keeps the original full-run speed, coding, toolcall, agent, and reasonmath scores, and replaces only the affected `dataextract` and `instructfollow` scores with reduced-suite reruns through the thought-strip proxy. E2B/E4B did not emit those markers and remain from the original full runs.
 
@@ -103,6 +103,7 @@ Config: [`reasoning-off-131k-q4-mtp-toggle.json`](windows-strix-halo/configs/rea
 | `gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf` | No MTP | 131072 | `1.0 / 0.95 / 64` | 77.0 | 82.2 | 69.0 | 44.22 tok/s | 100.0 | 75.0 | 96.9 | 81.0 | 63.3 | 77.0 |
 | `gemma-4-12B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 81.1 | 86.9 | 65.6 | 36.86 tok/s | 100.0 | 83.3 | 96.9 | 81.2 | 80.0 | 80.0 |
 | `gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.1 | 84.1 | 73.9 | 58.81 tok/s | 91.7 | 83.3 | 96.9 | 80.4 | 85.6 | 66.7 |
+| `Qwen3.6-27B-MTP-pi-tune-Q4_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 76.3 | 84.3 | 52.6 | 17.58 tok/s | 93.8 | 83.3 | 96.9 | 84.3 | 67.8 | 80.0 |
 | `Qwopus3.6-27B-Coder-MTP-Q3_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 76.8 | 85.4 | 53.6 | 18.75 tok/s | 100.0 | 86.7 | 96.9 | 77.5 | 71.1 | 80.0 |
 | `Qwopus3.6-35B-A3B-v1-MTP-Q5_K_M.gguf` | MTP | 131072 | `0.85 / 0.95 / 20` | 78.3 | 83.9 | 69.2 | 47.25 tok/s | 93.8 | 96.7 | 96.9 | 78.4 | 64.5 | 73.3 |
 | `gemma-4-31B-it-qat-UD-Q4_K_XL.gguf` | MTP | 131072 | `1.0 / 0.95 / 64` | 80.8 | 89.2 | 54.6 | 19.87 tok/s | 100.0 | 83.3 | 96.9 | 89.3 | 85.6 | 80.0 |
