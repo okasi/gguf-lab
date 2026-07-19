@@ -8,6 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
+. (Join-Path $Root "Common.ps1")
 $LogDir = Join-Path $Root "logs"
 $BenchLoop = Join-Path $Root ".venv-benchloop\Scripts\benchloop.exe"
 
@@ -16,27 +17,6 @@ if (-not $ReasoningOnBenchExportJson) { $ReasoningOnBenchExportJson = Join-Path 
 if (-not $ReasoningOffBenchExportJson) { $ReasoningOffBenchExportJson = Join-Path $LogDir "readme-noreason-benchloop-export.json" }
 if (-not $ReasoningOnHardTsCsv) { $ReasoningOnHardTsCsv = Join-Path $LogDir "readme-refresh-personal-results.csv" }
 if (-not $ReadmePath) { $ReadmePath = Join-Path (Split-Path $Root -Parent) "README.md" }
-
-function ConvertTo-PlainHashtable {
-    param($Value)
-    if ($null -eq $Value) { return $null }
-    if ($Value -is [System.Collections.IDictionary]) {
-        $hash = @{}
-        foreach ($key in $Value.Keys) { $hash[$key] = ConvertTo-PlainHashtable -Value $Value[$key] }
-        return $hash
-    }
-    if ($Value -is [array]) {
-        $items = @()
-        foreach ($item in $Value) { $items += ConvertTo-PlainHashtable -Value $item }
-        return $items
-    }
-    if ($Value -is [pscustomobject]) {
-        $hash = @{}
-        foreach ($prop in $Value.PSObject.Properties) { $hash[$prop.Name] = ConvertTo-PlainHashtable -Value $prop.Value }
-        return $hash
-    }
-    return $Value
-}
 
 function Format-OneDecimal {
     param($Value)
@@ -241,7 +221,7 @@ function Build-ReadmeRow {
         SortGiB = if ($loadGiB) { $loadGiB * 1024 } else { 999999 }
         MemBucket = if ($loadGiB) { Get-MemBucket -GiB $loadGiB } else { "pending" }
         ModelLabel = Get-ReadmeModelLabel -Model $Model -Main35B:$Main35B
-        Ctx = if ($Model.CtxSize) { $Model.CtxSize } else { 262144 }
+        Ctx = if ($Model.CtxSize) { $Model.CtxSize } else { 131072 }
         Sampler = Get-SamplerLabel -Model $Model -MtpDraftMax $mtpDraftMax
         Reasoning = $ReasoningMode
         LoadMem = if ($loadGiB) { "{0:0.00} GiB" -f $loadGiB } else { "pending" }
@@ -344,7 +324,7 @@ $section = @(
     "",
     "Each row is the best of ``--reasoning auto`` vs ``--reasoning off`` for that model and sampler config, ranked by BL overall, then BL toolcall, then BL agent. **Reasoning** shows which mode was kept. Gemma reasoning-off rows also use ``--chat-template-kwargs '{""enable_thinking"":false}'``. Gemma4 QAT MTP rows use Unsloth drafters at ``--spec-draft-n-max 2``. Qwopus3.6 35B MTP rows use Jackrong ``*-MTP-GGUF`` weights at ``--spec-draft-n-max 2``.",
     "",
-    "Sampler column uses ``temp / top_p / top_k``. Every row uses ``presence_penalty=0`` and the largest practical ``--ctx-size`` on this hardware (``262144`` unless noted in **Max ctx**). Rerun with ``windows-strix-halo/Run-Readme-NoReasoning.ps1`` and refresh via ``windows-strix-halo/Export-ReadmeBenchmarkTable.ps1``.",
+    "Sampler column uses ``temp / top_p / top_k``. Normal runs cap ``--ctx-size`` at ``131072``; use larger contexts only for an explicit long-context experiment. Rerun with ``windows-strix-halo/Run-BenchLoop.ps1`` and ``windows-strix-halo/Run-Hard-Typescript.ps1``, then refresh with ``windows-strix-halo/Export-ReadmeBenchmarkTable.ps1``.",
     "",
     "``Model / file`` uses ``family / on-disk.gguf`` when the GGUF filename alone is ambiguous.",
     "",

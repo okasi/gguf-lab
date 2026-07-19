@@ -25,7 +25,7 @@ $Root = $PSScriptRoot
 $RepoRoot = Split-Path $Root -Parent
 
 if (-not $PolicyPath) {
-    $PolicyPath = Join-Path $RepoRoot "gemma4_harness\configs\gemma4_qat_q4_optimized_policy.json"
+    $PolicyPath = Join-Path $RepoRoot "proxy-lan-server\gemma_qwen_merged_policy.json"
 }
 
 if ($Action -eq "List") {
@@ -38,7 +38,7 @@ if ($Action -eq "Stop") {
     return
 }
 
-$harnessModule = Join-Path $RepoRoot "gemma4_harness\processor.mjs"
+$harnessModule = Join-Path $RepoRoot "proxy-lan-server\proxy.mjs"
 if (-not (Test-Path -LiteralPath $PolicyPath)) {
     throw "Gemma harness policy not found: $PolicyPath"
 }

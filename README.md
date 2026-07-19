@@ -12,10 +12,7 @@ Apple M1 Pro, 32 GB unified memory, llama.cpp Metal. Full macOS notes: [`macos-m
 
 **Gemma 4 shared-policy BenchLoop, no cap** (`-c 0`, `--fit-target 28672`, reasoning off). E2B/E4B use no MTP draft; 12B/26B use Unsloth MTP n-max=2. The current merged policy keeps family sampler profiles separate and pinned while sharing generic response behavior. Harness: [`gemma_qwen_merged_policy.json`](proxy-lan-server/gemma_qwen_merged_policy.json).
 
-Artifacts: [E2B/E4B current-policy rerun](macos-m1-pro/results/benchloop/gemma4-e2b-e4b-current-policy-rerun-20260614/) · [12B current harness](macos-m1-pro/results/benchloop/gemma4-12b-quality-goal-20260613/loop-03-temp090/) · [26B current harness](macos-m1-pro/results/benchloop/gemma4-26b-quality-goal-20260613/temp090/) · [12B restored baseline](macos-m1-pro/results/benchloop/gemma4-12b-policy-20iter-20260612T100148Z/iter186-restore-safe-baseline-full/)
-
-
-**Merged Gemma/Qwen v18 q4_0 same-runtime rerun (2026-06-15)** used the requested target/draft cache settings: `CACHE_TYPE_K=q4_0`, `CACHE_TYPE_V=q4_0`, `CACHE_TYPE_K_DRAFT=q4_0`, and `CACHE_TYPE_V_DRAFT=q4_0`. Raw and harness rows used the same matrix/runtime for each size. v18 improved quality and overall score on all four Gemma 4 sizes; proxy repair audits had zero suspicious prompt/task/answer/action repair labels. Artifact: [v18-q4-raw-harness-rerun](macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260615/v18-q4-raw-harness-rerun/).
+**Merged Gemma/Qwen v18 q4_0 same-runtime rerun (2026-06-15)** used `q4_0` target and draft KV for matching raw and harness rows. v18 improved quality and overall score on all four Gemma 4 sizes; proxy repair audits found no suspicious prompt/task/answer/action repair labels. Generated run artifacts are intentionally not tracked.
 
 | Model | Runtime | Raw quality | v18 quality | Quality Δ | Raw overall | v18 overall | Overall Δ | v18 dataextract | v18 toolcall |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -85,7 +82,6 @@ Notes:
 - Earlier Gemma4 QAT refresh rows used `--temp 1.0 --top-p 0.95 --top-k 64` and `q8_0/q8_0` KV cache; current serving and benchmark defaults use `q4_0/q4_0` target and draft KV unless a matrix overrides it. Per the [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4), E2B/E4B native context is 128K (`131072`); 12B, 26B A4B, and 31B native context is 256K (`262144`). Local Unsloth QAT GGUFs match those `n_ctx_train` values. The 12B, 26B, and 31B QAT rows used `--cache-ram 0 --ctx-checkpoints 0` for stable vision/cache behavior.
 - Qwopus rows use native `262144` context per the [Qwen3.6](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) model card and matching GGUF `n_ctx_train`.
 - `Jackrong Qwopus3.6 27B v2 MTP` rows used `--spec-type draft-mtp --spec-draft-n-min 1 --spec-draft-n-max 2`; the 2026-06-06 sampler sweep used `mmproj-F32.gguf` from the MTP repo snapshot.
-- Older Qwen/Qwopus harness BenchLoop tables live in [`windows-strix-halo/historical-benchloop.md`](windows-strix-halo/historical-benchloop.md).
 
 ## Reasoning-Off 131K q4_0 MTP Toggle BenchLoop (2026-06-15)
 

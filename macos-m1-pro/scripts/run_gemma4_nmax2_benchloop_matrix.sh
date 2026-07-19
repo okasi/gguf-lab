@@ -5,16 +5,16 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
-CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-for-unsloth-gemma-4}"
+LLM_ROOT="${LLM_ROOT:-${CODEX_ROOT:-$MACOS_DIR}}"
 cd "$MACOS_DIR"
 
-SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
+SERVER_BIN="${SERVER_BIN:-$LLM_ROOT/llama.cpp/build/bin/llama-server}"
 HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
 POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
-HOST="127.0.0.1"
+HOST="${HOST:-127.0.0.1}"
 UPSTREAM_ENDPOINT="http://${HOST}:${UPSTREAM_PORT}"
 PROXY_ENDPOINT="http://${HOST}:${PROXY_PORT}"
 SUITES="${SUITES:-agent,coding,dataextract,instructfollow,reasonmath,speed,toolcall}"
@@ -26,8 +26,13 @@ CACHE_TYPE_K_DRAFT="${CACHE_TYPE_K_DRAFT:-}"
 CACHE_TYPE_V_DRAFT="${CACHE_TYPE_V_DRAFT:-}"
 ALIAS_TAG="${ALIAS_TAG:-}"
 MODE="${MODE:-all}" # raw | harness | all
-NO_CAP="${NO_CAP:-0}" # 1 = full 32GB machine budget, no 16GB inference cap label
+NO_CAP="${NO_CAP:-1}" # 1 = full 32GB machine budget, no 16GB inference cap label
 OUT_DIR="${OUT_DIR:-results/benchloop/gemma4-nmax2-matrix-$(date -u +%Y%m%dT%H%M%SZ)}"
+
+case "$MODE" in
+  raw|harness|all) ;;
+  *) echo "MODE must be raw, harness, or all: $MODE" >&2; exit 2 ;;
+esac
 
 if [[ "$NO_CAP" == "1" ]]; then
   CTX_SIZE="${CTX_SIZE:-0}"
@@ -41,14 +46,14 @@ else
   HARDWARE_LABEL="Apple M1 Pro 32GB unified memory (${MEMORY_GB}GB inference cap)"
 fi
 
-MODEL_12B_TARGET="$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
-MODEL_12B_DRAFT="$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf"
-MODEL_26B_TARGET="$CODEX_ROOT/models/gemma-4-26B-A4B-it-qat-GGUF/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf"
-MODEL_26B_DRAFT="$CODEX_ROOT/models/gemma-4-26B-A4B-it-qat-GGUF/MTP/gemma-4-26B-A4B-it-Q8_0-MTP.gguf"
+MODEL_12B_TARGET="$LLM_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
+MODEL_12B_DRAFT="$LLM_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf"
+MODEL_26B_TARGET="$LLM_ROOT/models/gemma-4-26B-A4B-it-qat-GGUF/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf"
+MODEL_26B_DRAFT="$LLM_ROOT/models/gemma-4-26B-A4B-it-qat-GGUF/MTP/gemma-4-26B-A4B-it-Q8_0-MTP.gguf"
 
 declare -a MODELS=(
-  "gemma-4-E2B-it-qat-UD-Q4_K_XL|$CODEX_ROOT/models/gemma-4-E2B-it-qat-GGUF/gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf|0|"
-  "gemma-4-E4B-it-qat-UD-Q4_K_XL|$CODEX_ROOT/models/gemma-4-E4B-it-qat-GGUF/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf|0|"
+  "gemma-4-E2B-it-qat-UD-Q4_K_XL|$LLM_ROOT/models/gemma-4-E2B-it-qat-GGUF/gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf|0|"
+  "gemma-4-E4B-it-qat-UD-Q4_K_XL|$LLM_ROOT/models/gemma-4-E4B-it-qat-GGUF/gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf|0|"
   "gemma-4-12B-it-qat-UD-Q4_K_XL|$MODEL_12B_TARGET|1|$MODEL_12B_DRAFT"
   "gemma-4-26B-A4B-it-qat-UD-Q4_K_XL|$MODEL_26B_TARGET|1|$MODEL_26B_DRAFT"
 )
@@ -95,12 +100,13 @@ wait_for_health() {
   local url="$1"
   local label="$2"
   local server_log="$3"
+  local pid="$4"
   for _ in $(seq 1 240); do
     if curl -fsS "$url" >/dev/null 2>&1; then
       return 0
     fi
-    if [[ -n "${SERVER_PID:-}" ]] && ! kill -0 "$SERVER_PID" 2>/dev/null; then
-      echo "llama-server exited while starting ${label}. See ${server_log}" >&2
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "${label} exited while starting. See ${server_log}" >&2
       return 1
     fi
     sleep 1
@@ -149,7 +155,7 @@ start_server() {
 
   "$SERVER_BIN" "${server_args[@]}" > "$server_stdout" 2>&1 &
   SERVER_PID=$!
-  wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server" "$server_log"
+  wait_for_health "${UPSTREAM_ENDPOINT}/health" "llama-server" "$server_log" "$SERVER_PID"
 }
 
 run_benchloop() {
@@ -179,7 +185,7 @@ for required in "$SERVER_BIN" "$POLICY" "$PROXY_BIN"; do
   fi
 done
 
-if [[ ! -d "$HARNESS_DIR/node_modules" ]]; then
+if ! (cd "$HARNESS_DIR" && node --input-type=module -e 'await import("./proxy.mjs")') >/dev/null 2>&1; then
   echo "Missing harness dependencies. Run: (cd \"$HARNESS_DIR\" && npm install)" >&2
   exit 1
 fi
@@ -248,7 +254,7 @@ for entry in "${MODELS[@]}"; do
       --log-jsonl "$proxy_jsonl" \
       > "$proxy_log" 2>&1 &
     PROXY_PID=$!
-    wait_for_health "${PROXY_ENDPOINT}/health" "harness proxy" "$proxy_log"
+    wait_for_health "${PROXY_ENDPOINT}/health" "harness proxy" "$proxy_log" "$PROXY_PID"
 
     run_benchloop "$harness_alias" "$PROXY_ENDPOINT" "raw" "$bench_log"
     node "$MACOS_DIR/scripts/copy_latest_benchloop_run.mjs" "$harness_alias" "$bench_log" "$run_json" >/dev/null || true

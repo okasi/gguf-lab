@@ -40,51 +40,14 @@ LAN default fast prefill profile (agent-facing serving shortcuts):
 
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
+. (Join-Path $Root "Common.ps1")
 . (Join-Path $Root "ModelDraft.ps1")
+. (Join-Path $Root "ReasoningArgs.ps1")
 $RepoRoot = Split-Path $Root -Parent
 $LogDir = Join-Path $Root "logs"
 $DefaultServer = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
-if (-not (Test-Path -LiteralPath $DefaultServer)) {
-    $DefaultServer = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
-}
 $Adapter = Join-Path $RepoRoot "proxy-lan-server\lan-adapter.js"
 $Watchdog = Join-Path $Root "Watch-LAN-Parent.ps1"
-
-function ConvertTo-PlainHashtable {
-    param($Value)
-
-    if ($null -eq $Value) { return $null }
-    if ($Value -is [string] -or $Value -is [char] -or $Value.GetType().IsPrimitive -or $Value -is [decimal]) {
-        return $Value
-    }
-    if ($Value -is [System.Collections.IDictionary]) {
-        $hash = @{}
-        foreach ($key in $Value.Keys) {
-            $hash[$key] = ConvertTo-PlainHashtable -Value $Value[$key]
-        }
-        return $hash
-    }
-    if ($Value -is [array]) {
-        return @($Value | ForEach-Object { ConvertTo-PlainHashtable -Value $_ })
-    }
-    if ($Value -is [pscustomobject]) {
-        $hash = @{}
-        foreach ($prop in $Value.PSObject.Properties) {
-            $hash[$prop.Name] = ConvertTo-PlainHashtable -Value $prop.Value
-        }
-        return $hash
-    }
-    return $Value
-}
-
-function Get-ModelValue {
-    param($ModelConfig, [string]$Key, [string]$Default)
-
-    if ($ModelConfig.ContainsKey($Key) -and $null -ne $ModelConfig[$Key] -and "$($ModelConfig[$Key])" -ne "") {
-        return "$($ModelConfig[$Key])"
-    }
-    return $Default
-}
 
 function Get-LanSlug {
     param([string]$Key)
@@ -162,32 +125,6 @@ function Get-LanAliasTokens {
     }
 
     return @($tokens.Keys)
-}
-
-function Set-ReasoningServerArgs {
-    param(
-        [object[]]$ServerArgs,
-        [ValidateSet("auto", "off")]
-        [string]$Reasoning = "auto",
-        [string]$ModelName = ""
-    )
-
-    $filtered = @()
-    $skipNext = $false
-    foreach ($arg in $ServerArgs) {
-        if ($skipNext) {
-            $skipNext = $false
-            continue
-        }
-        if ([string]$arg -eq "--reasoning") {
-            $skipNext = $true
-            continue
-        }
-        $filtered += $arg
-    }
-
-    $filtered += @("--reasoning", $Reasoning)
-    return $filtered
 }
 
 function Initialize-LanConsoleCleanup {
@@ -637,7 +574,7 @@ function Resolve-LanModelConfig {
     if ($config.ContainsKey("Server") -and $config.Server -and -not [System.IO.Path]::IsPathRooted([string]$config.Server)) {
         $config["Server"] = Join-Path $Root ([string]$config.Server)
     }
-    return $config
+    return Resolve-ModelConfigPaths -Model $config
 }
 
 function Build-LlamaArgs {
@@ -670,10 +607,10 @@ function Build-LlamaArgs {
             }
         }
         $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
-        return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
+        return Add-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
     }
 
-    $ctxSize = if ($CtxSizeOverride -gt 0) { "$CtxSizeOverride" } else { Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "262144" }
+    $ctxSize = if ($CtxSizeOverride -gt 0) { "$CtxSizeOverride" } else { Get-ModelValue -ModelConfig $ModelConfig -Key "CtxSize" -Default "131072" }
     $ctxFlag = if ($CtxSizeOverride -gt 0) { "-c" } else { "--ctx-size" }
     $temp = Get-ModelValue -ModelConfig $ModelConfig -Key "Temp" -Default "0.75"
     $topP = Get-ModelValue -ModelConfig $ModelConfig -Key "TopP" -Default "0.95"
@@ -724,7 +661,7 @@ function Build-LlamaArgs {
         $args += $ExtraServerArgs
     }
     $args = Apply-PromptRuntimeOverrides -ServerArgs $args -CtxSize $CtxSizeOverride -CacheReuse $CacheReuse -BatchSize $BatchSize -UBatchSize $UBatchSize -ThreadsBatch $ThreadsBatch
-    return Set-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
+    return Add-ReasoningServerArgs -ServerArgs $args -Reasoning $Reasoning -ModelName ([string]$ModelConfig.Name)
 }
 
 if (-not $LanModelsJson) { $LanModelsJson = Join-Path $RepoRoot "proxy-lan-server\lan-models.json" }

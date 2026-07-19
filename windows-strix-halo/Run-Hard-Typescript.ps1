@@ -26,6 +26,7 @@ param(
 $ErrorActionPreference = "Continue"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $Root "Common.ps1")
 . (Join-Path $Root "ModelDraft.ps1")
 . (Join-Path $Root "ReasoningArgs.ps1")
 $script:AllowReasoningContentFallback = ($Reasoning -ne "off")
@@ -36,34 +37,13 @@ $ResultName = if ($ResultNameOverride) { $ResultNameOverride } else { "readme-ha
 $ResultPath = Join-Path $LogDir $ResultName
 $Server = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
 if (-not (Test-Path -LiteralPath $Server)) {
-    $Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
+    throw "llama-server not found: $Server. Run .\Install-LlamaB9551.ps1."
 }
 $Node = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
 $Transpiler = Join-Path $Root "tools\ts-runner\transpile-ts.js"
 $Image = Join-Path $Root "test-assets\vision-test.png"
 $ImageB64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($Image))
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
-function ConvertTo-PlainHashtable {
-    param($Value)
-
-    if ($null -eq $Value) { return $null }
-    if ($Value -is [System.Collections.IDictionary]) {
-        $hash = @{}
-        foreach ($key in $Value.Keys) { $hash[$key] = ConvertTo-PlainHashtable -Value $Value[$key] }
-        return $hash
-    }
-    if ($Value -is [array]) {
-        $items = @()
-        foreach ($item in $Value) { $items += ConvertTo-PlainHashtable -Value $item }
-        return $items
-    }
-    if ($Value -is [pscustomobject]) {
-        $hash = @{}
-        foreach ($prop in $Value.PSObject.Properties) { $hash[$prop.Name] = ConvertTo-PlainHashtable -Value $prop.Value }
-        return $hash
-    }
-    return $Value
-}
 function New-BatchRun {
     param(
         [string]$Name,
@@ -72,7 +52,7 @@ function New-BatchRun {
         [string]$Mmproj = "",
         [int]$Port = $GemmaPort,
         [bool]$Vision = $true,
-        [int]$CtxSize = 262144,
+        [int]$CtxSize = 131072,
         [double]$Temperature = 0.75,
         [double]$TopP = 0.95,
         [int]$TopK = 20,
@@ -172,7 +152,7 @@ if (-not (Test-Path -LiteralPath $ModelsJson)) {
 }
 $parsedModels = Get-Content -LiteralPath $ModelsJson -Raw | ConvertFrom-Json
 foreach ($parsedModel in $parsedModels) {
-    $model = ConvertTo-PlainHashtable -Value $parsedModel
+    $model = Resolve-ModelConfigPaths -Model (ConvertTo-PlainHashtable -Value $parsedModel)
     $extra = if ($model.ContainsKey("ExtraServerArgs") -and $null -ne $model.ExtraServerArgs) { @($model.ExtraServerArgs) } else { @() }
     $runAlias = Get-ReadmeAlias -Model $model -AliasSuffix $AliasSuffix
     $runArgs = @{
@@ -183,7 +163,7 @@ foreach ($parsedModel in $parsedModels) {
         Mmproj = if ($model.ContainsKey("Mmproj") -and $null -ne $model.Mmproj) { [string]$model.Mmproj } else { "" }
         Port = if ($model.ContainsKey("Port") -and $model.Port) { [int]$model.Port } else { $GemmaPort }
         Vision = if ($model.ContainsKey("Vision")) { [bool]$model.Vision } else { $true }
-        CtxSize = if ($CtxSizeOverride -gt 0) { $CtxSizeOverride } elseif ($model.ContainsKey("CtxSize") -and $model.CtxSize) { [int]$model.CtxSize } else { 262144 }
+        CtxSize = if ($CtxSizeOverride -gt 0) { $CtxSizeOverride } elseif ($model.ContainsKey("CtxSize") -and $model.CtxSize) { [int]$model.CtxSize } else { 131072 }
         Temperature = if ($model.ContainsKey("Temp") -and $model.Temp) { [double]$model.Temp } elseif ($model.ContainsKey("Temperature") -and $model.Temperature) { [double]$model.Temperature } else { 0.75 }
         TopP = if ($model.ContainsKey("TopP") -and $model.TopP) { [double]$model.TopP } else { 0.95 }
         TopK = if ($model.ContainsKey("TopK") -and $model.TopK) { [int]$model.TopK } else { 20 }
@@ -503,60 +483,6 @@ function Add-Result {
     param($Row)
     $script:Results += $Row
     $script:Results | Export-Csv -NoTypeInformation -LiteralPath $script:ResultPath
-}
-
-function Join-ProcessArguments {
-    param([object[]]$ArgumentList)
-
-    ($ArgumentList | ForEach-Object {
-        $arg = [string]$_
-        if ($arg -eq "") {
-            '""'
-        } elseif ($arg -match '[\s"]') {
-            '"' + $arg.Replace('"', '\"') + '"'
-        } else {
-            $arg
-        }
-    }) -join " "
-}
-
-function Start-LoggedProcess {
-    param(
-        [string]$FilePath,
-        [object[]]$ArgumentList,
-        [string]$WorkingDirectory,
-        [string]$StdOutLog,
-        [string]$StdErrLog
-    )
-
-    "" | Out-File -Encoding utf8 -LiteralPath $StdOutLog
-    "" | Out-File -Encoding utf8 -LiteralPath $StdErrLog
-
-    $psi = [System.Diagnostics.ProcessStartInfo]::new()
-    $psi.FileName = $FilePath
-    $psi.Arguments = Join-ProcessArguments -ArgumentList $ArgumentList
-    $psi.WorkingDirectory = $WorkingDirectory
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-
-    $proc = [System.Diagnostics.Process]::new()
-    $proc.StartInfo = $psi
-
-    $outWriter = [System.IO.StreamWriter]::new($StdOutLog, $true, [System.Text.UTF8Encoding]::new($false))
-    $errWriter = [System.IO.StreamWriter]::new($StdErrLog, $true, [System.Text.UTF8Encoding]::new($false))
-    Register-ObjectEvent -InputObject $proc -EventName OutputDataReceived -MessageData $outWriter -Action {
-        if ($null -ne $EventArgs.Data) { $Event.MessageData.WriteLine($EventArgs.Data); $Event.MessageData.Flush() }
-    } | Out-Null
-    Register-ObjectEvent -InputObject $proc -EventName ErrorDataReceived -MessageData $errWriter -Action {
-        if ($null -ne $EventArgs.Data) { $Event.MessageData.WriteLine($EventArgs.Data); $Event.MessageData.Flush() }
-    } | Out-Null
-
-    [void]$proc.Start()
-    $proc.BeginOutputReadLine()
-    $proc.BeginErrorReadLine()
-    return $proc
 }
 
 foreach ($p in @($GemmaPort, $GptOssPort)) { Stop-PortProcess -LocalPort $p }

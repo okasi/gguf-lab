@@ -1,6 +1,21 @@
-const http = require("http");
-const path = require("path");
-const { pathToFileURL } = require("url");
+import http from "node:http";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "authorization, content-type, anthropic-version, x-api-key",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+};
+const MAX_STORED_RESPONSES = 100;
+
+class HttpError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
 
 function normalizeModelId(value) {
   if (typeof value !== "string") return "";
@@ -36,7 +51,7 @@ function parseJsonEnv(value, fallback = {}) {
   if (!value) return fallback;
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === "object" ? parsed : fallback;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : fallback;
   } catch {
     return fallback;
   }
@@ -247,6 +262,7 @@ const mainModelMetadata = buildMainModelMetadata();
 const audioModelMetadata = buildAudioModelMetadata();
 
 let harnessModulePromise = null;
+let harnessPolicyPromise = null;
 
 async function getHarnessModule() {
   if (!harnessPolicyPath) return null;
@@ -257,9 +273,10 @@ async function getHarnessModule() {
 }
 
 async function getHarnessPolicy() {
-  const mod = await getHarnessModule();
-  if (!mod) return null;
-  return mod.loadPolicy(harnessPolicyPath);
+  if (!harnessPolicyPromise) {
+    harnessPolicyPromise = getHarnessModule().then((mod) => mod?.loadPolicy(harnessPolicyPath) ?? null);
+  }
+  return harnessPolicyPromise;
 }
 
 async function getHarnessPolicyForModel(modelId) {
@@ -274,9 +291,7 @@ function json(res, status, body) {
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization, content-type, anthropic-version, x-api-key",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    ...CORS_HEADERS,
   });
   res.end(payload);
 }
@@ -291,7 +306,7 @@ function readBody(req) {
       try {
         resolve(JSON.parse(raw));
       } catch (err) {
-        reject(new Error(`Invalid JSON: ${err.message}`));
+        reject(new HttpError(400, `Invalid JSON: ${err.message}`));
       }
     });
     req.on("error", reject);
@@ -339,7 +354,7 @@ async function upstreamJson(path, body) {
   }
   if (!response.ok) {
     const message = parsed?.error?.message || parsed?.error || `Upstream HTTP ${response.status}`;
-    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
+    throw new HttpError(response.status, typeof message === "string" ? message : JSON.stringify(message));
   }
   return parsed;
 }
@@ -361,7 +376,7 @@ async function upstreamStream(path, body, res) {
       parsed = { error: text };
     }
     const message = parsed?.error?.message || parsed?.error || `Upstream HTTP ${response.status}`;
-    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
+    throw new HttpError(response.status, typeof message === "string" ? message : JSON.stringify(message));
   }
 
   res.writeHead(response.status, {
@@ -369,9 +384,7 @@ async function upstreamStream(path, body, res) {
     "cache-control": "no-cache, no-transform",
     "connection": "keep-alive",
     "x-accel-buffering": "no",
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization, content-type, anthropic-version, x-api-key",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    ...CORS_HEADERS,
   });
 
   const reader = response.body.getReader();
@@ -402,9 +415,7 @@ async function proxyRaw(req, res, targetPath, targetUpstream = upstream) {
   res.writeHead(response.status, {
     "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
     "content-length": responseBody.length,
-    "access-control-allow-origin": "*",
-    "access-control-allow-headers": "authorization, content-type, anthropic-version, x-api-key",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    ...CORS_HEADERS,
   });
   res.end(responseBody);
 }
@@ -432,11 +443,10 @@ function normalizeAudioMultipartModel(buffer) {
 }
 
 async function proxy(req, res, targetPath) {
-  const body = withSamplingDefaults(await readBody(req), { tools: targetPath.includes("chat") });
+  const body = withSamplingDefaults(await readBody(req));
   const policy = targetPath.includes("chat") ? await getHarnessPolicyForModel(body.model) : null;
   if (body.stream === true) {
-    if (policy && targetPath.includes("chat")) body.stream = false;
-    else return upstreamStream(targetPath, body, res);
+    return upstreamStream(targetPath, body, res);
   }
   if (policy && targetPath.includes("chat")) {
     const mod = await getHarnessModule();
@@ -811,7 +821,7 @@ function anthropicToolChoiceToOpenAI(toolChoice) {
   return undefined;
 }
 
-function withSamplingDefaults(body, options = {}) {
+function withSamplingDefaults(body) {
   const next = { ...body };
   if (next.model == null) next.model = defaultModel;
   if (next.temperature == null) next.temperature = defaultTemperature;
@@ -838,8 +848,8 @@ async function handleResponses(req, res) {
     top_k: body.top_k,
     min_p: body.min_p,
     presence_penalty: body.presence_penalty,
-    repeat_penalty: body.repeat_penalty || body.repetition_penalty,
-    max_tokens: body.max_output_tokens || body.max_tokens,
+    repeat_penalty: body.repeat_penalty ?? body.repetition_penalty,
+    max_tokens: body.max_output_tokens ?? body.max_tokens,
     stream: false,
   });
 
@@ -880,6 +890,9 @@ async function handleResponses(req, res) {
     usage: completion.usage || null,
   };
   responses.set(id, response);
+  if (responses.size > MAX_STORED_RESPONSES) {
+    responses.delete(responses.keys().next().value);
+  }
   json(res, 200, response);
 }
 
@@ -904,12 +917,12 @@ async function handleAnthropicMessages(req, res) {
     top_k: body.top_k,
     min_p: body.min_p,
     presence_penalty: body.presence_penalty,
-    repeat_penalty: body.repeat_penalty || body.repetition_penalty,
+    repeat_penalty: body.repeat_penalty ?? body.repetition_penalty,
     max_tokens: body.max_tokens,
     tools: anthropicToolsToOpenAI(body.tools),
     tool_choice: anthropicToolChoiceToOpenAI(body.tool_choice),
     stream: false,
-  }, { tools: Array.isArray(body.tools) && body.tools.length > 0 });
+  });
 
   let completion;
   const policy = await getHarnessPolicyForModel(chatPayload.model);
@@ -1019,18 +1032,25 @@ const requestHandler = async (req, res) => {
     if (req.method === "POST" && (url.pathname === "/v1/messages" || url.pathname === "/anthropic/v1/messages")) return await handleAnthropicMessages(req, res);
     json(res, 404, { error: { message: `No route for ${req.method} ${url.pathname}` } });
   } catch (err) {
-    json(res, 500, { error: { message: err.message || String(err) } });
+    json(res, err.statusCode || 500, { error: { message: err.message || String(err) } });
   }
 };
 
-for (const listenPort of listenPorts) {
-  const server = http.createServer(requestHandler);
-  server.listen(listenPort, host, () => {
-    console.log(`LAN adapter listening on http://${host}:${listenPort}`);
-    console.log(`Upstream ${upstreamKind}: ${upstream}`);
-    console.log(`Audio upstream: ${audioUpstream}`);
-    console.log(`Model alias: ${defaultModel}`);
-    console.log(`Public model aliases: ${publicModels.join(", ")}`);
-    console.log("Endpoints: /v1/chat/completions, /v1/responses, /v1/messages, /v1/audio/transcriptions");
+export function startServers() {
+  return listenPorts.map((listenPort) => {
+    const server = http.createServer(requestHandler);
+    server.listen(listenPort, host, () => {
+      console.log(`LAN adapter listening on http://${host}:${listenPort}`);
+      console.log(`Upstream ${upstreamKind}: ${upstream}`);
+      console.log(`Audio upstream: ${audioUpstream}`);
+      console.log(`Model alias: ${defaultModel}`);
+      console.log(`Public model aliases: ${publicModels.join(", ")}`);
+      console.log("Endpoints: /v1/chat/completions, /v1/responses, /v1/messages, /v1/audio/transcriptions");
+    });
+    return server;
   });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startServers();
 }

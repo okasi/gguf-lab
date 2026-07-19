@@ -21,15 +21,16 @@ param(
 $ErrorActionPreference = "Stop"
 
 $Root = $PSScriptRoot
+. (Join-Path $Root "Common.ps1")
 . (Join-Path $Root "ModelDraft.ps1")
 . (Join-Path $Root "ReasoningArgs.ps1")
 $LogDir = Join-Path $Root "logs"
 $Server = Join-Path $Root "tools\llama-b9551-bin-win-vulkan-x64\llama-server.exe"
-if (-not (Test-Path -LiteralPath $Server)) {
-    $Server = Join-Path $Root "tools\llama-b9535-bin-win-vulkan-x64\llama-server.exe"
-}
 if ($ServerOverride) {
     $Server = $ServerOverride
+}
+if (-not (Test-Path -LiteralPath $Server)) {
+    throw "llama-server not found: $Server. Run .\Install-LlamaB9551.ps1 or pass -ServerOverride."
 }
 $BenchLoop = Join-Path $Root ".venv-benchloop\Scripts\benchloop.exe"
 if ($StripThoughtMarkers -and $ProxyPort -le 0) {
@@ -46,37 +47,6 @@ $Gpu = "AMD Radeon(TM) 8060S Graphics"
 $GpuMemoryGb = "111.82"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
-function ConvertTo-PlainHashtable {
-    param($Value)
-
-    if ($null -eq $Value) {
-        return $null
-    }
-    if ($Value -is [System.Collections.IDictionary]) {
-        $hash = @{}
-        foreach ($key in $Value.Keys) {
-            $hash[$key] = ConvertTo-PlainHashtable -Value $Value[$key]
-        }
-        return $hash
-    }
-    if ($Value -is [array]) {
-        $items = @()
-        foreach ($item in $Value) {
-            $items += ConvertTo-PlainHashtable -Value $item
-        }
-        return $items
-    }
-    if ($Value -is [pscustomobject]) {
-        $hash = @{}
-        foreach ($prop in $Value.PSObject.Properties) {
-            $hash[$prop.Name] = ConvertTo-PlainHashtable -Value $prop.Value
-        }
-        return $hash
-    }
-
-    return $Value
-}
-
 if (-not $ModelsJson) {
     $ModelsJson = Join-Path $Root "readme-models.json"
 }
@@ -87,77 +57,13 @@ if (-not (Test-Path -LiteralPath $ModelsJson)) {
 $Models = @()
 $parsedModels = Get-Content -LiteralPath $ModelsJson -Raw | ConvertFrom-Json
 foreach ($parsedModel in $parsedModels) {
-    $Models += ConvertTo-PlainHashtable -Value $parsedModel
+    $Models += Resolve-ModelConfigPaths -Model (ConvertTo-PlainHashtable -Value $parsedModel)
 }
 
 foreach ($m in $Models) {
     if ($m.ContainsKey("Server") -and $m.Server -and -not [System.IO.Path]::IsPathRooted([string]$m.Server)) {
         $m["Server"] = Join-Path $Root ([string]$m.Server)
     }
-}
-
-function Get-ModelValue {
-    param($Model, [string]$Key, [string]$Default)
-
-    if ($Model.ContainsKey($Key) -and $null -ne $Model[$Key] -and "$($Model[$Key])" -ne "") {
-        return "$($Model[$Key])"
-    }
-
-    return $Default
-}
-
-function Join-ProcessArguments {
-    param([object[]]$ArgumentList)
-
-    ($ArgumentList | ForEach-Object {
-        $arg = [string]$_
-        if ($arg -eq "") {
-            '""'
-        } elseif ($arg -match '[\s"]') {
-            '"' + $arg.Replace('"', '\"') + '"'
-        } else {
-            $arg
-        }
-    }) -join " "
-}
-
-function Start-LoggedProcess {
-    param(
-        [string]$FilePath,
-        [object[]]$ArgumentList,
-        [string]$WorkingDirectory,
-        [string]$StdOutLog,
-        [string]$StdErrLog
-    )
-
-    "" | Out-File -Encoding utf8 -LiteralPath $StdOutLog
-    "" | Out-File -Encoding utf8 -LiteralPath $StdErrLog
-
-    $psi = [System.Diagnostics.ProcessStartInfo]::new()
-    $psi.FileName = $FilePath
-    $psi.Arguments = Join-ProcessArguments -ArgumentList $ArgumentList
-    $psi.WorkingDirectory = $WorkingDirectory
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-
-    $proc = [System.Diagnostics.Process]::new()
-    $proc.StartInfo = $psi
-
-    $outWriter = [System.IO.StreamWriter]::new($StdOutLog, $true, [System.Text.UTF8Encoding]::new($false))
-    $errWriter = [System.IO.StreamWriter]::new($StdErrLog, $true, [System.Text.UTF8Encoding]::new($false))
-    Register-ObjectEvent -InputObject $proc -EventName OutputDataReceived -MessageData $outWriter -Action {
-        if ($null -ne $EventArgs.Data) { $Event.MessageData.WriteLine($EventArgs.Data); $Event.MessageData.Flush() }
-    } | Out-Null
-    Register-ObjectEvent -InputObject $proc -EventName ErrorDataReceived -MessageData $errWriter -Action {
-        if ($null -ne $EventArgs.Data) { $Event.MessageData.WriteLine($EventArgs.Data); $Event.MessageData.Flush() }
-    } | Out-Null
-
-    [void]$proc.Start()
-    $proc.BeginOutputReadLine()
-    $proc.BeginErrorReadLine()
-    return $proc
 }
 
 function Wait-Model {
@@ -242,7 +148,7 @@ foreach ($m in $Models) {
     $benchErr = Join-Path $LogDir "benchloop-$runAlias.err.log"
     Remove-Item $serverOut,$serverErr,$benchOut,$benchErr -ErrorAction SilentlyContinue
 
-    $ctxSize = if ($CtxSize -gt 0) { "$CtxSize" } else { Get-ModelValue -Model $m -Key "CtxSize" -Default "262144" }
+    $ctxSize = if ($CtxSize -gt 0) { "$CtxSize" } else { Get-ModelValue -Model $m -Key "CtxSize" -Default "131072" }
     $ctxFlag = if ($CtxSize -gt 0) { "-c" } else { "--ctx-size" }
     $temp = Get-ModelValue -Model $m -Key "Temp" -Default "0.75"
     $topP = Get-ModelValue -Model $m -Key "TopP" -Default "0.95"

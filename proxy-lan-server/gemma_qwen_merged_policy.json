@@ -1,10 +1,10 @@
 {
   "name": "gemma-qwen-merged",
   "version": "family-sampler-v18-fraction-small-major-json-scalars",
-  "temperature": 1.0,
+  "temperature": 1,
   "top_p": 0.95,
   "top_k": 64,
-  "min_p": 0.0,
+  "min_p": 0,
   "enforce_sampler": true,
   "respect_client_sampler": true,
   "default_sampler_profile": "gemma4",
@@ -15,10 +15,10 @@
         "gemma-4",
         "gemma4"
       ],
-      "temperature": 1.0,
+      "temperature": 1,
       "top_p": 0.95,
       "top_k": 64,
-      "min_p": 0.0
+      "min_p": 0
     },
     "qwen": {
       "model_patterns": [
@@ -28,7 +28,7 @@
       "temperature": 0.85,
       "top_p": 0.95,
       "top_k": 20,
-      "min_p": 0.0
+      "min_p": 0
     }
   },
   "strip_reasoning": true,
@@ -62,193 +62,8 @@
   "retry_missing_tool_call": true,
   "max_retries": 0,
   "metadata": {
-    "purpose": "Merged Gemma 4 and Qwen/Qwopus OpenAI-compatible harness policy with shared response behavior and separate pinned sampler profiles.",
-    "sampler_policy": "Do not tune these sampler profiles during harness-policy work unless explicitly requested; focus policy changes on generic parsing, protocol adaptation, retries, and output normalization.",
-    "samplers": {
-      "gemma4": "temp=1.0, top_p=0.95, top_k=64, min_p=0.0",
-      "qwen": "temp=0.85, top_p=0.95, top_k=20, min_p=0.0"
-    },
-    "benchloop_e2b_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v1",
-      "result": "failed E2B raw/current gate",
-      "overall_score": 74.60013483146068,
-      "quality_score": 79.0,
-      "speed_score": 74.29,
-      "reliability_score": 65.1685393258427
-    },
-    "benchloop_e2b_v2_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v2-gemma-conservative",
-      "result": "failed E2B raw/current quality gate",
-      "overall_score": 74.10578370786517,
-      "quality_score": 79.44500000000001,
-      "quality_delta_vs_current_harness": -0.7349999999999852,
-      "quality_delta_vs_raw": -4.676666666666662
-    },
-    "benchloop_e2b_v3_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v3-gemma-passthrough",
-      "result": "quality no longer below current harness; still below raw",
-      "overall_score": 74.85091479400751,
-      "quality_score": 80.41833333333334,
-      "quality_delta_vs_current_harness": 0.2383333333333444,
-      "quality_delta_vs_raw": -3.703333333333333
-    },
-    "benchloop_e2b_v4_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v4-shared-passthrough",
-      "result": "failed E2B raw quality gate",
-      "fresh_raw_overall_score": 78.9671413857678,
-      "fresh_raw_quality_score": 84.12166666666667,
-      "overall_score": 76.11318258426968,
-      "quality_score": 80.995,
-      "quality_delta_vs_fresh_raw": -3.126666666666665
-    },
-    "benchloop_e2b_v5_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v5-shared-passthrough-retry1",
-      "result": "failed E2B raw quality gate",
-      "overall_score": 77.18562921348315,
-      "quality_score": 80.82,
-      "quality_delta_vs_fresh_raw": -3.3016666666666623
-    },
-    "benchloop_e2b_v6_20260614": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260614/e2b-merged-v6-shared-passthrough-client-sampler",
-      "result": "matched fresh E2B raw quality; E4B/12B/26B not checked",
-      "overall_score": 80.0191413857678,
-      "quality_score": 84.12166666666667,
-      "speed_score": 74.66,
-      "reliability_score": 75.28089887640449,
-      "quality_delta_vs_fresh_raw": 0,
-      "overall_delta_vs_fresh_raw": 1.0520000000000067
-    },
-    "benchloop_e2b_v8_20260615": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260615/e2b-merged-v8-untyped-json-passthrough",
-      "result": "improved E2B quality above fresh raw using shared Gemma/Qwen behavior",
-      "overall_score": 81.28012359550563,
-      "quality_score": 85.86,
-      "speed_score": 74.78,
-      "reliability_score": 76.40449438202246,
-      "quality_delta_vs_fresh_raw": 1.7383333333333297,
-      "overall_delta_vs_fresh_raw": 2.312982209737831
-    },
-    "benchloop_e2b_v18_20260615": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260615/e2b-round-10-v18-fraction-small-major-json-scalars",
-      "result": "selected after 10 additional E2B rounds by quality score",
-      "overall_score": 77.57125468164796,
-      "quality_score": 86.79333333333334,
-      "speed_score": 50.86,
-      "reliability_score": 78.65168539325843,
-      "suite_scores": {
-        "agent": 96.88,
-        "coding": 100,
-        "dataextract": 86.1,
-        "instructfollow": 67.78,
-        "reasonmath": 80,
-        "toolcall": 90
-      },
-      "quality_delta_vs_v8": 0.9333333333333371,
-      "suspicious_repair_labels": 0
-    },
-    "benchloop_v18_cross_size_20260615": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260615/selected-v18-e4b-12b-26b-rerun",
-      "result": "completed E4B/12B/26B rerun for the selected E2B policy; not promoted over the older q4_0 12B/26B current harness rows",
-      "runtime_note": "matrix defaults used f16 KV for all rows; 12B/26B used MTP n-max=2",
-      "models": {
-        "e4b": {
-          "overall_score": 74.36550468164795,
-          "quality_score": 84.92833333333333,
-          "speed_score": 39.96,
-          "reliability_score": 78.65168539325843,
-          "suite_scores": {
-            "agent": 96.88,
-            "coding": 100,
-            "dataextract": 91.02,
-            "instructfollow": 66.67,
-            "reasonmath": 80,
-            "toolcall": 75
-          },
-          "suspicious_repair_labels": 0
-        },
-        "12b": {
-          "overall_score": 72.35913576779026,
-          "quality_score": 85.41166666666668,
-          "speed_score": 25.79,
-          "reliability_score": 80.89887640449437,
-          "suite_scores": {
-            "agent": 96.88,
-            "coding": 100,
-            "dataextract": 83.38,
-            "instructfollow": 75.55,
-            "reasonmath": 73.33,
-            "toolcall": 83.33
-          },
-          "suspicious_repair_labels": 0
-        },
-        "26b": {
-          "overall_score": 73.08875468164796,
-          "quality_score": 83.72333333333334,
-          "speed_score": 36.89,
-          "reliability_score": 78.65168539325843,
-          "suite_scores": {
-            "agent": 96.88,
-            "coding": 85.42,
-            "dataextract": 84.48,
-            "instructfollow": 72.23,
-            "reasonmath": 80,
-            "toolcall": 83.33
-          },
-          "suspicious_repair_labels": 0
-        }
-      }
-    },
-    "benchloop_v18_q4_same_runtime_20260615": {
-      "run": "macos-m1-pro/results/benchloop/gemma-qwen-merged-policy-20260615/v18-q4-raw-harness-rerun",
-      "result": "same-runtime raw versus v18 rerun improved quality and overall score on E2B, E4B, 12B, and 26B",
-      "runtime_note": "CACHE_TYPE_K=q4_0, CACHE_TYPE_V=q4_0, CACHE_TYPE_K_DRAFT=q4_0, CACHE_TYPE_V_DRAFT=q4_0; 12B/26B used MTP n-max=2",
-      "models": {
-        "e2b": {
-          "raw_overall_score": 76.35734363295882,
-          "raw_quality_score": 82.48166666666667,
-          "harness_overall_score": 79.19662359550561,
-          "harness_quality_score": 85.57000000000001,
-          "overall_delta": 2.839279962546791,
-          "quality_delta": 3.0883333333333383,
-          "suspicious_repair_labels": 0
-        },
-        "e4b": {
-          "raw_overall_score": 74.3993436329588,
-          "raw_quality_score": 81.72166666666666,
-          "harness_overall_score": 76.29262359550562,
-          "harness_quality_score": 83.33,
-          "overall_delta": 1.893279962546821,
-          "quality_delta": 1.6083333333333343,
-          "suspicious_repair_labels": 0
-        },
-        "12b": {
-          "raw_overall_score": 76.63130243445693,
-          "raw_quality_score": 86.24833333333333,
-          "harness_overall_score": 77.13345131086143,
-          "harness_quality_score": 86.52333333333333,
-          "overall_delta": 0.5021488764044948,
-          "quality_delta": 0.2750000000000057,
-          "suspicious_repair_labels": 0
-        },
-        "26b": {
-          "raw_overall_score": 75.8453913857678,
-          "raw_quality_score": 82.73666666666666,
-          "harness_overall_score": 76.71677247191012,
-          "harness_quality_score": 83.325,
-          "overall_delta": 0.8713810861423241,
-          "quality_delta": 0.5883333333333383,
-          "suspicious_repair_labels": 0
-        }
-      }
-    },
-    "quality_adjustment_20260614": "v2 disables merged-policy tool argument normalization and tool-call dedupe because the v1 E2B quality regression was concentrated in reasonmath and toolcall; this keeps sampler profiles pinned while reducing nonessential post-processing for Gemma.",
-    "quality_adjustment_v3_20260614": "v3 kept Qwen parser behavior but used a Gemma passthrough behavior profile so Gemma quality was not lowered versus the current harness by response rewriting; Gemma sampler enforcement remained pinned.",
-    "quality_adjustment_v4_20260614": "v4 removes model-family behavior profiles and uses one shared passthrough behavior for Gemma and Qwen, leaving only the explicitly pinned sampler profiles separate.",
-    "quality_adjustment_v5_20260614": "v5 keeps shared passthrough behavior but allows one generic protocol retry for empty, malformed JSON, malformed code, or missing-call format failures; it does not inspect benchmark answers or rewrite content.",
-    "quality_adjustment_v6_20260614": "v6 keeps shared passthrough behavior and separate sampler profiles as defaults, but respects explicit client sampler values so raw/OpenAI-compatible clients are not silently resampled by the harness.",
-    "quality_adjustment_v7_20260615": "v7 keeps shared passthrough and client-sampler respect, but applies schema-local JSON repair/coercion only when the client explicitly requests JSON schema output.",
-    "quality_adjustment_v8_20260615": "v8 also repairs parseable JSON passthrough content without a declared schema by coercing only strict scalar JSON values emitted by the model itself (currency/percent/unit numbers, booleans, nulls, and star-glyph ratings); it does not inspect field names, prompts, task IDs, or expected answers.",
-    "quality_adjustment_v18_20260615": "v18 extends the value-only scalar layer with plus, per-unit, Unicode-unit, and fraction-leading number coercion, while preserving generic ID-like integers, AM/PM-like times, and narrow single-digit-major decimals. It never branches on prompt text, field names, task IDs, suites, or expected answers.",
+    "purpose": "Shared Gemma 4 and Qwen/Qwopus protocol adaptation with family-specific sampler defaults.",
+    "sampler_policy": "Keep family samplers pinned unless a sampler sweep is explicitly requested.",
     "target_clients": [
       "BenchLoop",
       "OpenClaw/ClawBench",
@@ -256,6 +71,6 @@
       "opencode",
       "OpenAI-compatible local agent clients"
     ],
-    "audit_note": "Generic protocol adaptation only: no benchmark-specific branches, prompt-derived direct answers, prompt-to-tool-call synthesis, answer rewrites, phrase/word transforms, or expected-action heuristics."
+    "audit_note": "Protocol adaptation only; never infer answers or actions from prompts, task names, or expected outputs."
   }
 }

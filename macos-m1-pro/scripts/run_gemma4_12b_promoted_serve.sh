@@ -4,13 +4,13 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MACOS_DIR="${MACOS_DIR:-$REPO_ROOT/macos-m1-pro}"
-CODEX_ROOT="${CODEX_ROOT:-/Users/okasi/Documents/Codex/2026-06-04/run-benchloop-for-unsloth-gemma-4}"
+LLM_ROOT="${LLM_ROOT:-${CODEX_ROOT:-$MACOS_DIR}}"
 HARNESS_DIR="${HARNESS_DIR:-$REPO_ROOT/proxy-lan-server}"
 POLICY="${POLICY:-$HARNESS_DIR/gemma_qwen_merged_policy.json}"
 PROXY_BIN="${PROXY_BIN:-$HARNESS_DIR/proxy.mjs}"
-SERVER_BIN="${SERVER_BIN:-$CODEX_ROOT/llama.cpp/build/bin/llama-server}"
-TARGET_MODEL="${TARGET_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
-DRAFT_MODEL="${DRAFT_MODEL:-$CODEX_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf}"
+SERVER_BIN="${SERVER_BIN:-$LLM_ROOT/llama.cpp/build/bin/llama-server}"
+TARGET_MODEL="${TARGET_MODEL:-$LLM_ROOT/models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf}"
+DRAFT_MODEL="${DRAFT_MODEL:-$LLM_ROOT/models/gemma-4-12B-it-qat-GGUF/MTP/gemma-4-12B-it-Q8_0-MTP.gguf}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-8091}"
 PROXY_PORT="${PROXY_PORT:-8092}"
 HOST="${HOST:-127.0.0.1}"
@@ -44,12 +44,14 @@ cleanup() {
 
 wait_for_health() {
   local url="$1"
+  local pid="$2"
+  local label="$3"
   for _ in $(seq 1 240); do
     if curl -fsS "$url" >/dev/null 2>&1; then
       return 0
     fi
-    if [[ -n "${SERVER_PID:-}" ]] && ! kill -0 "$SERVER_PID" 2>/dev/null; then
-      echo "llama-server exited while starting." >&2
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "${label} exited while starting." >&2
       return 1
     fi
     sleep 1
@@ -65,7 +67,7 @@ for f in "$SERVER_BIN" "$TARGET_MODEL" "$DRAFT_MODEL" "$POLICY" "$PROXY_BIN"; do
   fi
 done
 
-if [[ ! -d "$HARNESS_DIR/node_modules" ]]; then
+if ! (cd "$HARNESS_DIR" && node --input-type=module -e 'await import("./proxy.mjs")') >/dev/null 2>&1; then
   echo "Missing harness dependencies. Run: (cd \"$HARNESS_DIR\" && npm install)" >&2
   exit 1
 fi
@@ -95,7 +97,7 @@ echo "Starting llama-server: 12B MTP n-max=${SPEC_DRAFT_N_MAX}, KV ${CACHE_TYPE_
   --spec-type draft-mtp --spec-draft-n-max "$SPEC_DRAFT_N_MAX" \
   "${KV_ARGS[@]}"
 SERVER_PID=$!
-wait_for_health "http://${HOST}:${UPSTREAM_PORT}/health"
+wait_for_health "http://${HOST}:${UPSTREAM_PORT}/health" "$SERVER_PID" "llama-server"
 
 echo "Starting merged harness proxy on http://${HOST}:${PROXY_PORT}"
 node "$PROXY_BIN" \
@@ -103,7 +105,7 @@ node "$PROXY_BIN" \
   --upstream "http://${HOST}:${UPSTREAM_PORT}" \
   --policy "$POLICY" &
 PROXY_PID=$!
-wait_for_health "http://${HOST}:${PROXY_PORT}/health"
+wait_for_health "http://${HOST}:${PROXY_PORT}/health" "$PROXY_PID" "harness proxy"
 
 echo "Ready."
 echo "  OpenAI endpoint: http://${HOST}:${PROXY_PORT}/v1"

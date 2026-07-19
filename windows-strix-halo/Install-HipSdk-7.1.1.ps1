@@ -1,5 +1,5 @@
 param(
-  [string]$Installer = "C:\Users\Admin\Downloads\AMD-Software-PRO-Edition-26.Q1-Win11-For-HIP.exe",
+  [string]$Installer = (Join-Path $HOME "Downloads\AMD-Software-PRO-Edition-26.Q1-Win11-For-HIP.exe"),
   [string]$LogPath = ""
 )
 
